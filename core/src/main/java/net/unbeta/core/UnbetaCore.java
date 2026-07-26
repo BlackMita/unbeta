@@ -49,6 +49,10 @@ public final class UnbetaCore implements ModInitializer {
         net.unbeta.core.gates.SpawnGate.register();
         net.unbeta.core.gates.SpawnCatchAll.register(config);
 
+        // M7 dimension gate: generic and rule-driven. Phase 1 gates the End;
+        // Phase 2 gates the Nether via a rule flip, with no code change here.
+        net.unbeta.core.gates.DimensionGate.register();
+
         LOG.info("Unbeta Core ready in {} ms - {} manifest entries, {} rules, gated namespaces {}.",
                 System.currentTimeMillis() - t0,
                 manifest.entries().size(), registry.keys().size(), config.gatedNamespaces);

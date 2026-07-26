@@ -3,6 +3,9 @@
   "package": "net.unbeta.core.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "EndPortalBlockMixin",
+    "EnderEyeItemMixin",
+    "NetherPortalBlockMixin",
     "RecipeManagerAccessor",
     "RecipeManagerMixin"
   ],
