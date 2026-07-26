@@ -48,6 +48,11 @@ public final class UnbetaCommands {
                                 .executes(ctx -> why(ctx, registry))))
                 .then(CommandManager.literal("reload")
                         .executes(ctx -> reload(ctx, registry)))
+                .then(CommandManager.literal("features")
+                        .executes(ctx -> features(ctx, ""))
+                        .then(CommandManager.argument("filter", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                                .executes(ctx -> features(ctx,
+                                        com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "filter")))))
             ));
     }
 
@@ -173,6 +178,40 @@ public final class UnbetaCommands {
         registry.reload();
         ctx.getSource().sendFeedback(() -> Text.literal(
                 "Reloaded config/unbeta/overrides.json. Manifest and mod overrides are load-time only."), false);
+        return 1;
+    }
+
+    // --------------------------------------------------------------- features
+
+    /**
+     * Dumps every registered placed feature ID to a CSV. Placed features live in a
+     * DYNAMIC registry, so the only reliable list is the one from a running server -
+     * exactly like the /unbeta audit approach for blocks and items.
+     */
+    private static int features(CommandContext<ServerCommandSource> ctx, String filter) {
+        String f = filter.toLowerCase(Locale.ROOT).trim();
+        String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        Path out = FabricLoader.getInstance().getGameDir().resolve("unbeta-features-" + stamp + ".csv");
+
+        int n = 0;
+        try (BufferedWriter w = Files.newBufferedWriter(out, StandardCharsets.UTF_8)) {
+            w.write("placed_feature\n");
+            var reg = ctx.getSource().getServer().getRegistryManager().get(RegistryKeys.PLACED_FEATURE);
+            for (Identifier id : reg.getIds()) {
+                if (!f.isEmpty() && !id.toString().toLowerCase(Locale.ROOT).contains(f)) continue;
+                w.write(id.toString());
+                w.write('\n');
+                n++;
+            }
+        } catch (Exception e) {
+            UnbetaCore.LOG.error("Feature dump failed", e);
+            ctx.getSource().sendError(Text.literal("Feature dump failed: " + e.getMessage()));
+            return 0;
+        }
+
+        final int count = n;
+        ctx.getSource().sendFeedback(() -> Text.literal(
+                "Unbeta features: " + count + " placed feature(s) -> " + out.getFileName()), false);
         return 1;
     }
 }

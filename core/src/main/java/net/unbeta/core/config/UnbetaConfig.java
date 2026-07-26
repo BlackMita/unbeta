@@ -52,6 +52,50 @@ public final class UnbetaConfig {
      */
     public boolean allowDeliberateGatedSpawns = false;
 
+    /**
+     * When true, freshly generated chunks are scanned and any gated block is replaced
+     * with stone. This is the safety net for gated blocks placed by biome carvers or
+     * decorators (lush-cave moss, glow berries, azalea) that the feature gate cannot
+     * reach. DEFAULT FALSE: the chunk-load scan is too heavy and can stall world saving. Lush-cave cleanup is deferred to Phase 2 (to be done at generation time, not on load). Set true only if you accept the performance cost.
+     */
+    public boolean replaceGeneratedGatedBlocks = false;
+
+    /**
+     * The generated-block gate only scans at and below this Y level. Lush caves are
+     * deep, so a low value keeps the scan cheap. Raise it if gated blocks appear higher. Default 128 to cover shifted beta terrain.
+     */
+    public int scanBelowY = 64;
+
+    /**
+     * Placed features stripped from every biome. These are post-b1.8 worldgen that
+     * attaches to ORDINARY overworld biomes, so turning off cave-biome injection in
+     * Moderner Beta does not remove them.
+     *
+     * <p>Edit freely - this is a plain list of minecraft: placed_feature paths.
+     * Removing an entry here lets that feature generate again.
+     */
+    public java.util.List<String> removedPlacedFeatures = new java.util.ArrayList<>(java.util.List.of(
+            // 1.17 Caves & Cliffs
+            "ore_copper", "ore_copper_large",
+            "ore_tuff",
+            "amethyst_geode",
+            "glow_lichen",
+            "dripstone_cluster", "large_dripstone", "pointed_dripstone",
+            // 1.17 lush cave vegetation (belt and braces if a lush biome slips through)
+            "moss_patch", "moss_patch_bonemeal", "moss_vegetation",
+            "lush_caves_clay", "cave_vine", "cave_vine_in_moss",
+            "spore_blossom", "rooted_azalea_tree",
+            // 1.19 deep dark
+            "sculk_patch_deep_dark", "sculk_patch_ancient_city", "sculk_vein",
+            // 1.16 nether ores that leak into overworld-adjacent generation
+            "ore_ancient_debris_small", "ore_ancient_debris_large",
+            "ore_nether_gold", "ore_quartz_nether", "ore_blackstone",
+            // 1.13 ocean vegetation
+            "kelp_cold", "kelp_warm", "seagrass_short", "seagrass_slightly_less_short",
+            "seagrass_mid", "seagrass_tall", "seagrass_simple",
+            "sea_pickle", "warm_ocean_vegetation"
+    ));
+
     /** Rule overrides at CORE_CONFIG priority. Key -> removed. */
     public Map<String, Boolean> rules = new LinkedHashMap<>();
 

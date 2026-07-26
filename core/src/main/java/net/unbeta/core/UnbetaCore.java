@@ -53,6 +53,14 @@ public final class UnbetaCore implements ModInitializer {
         // Phase 2 gates the Nether via a rule flip, with no code change here.
         net.unbeta.core.gates.DimensionGate.register();
 
+        // Worldgen feature gate: post-b1.8 features attached to ordinary biomes.
+        // Terrain and biome layout remain Moderner Beta's job.
+        net.unbeta.core.gates.FeatureGate.register(config);
+
+        // Safety net: swap any gated block that a biome carver/decorator places
+        // (lush-cave vegetation) to stone as chunks generate.
+        net.unbeta.core.gates.GeneratedBlockGate.register(config);
+
         LOG.info("Unbeta Core ready in {} ms - {} manifest entries, {} rules, gated namespaces {}.",
                 System.currentTimeMillis() - t0,
                 manifest.entries().size(), registry.keys().size(), config.gatedNamespaces);

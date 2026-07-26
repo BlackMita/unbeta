@@ -24,3 +24,29 @@
   Phase 2 wants mobs tied to "biomes that snow". Pick one before Phase 2 mob work:
   (a) allow 1.0-era snowy biomes as an exception, (b) re-enable them in Moderner Beta's preset,
   (c) tie the mob to snow-layer presence or altitude instead of biome.
+
+## 2026-07-26 — Generated-block gate disabled (lush caves deferred)
+
+**Decision:** `replaceGeneratedGatedBlocks` defaults to **false**. The generated-block
+gate (chunk-load scan that swaps gated blocks to stone) is shipped but off.
+
+**Why:** Scanning blocks on every chunk load — even with a section palette pre-check —
+stalled the server thread badly enough to freeze world saving twice during testing.
+It also turned gated tall plants (tall_grass, sunflower, lilac, peony, rose_bush — all
+correctly 1.7+ removals) into ugly stone stubs rather than removing them cleanly.
+
+**Consequence:** Lush-cave vegetation (moss, glow berries, azalea) still generates
+underground. Those blocks remain gated at the item/recipe/loot/creative level, so they
+are unobtainable and drop nothing — they are just visible in the wild. Accepted as a
+known Phase 1 limitation.
+
+**Phase 2 plan:** redo this at world-generation time (a mixin on chunk generation, or a
+custom biome-source that never injects lush caves), where the swap is free instead of a
+per-load scan. At that point gated non-solid blocks (plants) should become AIR, and
+gated solid blocks (deepslate/sculk) should become STONE — the stone-stub bug was from
+treating all gated blocks the same.
+
+**Manifest note:** the plant removals are CORRECT. Beta 1.8 had 1-block grass, fern,
+dandelion and poppy (all kept). The 2-block tall_grass, large_fern, and the tall
+flowers (sunflower/lilac/peony/rose_bush) are all 1.7 additions and are correctly
+removed — they were only ugly because of the stone swap, not because the gate was wrong.
