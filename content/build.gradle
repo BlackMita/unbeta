@@ -1,0 +1,7 @@
+base { archivesName = "${project.archives_base_name}-content" }
+
+dependencies {
+    // The `namedElements` configuration is REQUIRED. A plain project(':core')
+    // dependency will not be remapped by Loom and will fail at runtime.
+    implementation project(path: ':core', configuration: 'namedElements')
+}

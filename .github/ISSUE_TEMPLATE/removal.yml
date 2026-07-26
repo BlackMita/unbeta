@@ -1,0 +1,42 @@
+name: Removal bucket
+description: One update's worth of content to gate out of 1.20.1
+title: "remove/<update>: <short name>"
+labels: ["phase:1"]
+body:
+  - type: textarea
+    id: ids
+    attributes:
+      label: Registry IDs touched
+      description: Exact minecraft: namespaced IDs. These become manifest.json entries.
+    validations: { required: true }
+  - type: dropdown
+    id: mechanism
+    attributes:
+      label: Mechanism
+      description: Must be one of the mechanisms in section 5 of the master plan. Do not improvise.
+      multiple: true
+      options:
+        - recipe_datagen
+        - loot_filter
+        - spawn_gate
+        - structure_set_datagen
+        - biome_modification
+        - creative_hide
+        - use_cancel
+        - dimension_gate
+        - mixin
+    validations: { required: true }
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Definition of done
+      options:
+        - label: manifest.json entries added, with verified:true and a wiki source URL
+        - label: Namespace-scoped (touches minecraft: only)
+        - label: No @Overwrite mixins
+        - label: /unbeta audit re-run and the diff attached below
+        - label: Tested in-game with the full mod pack, not just core
+  - type: textarea
+    id: diff
+    attributes:
+      label: Audit diff

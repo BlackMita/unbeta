@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "unbeta-core",
+  "version": "${version}",
+  "name": "Unbeta Core",
+  "description": "Gates Minecraft 1.20.1 vanilla content down to the Java Beta 1.8 feature set, without touching content from other mods.",
+  "authors": [],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [ "net.unbeta.core.UnbetaCore" ]
+  },
+  "mixins": [
+    "unbeta.mixins.json"
+  ],
+  "custom": {
+    "unbeta:entrypointDocs": "Other mods may declare an entrypoint named 'unbeta:rules' with type net.unbeta.core.api.RuleProvider to override rule values."
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "recommends": {
+    "moderner-beta": "*",
+    "nostalgic_tweaks": "*"
+  }
+}

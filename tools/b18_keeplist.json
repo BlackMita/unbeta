@@ -1,0 +1,1199 @@
+{
+  "schemaVersion": 1,
+  "target": "Java Edition Beta 1.8 (2011-09-14), expressed in Minecraft 1.20.1 registry IDs",
+  "usage": "Fed to tools/generate_manifest.py together with a /unbeta audit CSV. Anything present in 1.20.1 and absent from this file is marked action=remove. The inversion happens HERE, at authoring time - never at runtime.",
+  "philosophy": "Default is REMOVE. An item I forgot gets removed (visible, easily fixed by adding it here) rather than silently surviving. That is the correct failure direction for a subtraction mod.",
+  "blocks_and_items": {
+    "apple": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "arrow": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "attached_melon_stem": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "attached_pumpkin_stem": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "bedrock": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "beef": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "birch_leaves": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "birch_log": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "birch_sapling": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "black_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "blue_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "bone": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "bone_meal": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "book": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "bookshelf": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "bow": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "bowl": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "bread": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "brick": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "brick_slab": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "brick_stairs": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "bricks": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "brown_mushroom": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "brown_mushroom_block": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "brown_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "bucket": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "cactus": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "cake": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "carved_pumpkin": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "chainmail_boots": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "chainmail_chestplate": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "chainmail_helmet": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "chainmail_leggings": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "charcoal": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "chest": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "chest_minecart": {
+      "category": "transport",
+      "confidence": "high"
+    },
+    "chicken": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "clay": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "clay_ball": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "clock": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "coal": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "coal_ore": {
+      "category": "ores",
+      "confidence": "high",
+      "note": "Deepslate and copper variants are post-b1.8 and removed."
+    },
+    "cobblestone": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "cobblestone_slab": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "cobblestone_stairs": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "cobweb": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "cocoa_beans": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "cod": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "compass": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "cooked_beef": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "cooked_chicken": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "cooked_cod": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "cooked_porkchop": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "cookie": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "cracked_stone_bricks": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "crafting_table": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "cyan_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "cyan_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "dandelion": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "dead_bush": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "detector_rail": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "diamond": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "diamond_axe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "diamond_block": {
+      "category": "metal_blocks",
+      "confidence": "high"
+    },
+    "diamond_boots": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "diamond_chestplate": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "diamond_helmet": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "diamond_hoe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "diamond_leggings": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "diamond_ore": {
+      "category": "ores",
+      "confidence": "high",
+      "note": "Deepslate and copper variants are post-b1.8 and removed."
+    },
+    "diamond_pickaxe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "diamond_shovel": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "diamond_sword": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "dirt": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "dispenser": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "egg": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "ender_pearl": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "farmland": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "feather": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "fern": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "filled_map": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "fishing_rod": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "flint": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "flint_and_steel": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "furnace": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "furnace_minecart": {
+      "category": "transport",
+      "confidence": "high"
+    },
+    "glass": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "glass_pane": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "glowstone": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "glowstone_dust": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "gold_block": {
+      "category": "metal_blocks",
+      "confidence": "high"
+    },
+    "gold_ingot": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "gold_ore": {
+      "category": "ores",
+      "confidence": "high",
+      "note": "Deepslate and copper variants are post-b1.8 and removed."
+    },
+    "golden_apple": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "golden_axe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "golden_boots": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "golden_chestplate": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "golden_helmet": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "golden_hoe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "golden_leggings": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "golden_pickaxe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "golden_shovel": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "golden_sword": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "grass": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "grass_block": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "gravel": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "gray_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "gray_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "green_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "green_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "gunpowder": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "ice": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "infested_cobblestone": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "infested_stone": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "infested_stone_bricks": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "ink_sac": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "iron_axe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "iron_bars": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "iron_block": {
+      "category": "metal_blocks",
+      "confidence": "high"
+    },
+    "iron_boots": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "iron_chestplate": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "iron_door": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "iron_helmet": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "iron_hoe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "iron_ingot": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "iron_leggings": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "iron_ore": {
+      "category": "ores",
+      "confidence": "high",
+      "note": "Deepslate and copper variants are post-b1.8 and removed."
+    },
+    "iron_pickaxe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "iron_shovel": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "iron_sword": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "jack_o_lantern": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "jukebox": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "ladder": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "lapis_block": {
+      "category": "metal_blocks",
+      "confidence": "high"
+    },
+    "lapis_lazuli": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "lapis_ore": {
+      "category": "ores",
+      "confidence": "high",
+      "note": "Deepslate and copper variants are post-b1.8 and removed."
+    },
+    "lava": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "lava_bucket": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "leather_boots": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "leather_chestplate": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "leather_helmet": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "leather_horse_armor": {
+      "category": "armor",
+      "confidence": "low",
+      "note": "VERIFY: horse armor is 1.6 - almost certainly should be removed."
+    },
+    "leather_leggings": {
+      "category": "armor",
+      "confidence": "high"
+    },
+    "lever": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "light_blue_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "light_blue_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "light_gray_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "light_gray_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "lime_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "lime_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "magenta_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "magenta_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "map": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "melon": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "melon_seeds": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "melon_slice": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "melon_stem": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "milk_bucket": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "minecart": {
+      "category": "transport",
+      "confidence": "high"
+    },
+    "mossy_cobblestone": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "mossy_stone_bricks": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "moving_piston": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "mushroom_stem": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "mushroom_stew": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "music_disc_13": {
+      "category": "music",
+      "confidence": "high",
+      "note": "The other 9 discs arrived in Beta 1.9 pre-releases."
+    },
+    "music_disc_cat": {
+      "category": "music",
+      "confidence": "high",
+      "note": "The other 9 discs arrived in Beta 1.9 pre-releases."
+    },
+    "netherrack": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "note_block": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "oak_boat": {
+      "category": "transport",
+      "confidence": "high"
+    },
+    "oak_door": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "oak_fence": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "oak_fence_gate": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "oak_leaves": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "oak_log": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "oak_planks": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "oak_pressure_plate": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "oak_sapling": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "oak_sign": {
+      "category": "signs",
+      "confidence": "high"
+    },
+    "oak_slab": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "oak_stairs": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "oak_trapdoor": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "oak_wall_sign": {
+      "category": "signs",
+      "confidence": "high"
+    },
+    "obsidian": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "orange_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "orange_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "painting": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "paper": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "pink_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "pink_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "piston": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "piston_head": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "poppy": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "porkchop": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "powered_rail": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "pumpkin": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "pumpkin_seeds": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "pumpkin_stem": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "purple_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "purple_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "rail": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "red_bed": {
+      "category": "bed",
+      "confidence": "high",
+      "note": "b1.8 had exactly one bed. The other 15 dyed beds are 1.12."
+    },
+    "red_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "red_mushroom": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "red_mushroom_block": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "red_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "redstone": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "redstone_ore": {
+      "category": "ores",
+      "confidence": "high",
+      "note": "Deepslate and copper variants are post-b1.8 and removed."
+    },
+    "redstone_torch": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "redstone_wall_torch": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "redstone_wire": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "repeater": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "rotten_flesh": {
+      "category": "food",
+      "confidence": "high",
+      "note": "'cod' the ITEM is b1.8 raw fish and is kept; the cod ENTITY is 1.13 and is removed."
+    },
+    "saddle": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "sand": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "sandstone": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "sandstone_slab": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "shears": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "slime_ball": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "smooth_stone_slab": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "snow": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "snow_block": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "snowball": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "soul_sand": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "sponge": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "spruce_leaves": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "spruce_log": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "spruce_sapling": {
+      "category": "wood",
+      "confidence": "high",
+      "note": "b1.8 had 3 log types but a single plank/stair/slab appearance (oak). Jungle wood is 1.2."
+    },
+    "stick": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "sticky_piston": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "stone": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "stone_axe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "stone_brick_slab": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "stone_brick_stairs": {
+      "category": "stairs_slabs",
+      "confidence": "high",
+      "note": "b1.8 slab set = stone(smooth)/sandstone/wood/cobble/brick/stonebrick. Modern 'stone_slab' is a 1.14 addition and is removed."
+    },
+    "stone_bricks": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "stone_button": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "stone_hoe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "stone_pickaxe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "stone_pressure_plate": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "stone_shovel": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "stone_sword": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "string": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "sugar": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "sugar_cane": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "tnt": {
+      "category": "building",
+      "confidence": "high"
+    },
+    "torch": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "vine": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "wall_torch": {
+      "category": "redstone",
+      "confidence": "high",
+      "note": "Wooden button is 1.4; comparator/dropper/hopper are 1.5. All removed."
+    },
+    "water": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "water_bucket": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "wheat": {
+      "category": "plants",
+      "confidence": "high"
+    },
+    "wheat_seeds": {
+      "category": "items",
+      "confidence": "high"
+    },
+    "white_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "wooden_axe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "wooden_hoe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "wooden_pickaxe": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "wooden_shovel": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "wooden_sword": {
+      "category": "tools",
+      "confidence": "high"
+    },
+    "yellow_dye": {
+      "category": "dyes",
+      "confidence": "high",
+      "note": "b1.8 white=bone_meal, black=ink_sac, blue=lapis, brown=cocoa. The separate white_dye/black_dye/blue_dye/brown_dye items are 1.14 and removed."
+    },
+    "yellow_wool": {
+      "category": "wool",
+      "confidence": "high"
+    },
+    "spawner": {
+      "category": "building",
+      "confidence": "high",
+      "note": "Mob spawners exist in b1.8 (dungeons, mineshaft cave spiders). Phase 2 removes them via rule flip."
+    },
+    "nether_portal": {
+      "category": "terrain",
+      "confidence": "high",
+      "note": "Beta 1.8 HAS the Nether. Phase 2 removes it via rule flip."
+    },
+    "fire": {
+      "category": "terrain",
+      "confidence": "high"
+    },
+    "air": {
+      "category": "technical",
+      "confidence": "high"
+    },
+    "cave_air": {
+      "category": "technical",
+      "confidence": "high"
+    },
+    "void_air": {
+      "category": "technical",
+      "confidence": "high"
+    }
+  },
+  "entities": {
+    "pig": "passive",
+    "cow": "passive",
+    "sheep": "passive",
+    "chicken": "passive",
+    "squid": "passive",
+    "wolf": "passive",
+    "zombie": "hostile",
+    "skeleton": "hostile",
+    "creeper": "hostile",
+    "spider": "hostile",
+    "cave_spider": "hostile (added BY b1.8)",
+    "slime": "hostile",
+    "enderman": "hostile (added BY b1.8)",
+    "silverfish": "hostile (added BY b1.8)",
+    "ghast": "hostile",
+    "zombified_piglin": "hostile (the b1.8 Zombie Pigman)",
+    "item": "technical",
+    "experience_orb": "technical",
+    "player": "technical",
+    "arrow": "projectile",
+    "snowball": "projectile",
+    "egg": "projectile",
+    "painting": "decoration",
+    "tnt": "technical",
+    "falling_block": "technical",
+    "lightning_bolt": "technical",
+    "fishing_bobber": "technical",
+    "boat": "vehicle",
+    "minecart": "vehicle",
+    "chest_minecart": "vehicle",
+    "furnace_minecart": "vehicle",
+    "fireball": "ghast projectile",
+    "giant": "present but unspawnable in b1.8",
+    "marker": "technical no-op"
+  },
+  "structures": [
+    "mineshaft",
+    "mineshaft_mesa",
+    "stronghold",
+    "village_plains",
+    "village_desert"
+  ],
+  "dimensions": [
+    "overworld",
+    "the_nether"
+  ],
+  "uncertain_defaulting_to_remove": {
+    "lily_pad": "Believed Beta 1.9pre. VERIFY.",
+    "gold_nugget": "Believed Beta 1.9pre (zombie pigman drop). VERIFY.",
+    "cauldron": "Believed Beta 1.9pre. VERIFY.",
+    "chiseled_sandstone": "Sandstone decorative variants may postdate b1.8. VERIFY.",
+    "cut_sandstone": "Sandstone decorative variants may postdate b1.8. VERIFY.",
+    "nether_brick": "Nether fortresses are 1.0. Almost certainly remove.",
+    "glass_bottle": "1.0 with brewing. Almost certainly remove."
+  }
+}

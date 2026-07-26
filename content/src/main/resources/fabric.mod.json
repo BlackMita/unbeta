@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "unbeta-content",
+  "version": "${version}",
+  "name": "Unbeta Content",
+  "description": "Phase 2. Adds original content on top of the Unbeta Core gate. Empty scaffold during Phase 1.",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "unbeta:rules": [ "net.unbeta.content.ContentRules" ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "unbeta-core": ">=0.1.0"
+  }
+}
