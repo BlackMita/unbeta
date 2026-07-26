@@ -45,6 +45,13 @@ public final class UnbetaConfig {
     /** Log a line for every gate decision. Extremely noisy; for debugging only. */
     public boolean verboseGateLogging = false;
 
+    /**
+     * When true, the spawn catch-all still removes NATURAL spawns but allows a gated
+     * mob that is spawned deliberately (spawn egg, /summon, command). Lets a developer
+     * inspect a gated mob without disabling the whole gate. Default false.
+     */
+    public boolean allowDeliberateGatedSpawns = false;
+
     /** Rule overrides at CORE_CONFIG priority. Key -> removed. */
     public Map<String, Boolean> rules = new LinkedHashMap<>();
 

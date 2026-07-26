@@ -43,6 +43,12 @@ public final class UnbetaCore implements ModInitializer {
         }
         // (The recipe gate is wired via RecipeManagerMixin, not here.)
 
+        // M5 spawn gates: two layers.
+        //  - SpawnGate strips gated mobs from biome spawn tables (efficient, composable).
+        //  - SpawnCatchAll vetoes any gated mob that slips through by another path.
+        net.unbeta.core.gates.SpawnGate.register();
+        net.unbeta.core.gates.SpawnCatchAll.register(config);
+
         LOG.info("Unbeta Core ready in {} ms - {} manifest entries, {} rules, gated namespaces {}.",
                 System.currentTimeMillis() - t0,
                 manifest.entries().size(), registry.keys().size(), config.gatedNamespaces);
