@@ -593,11 +593,6 @@
       "category": "armor",
       "confidence": "high"
     },
-    "leather_horse_armor": {
-      "category": "armor",
-      "confidence": "low",
-      "note": "VERIFY: horse armor is 1.6 - almost certainly should be removed."
-    },
     "leather_leggings": {
       "category": "armor",
       "confidence": "high"
