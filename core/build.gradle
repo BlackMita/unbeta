@@ -1,1 +1,13 @@
 base { archivesName = "${project.archives_base_name}-core" }
+
+dependencies {
+    // Load the content (Phase 2) module into the dev client automatically, so
+    // `./gradlew :core:runClient` picks up unbeta-content without manually copying
+    // its jar into core/run/mods. This is a DEV-ONLY convenience: the two mods still
+    // ship as separate jars, and content still declares its own dependency on core.
+    //
+    // `runtimeOnly` + the namedElements configuration means the content classes and
+    // its fabric.mod.json entrypoint are on the classpath at runtime, but core does
+    // not compile against content (which would be a circular dependency).
+    runtimeOnly project(path: ':content', configuration: 'namedElements')
+}
