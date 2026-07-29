@@ -5,37 +5,63 @@ import net.unbeta.core.api.ContentKind;
 import net.unbeta.core.api.RuleKey;
 import net.unbeta.core.api.RuleOverrideContext;
 import net.unbeta.core.api.RuleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * PHASE 2 SCAFFOLD - not active yet.
+ * PHASE 2 — Unbeta 1.7.3 content rules.
  *
- * <p>This class exists in Phase 1 for one reason: to prove the architecture works.
- * Everything below is commented out. Uncomment a line and the corresponding vanilla
- * behaviour changes, with zero edits to unbeta-core.
- *
- * <p>That is the whole test of whether Phase 1 was designed correctly.
+ * <p>This is where Phase 2 overrides Phase 1's vanilla gating. Every entry here is a
+ * rule flip resolved through unbeta-core's precedence chain at MOD_OVERRIDE priority,
+ * with zero edits to core. The first feature — removing the Nether — deliberately
+ * exercises the chain in BOTH directions: gating a dimension, AND overriding several
+ * Phase 1 "keep" decisions (netherrack, ghast, etc.) into removals.
  */
 public final class ContentRules implements RuleProvider {
 
+    public static final Logger LOG = LoggerFactory.getLogger("UnbetaContent");
+
+    private static Identifier mc(String path) {
+        return new Identifier("minecraft", path);
+    }
+
     @Override
     public void registerOverrides(RuleOverrideContext ctx) {
+        LOG.info("=== Unbeta Content (Phase 2) is loading rule overrides ===");
 
-        // --- Unbeta 1.7.3: "The Nether removed (and The End will NEVER be added)" ---
-        // Beta 1.8 HAS the Nether, so Phase 1 leaves it alone. Phase 2 turns it off
-        // by flipping one rule. No new mixin. No change to the dimension gate.
-        //
-        // ctx.set(RuleKey.of(ContentKind.DIMENSION, new Identifier("minecraft", "the_nether")), true);
+        removeTheNether(ctx);
 
-        // --- "No hostile mobs will catch fire in sunlight. No more sunrise victories." ---
-        // ctx.setSystem("mob_daylight_burn", true);
+        LOG.info("=== Unbeta Content applied its overrides ===");
+    }
 
-        // --- "Mob spawners REMOVED from game" ---
-        // ctx.set(RuleKey.of(ContentKind.BLOCK, new Identifier("minecraft", "spawner")), true);
+    /**
+     * Unbeta 1.7.3: "The Nether removed. Netherrack removed. Ghasts and Zombie Pigmen removed."
+     *
+     * <p>Three kinds of override, all through the same rule engine:
+     * <ol>
+     *   <li>The dimension itself — travel is blocked by the already-written
+     *       NetherPortalBlockMixin + DimensionGate eviction the instant this is true.</li>
+     *   <li>Nether MOBS — ghast and zombified_piglin are Beta 1.8 content that Phase 1
+     *       keeps; here Phase 2 overrides those keeps into removals.</li>
+     *   <li>Nether BLOCKS — netherrack/soul sand/glowstone, likewise Phase 1 keeps
+     *       being overridden to removals.</li>
+     * </ol>
+     */
+    private void removeTheNether(RuleOverrideContext ctx) {
+        // 1. The dimension. This one line is the architecture-validation test.
+        ctx.set(RuleKey.of(ContentKind.DIMENSION, mc("the_nether")), true);
 
-        // --- Phase 2 re-enables nothing from Phase 1 yet, but it could: ---
-        // ctx.set(RuleKey.of(ContentKind.ITEM, new Identifier("minecraft", "trident")), false);
-        //   ("THEY DON'T HAVE TRIDENTS (Tridents are chest loot exclusive)" - your doc
-        //    keeps the trident as loot, so Phase 2 would un-gate the item and gate the
-        //    drowned's ability to hold one. Both are rule flips, not code edits.)
+        // 2. Nether mobs (Phase 1 keeps -> Phase 2 removes).
+        for (String mob : new String[]{ "ghast", "zombified_piglin" }) {
+            ctx.set(RuleKey.of(ContentKind.ENTITY, mc(mob)), true);
+        }
+
+        // 3. Nether blocks (Phase 1 keeps -> Phase 2 removes).
+        //    Kept minimal to the true b1.8 Nether palette. Glowstone is intentionally
+        //    NOT removed here — reconsider per your doc; it may have overworld uses.
+        for (String block : new String[]{ "netherrack", "soul_sand" }) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(block)), true);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(block)), true);
+        }
     }
 }

@@ -147,9 +147,8 @@ public final class UnbetaConfig {
             if (!Files.exists(file)) {
                 Files.writeString(file,
                         "{\n"
-                      + "  \"_comment\": \"Highest-priority rule overrides. true = Unbeta removes it. Example below.\",\n"
+                      + "  \"_comment\": \"Highest-priority rule overrides. true = Unbeta removes it, false = force-allow it. This OUTRANKS everything including Phase 2 content mods, so leave 'rules' empty unless you are deliberately overriding. Example (commented, not active): \\\"dimension/minecraft.the_nether\\\": true\",\n"
                       + "  \"rules\": {\n"
-                      + "    \"dimension/minecraft.the_nether\": false\n"
                       + "  }\n"
                       + "}\n", StandardCharsets.UTF_8);
                 return out;
