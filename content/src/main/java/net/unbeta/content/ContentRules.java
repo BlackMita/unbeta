@@ -30,6 +30,7 @@ public final class ContentRules implements RuleProvider {
         LOG.info("=== Unbeta Content (Phase 2) is loading rule overrides ===");
 
         removeTheNether(ctx);
+        noHostileDaylightBurn(ctx);
 
         LOG.info("=== Unbeta Content applied its overrides ===");
     }
@@ -63,5 +64,15 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.BLOCK, mc(block)), true);
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(block)), true);
         }
+    }
+
+    /**
+     * Unbeta 1.7.3: "No hostile mobs will catch fire in sunlight. No more sunrise victories."
+     *
+     * <p>One rule flip. The suppression mechanism (DaylightBurnMixin) already exists in
+     * unbeta-core, inert by default - this line is the entire Phase 2 feature.
+     */
+    private void noHostileDaylightBurn(RuleOverrideContext ctx) {
+        ctx.setSystem("mob_daylight_burn", true);
     }
 }

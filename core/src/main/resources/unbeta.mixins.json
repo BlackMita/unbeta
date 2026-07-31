@@ -10,9 +10,11 @@
     "EnderEyeItemMixin",
     "EntitySwimmingMixin",
     "LivingEntityClimbMixin",
+    "MobDaylightMixin",
     "NetherPortalBlockMixin",
     "RecipeManagerAccessor",
-    "RecipeManagerMixin"
+    "RecipeManagerMixin",
+    "ZombieDaylightMixin"
   ],
   "injectors": {
     "defaultRequire": 1
