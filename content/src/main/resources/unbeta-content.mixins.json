@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "net.unbeta.content.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AbstractFireBlockMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}

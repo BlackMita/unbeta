@@ -1,0 +1,509 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "color": "red"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_floor0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_floor1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "red"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side1"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "red"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side1",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt1",
+          "y": 90
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "red"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side1",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt1",
+          "y": 180
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "red"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side1",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_red_side_alt1",
+          "y": 270
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "yellow"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_floor0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_floor1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "yellow"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side1"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "yellow"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side1",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt1",
+          "y": 90
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "yellow"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side1",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt1",
+          "y": 180
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "yellow"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side1",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_yellow_side_alt1",
+          "y": 270
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "green"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_floor0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_floor1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "green"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side1"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "green"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side1",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt1",
+          "y": 90
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "green"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side1",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt1",
+          "y": 180
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "green"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side1",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_green_side_alt1",
+          "y": 270
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "blue"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_floor0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_floor1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "blue"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side1"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "blue"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side1",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt1",
+          "y": 90
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "blue"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side1",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt1",
+          "y": 180
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "blue"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side1",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_blue_side_alt1",
+          "y": 270
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "purple"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_floor0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_floor1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "purple"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side1"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt0"
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt1"
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "purple"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side1",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt0",
+          "y": 90
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt1",
+          "y": 90
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "purple"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side1",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt0",
+          "y": 180
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt1",
+          "y": 180
+        }
+      ]
+    },
+    {
+      "when": {
+        "color": "purple"
+      },
+      "apply": [
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side1",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt0",
+          "y": 270
+        },
+        {
+          "model": "unbeta-content:block/obsidian_fire_purple_side_alt1",
+          "y": 270
+        }
+      ]
+    }
+  ]
+}

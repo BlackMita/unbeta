@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_fire_floor",
+  "textures": {
+    "fire": "unbeta-content:block/obsidian_fire_green"
+  }
+}

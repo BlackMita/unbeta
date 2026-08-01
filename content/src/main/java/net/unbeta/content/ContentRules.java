@@ -31,6 +31,7 @@ public final class ContentRules implements RuleProvider {
 
         removeTheNether(ctx);
         noHostileDaylightBurn(ctx);
+        enableObsidianFire(ctx);
 
         LOG.info("=== Unbeta Content applied its overrides ===");
     }
@@ -74,5 +75,18 @@ public final class ContentRules implements RuleProvider {
      */
     private void noHostileDaylightBurn(RuleOverrideContext ctx) {
         ctx.setSystem("mob_daylight_burn", true);
+    }
+
+    /**
+     * Unbeta 1.7.3: obsidian, when ignited, yields permanent randomly-coloured fire
+     * (red/yellow/green/blue/purple) instead of regular fire.
+     *
+     * <p>NOTE ON SEMANTICS: the rule engine's convention is "true = removed/disabled".
+     * For this ADDITIVE feature we reuse the same boolean but read it as an on-switch:
+     * the AbstractFireBlockMixin activates when the rule resolves to true. Setting it
+     * true here turns the feature ON. (This slight overload is documented at the mixin.)
+     */
+    private void enableObsidianFire(RuleOverrideContext ctx) {
+        ctx.setSystem("obsidian_fire", true);
     }
 }
