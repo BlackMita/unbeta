@@ -57,6 +57,11 @@ public final class UnbetaCore implements ModInitializer {
         // Terrain and biome layout remain Moderner Beta's job.
         net.unbeta.core.gates.FeatureGate.register(config);
 
+        // Foundation service: persisted tick scheduler (position callbacks + item
+        // countdowns). Built in Phase 1 for Phase 2 (torches, creeper bombs, bone piles).
+        net.unbeta.core.sched.UnbetaScheduler.register();
+        net.unbeta.core.sched.SchedulerDemo.register();
+
         // Safety net: swap any gated block that a biome carver/decorator places
         // (lush-cave vegetation) to stone as chunks generate.
         net.unbeta.core.gates.GeneratedBlockGate.register(config);

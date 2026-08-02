@@ -48,6 +48,17 @@ public final class UnbetaCommands {
                                 .executes(ctx -> why(ctx, registry))))
                 .then(CommandManager.literal("reload")
                         .executes(ctx -> reload(ctx, registry)))
+                .then(CommandManager.literal("sched")
+                        .then(CommandManager.literal("here")
+                                .then(CommandManager.argument("seconds", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 600))
+                                        .executes(ctx -> schedHere(ctx,
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "seconds")))))
+                        .then(CommandManager.literal("item")
+                                .then(CommandManager.argument("seconds", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 600))
+                                        .executes(ctx -> schedItem(ctx,
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "seconds")))))
+                        .then(CommandManager.literal("list")
+                                .executes(UnbetaCommands::schedList)))
                 .then(CommandManager.literal("features")
                         .executes(ctx -> features(ctx, ""))
                         .then(CommandManager.argument("filter", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
@@ -212,6 +223,56 @@ public final class UnbetaCommands {
         final int count = n;
         ctx.getSource().sendFeedback(() -> Text.literal(
                 "Unbeta features: " + count + " placed feature(s) -> " + out.getFileName()), false);
+        return 1;
+    }
+
+    // --------------------------------------------------------------- scheduler
+
+    /** Schedule the demo POSITION handler at the player's feet. */
+    private static int schedHere(CommandContext<ServerCommandSource> ctx, int seconds) {
+        ServerCommandSource src = ctx.getSource();
+        net.minecraft.server.world.ServerWorld world = src.getWorld();
+        net.minecraft.util.math.BlockPos pos = net.minecraft.util.math.BlockPos.ofFloored(src.getPosition());
+        net.unbeta.core.sched.UnbetaScheduler.schedule(world, pos, seconds * 20L,
+                net.unbeta.core.sched.SchedulerDemo.POS_HANDLER);
+        src.sendFeedback(() -> Text.literal(
+                "Scheduled demo task at " + pos.toShortString() + " in " + seconds + "s. "
+              + "Safe to save & quit - it persists."), false);
+        return 1;
+    }
+
+    /** Stamp a demo countdown onto the held stack. */
+    private static int schedItem(CommandContext<ServerCommandSource> ctx, int seconds) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerCommandSource src = ctx.getSource();
+        net.minecraft.server.network.ServerPlayerEntity player = src.getPlayerOrThrow();
+        net.minecraft.item.ItemStack stack = player.getMainHandStack();
+        if (stack.isEmpty()) {
+            src.sendError(Text.literal("Hold an item first."));
+            return 0;
+        }
+        net.unbeta.core.sched.UnbetaScheduler.setItemCountdown(stack, seconds * 20L,
+                net.unbeta.core.sched.SchedulerDemo.ITEM_HANDLER);
+        src.sendFeedback(() -> Text.literal(
+                "Stamped a " + seconds + "s countdown on the held stack. Try putting it in a chest."), false);
+        return 1;
+    }
+
+    private static int schedList(CommandContext<ServerCommandSource> ctx) {
+        ServerCommandSource src = ctx.getSource();
+        var state = src.getWorld().getPersistentStateManager().getOrCreate(
+                net.unbeta.core.sched.ScheduledTaskState::fromNbt,
+                net.unbeta.core.sched.ScheduledTaskState::new,
+                net.unbeta.core.sched.ScheduledTaskState.ID);
+        if (state.tasks.isEmpty()) {
+            src.sendFeedback(() -> Text.literal("No pending position tasks."), false);
+            return 1;
+        }
+        src.sendFeedback(() -> Text.literal(state.tasks.size() + " pending position task(s):"), false);
+        for (var t : state.tasks) {
+            src.sendFeedback(() -> Text.literal(
+                    "  " + t.handlerId + " @ " + t.pos.toShortString()
+                  + " in " + (t.ticksRemaining / 20) + "s"), false);
+        }
         return 1;
     }
 }
