@@ -1,561 +1,240 @@
-# UNBETA — Master Plan, Phase 1
+# UNBETA — Master Plan
 
-**Project:** Make Minecraft Java 1.20.1 (Fabric) feel like Java Beta 1.8 "Adventure Update Part 1", without breaking ~two dozen coexisting 1.20.1 Fabric mods, and in a way that Phase 2 ("Minecraft Unbeta 1.7.3") can build on top of instead of fighting.
+**Project:** Make Minecraft Java 1.20.1 (Fabric) play like Java **Beta 1.8** ("Adventure Update Part 1", Sept 2011), without breaking the ~30 coexisting Fabric mods it ships alongside — then build **Phase 2 ("Unbeta 1.7.3")**, a layer of original content, on top of that gate instead of fighting it. End goal: Unbeta is the centerpiece mod of a modpack bundling ~30 mods + 4 datapacks.
 
-**Status:** planning document / action plan. Written to be handed to a human developer *or* pasted into another LLM as a specification.
+**What this document is:** the single source of truth and **handoff/catch-up brief.** If you are a fresh developer or a fresh LLM session with no memory of this project, read this top to bottom and you can continue the work. It reflects what has actually been **built and verified**, not just what was planned.
+
+**Repo:** `github.com/BlackMita/unbeta` (branch `main`).
 
 ---
 
 ## 0. How to use this document
 
-This document is the **shared brief**. If you hand it to another LLM, the useful prompt shape is:
+If handing this to a collaborating LLM, the useful prompt shape is:
 
-> "Read the attached UNBETA master plan. You are implementing `[section X]`. Follow the architecture in §4 and the mechanism decision table in §5. Do not invent new removal mechanisms. Output: `[files]`."
+> "Read the attached Unbeta master plan. You are implementing `[feature]`. Follow the architecture in §3–4 and the mechanism table in §5. Do not invent new removal mechanisms. Verify every 1.20.1 API name against the user's jars (§9.2) before writing code. Output working files."
 
-Three things in here are load-bearing and must not be silently changed by a downstream collaborator:
+**Three rules are load-bearing and must never be silently broken:**
 
-1. **Nothing is ever unregistered.** (§4.2)
-2. **Every rule is namespace-scoped to `minecraft:` unless explicitly listed.** (§6.3)
-3. **`unbeta-core` never contains Phase 2 content. It only contains the gate machinery and the vanilla rules.** (§10)
+1. **Nothing is ever unregistered.** Content is *gated* (no recipe/loot/spawn/worldgen/creative entry), never deleted from registries. (§3.1)
+2. **Every gate is namespace-scoped to `minecraft:`.** Never "remove all X except the beta list" — always "remove this explicit list of `minecraft:` IDs." This is what keeps ~30 other mods working. (§3.2)
+3. **`unbeta-core` contains only gate machinery + vanilla rules. Phase 2 content lives in `unbeta-content`,** which talks to core through its public API / rule entrypoint. (§3.3)
 
-Break any of those three and Phase 2 becomes a rewrite instead of an addition.
-
-### 0.1 Locked decisions (2026-07-26)
-
-These supersede any softer language elsewhere in this document.
-
-| # | Decision | Effect |
-|---|---|---|
-| D1 | **Practical strictness.** Gate content only. | World height stays −64→320. §5.9 is closed, not deferred. |
-| D2 | **Combat revert is not ours.** | §5.7 is delegated to Nostalgic Tweaks. `unbeta-core` ships the rule key and no implementation. |
-| D3 | **Advancements → achievements is deferred to Phase 2.** | Phase 1 may disable advancement *toasts* if trivial, but builds no replacement UI. |
-| D4 | **Empty b1.8-style villages are in scope for Phase 1.** | Custom village template set. Largest single task; see §9. |
-| D5 | **The End is removed hard, not made inert.** | Stronghold portal rooms must not generate with frames. Eye of Ender and End Portal Frame are removed content, not decorative. See §5.6. |
-| D6 | **Code is generated for the user.** | Deliverables are working files, not specs. Every generated file must be marked as compile-verified or not. |
+Break any of these and Phase 2 becomes a rewrite instead of an addition.
 
 ---
 
-## 1. Scope and design goals
+## 1. Current status snapshot
 
-### 1.1 What "Phase 1 done" means
+**Phase 1: COMPLETE and verified.** A 1.20.1 Fabric client that plays like Beta 1.8 — beta-only creative menu, mobs, dimensions, systems, and worldgen — running cleanly alongside ~30 mods and 4 datapacks in a real Prism instance.
 
-A 1.20.1 Fabric instance where a player who knows Beta 1.8 can play for several hours and not encounter anything that didn't exist in September 2011 — *except* for the deliberate quality-of-life and atmosphere mods you chose (AppleSkin, WTHIT, AmbientSounds, Presence Footsteps, Immersive Paintings, etc.), which are allowed to be visibly modern.
+**Phase 2: IN PROGRESS.** Three features shipped (Nether removal, no daylight burning, obsidian fire). The architecture bet — "Phase 2 flips rules without editing Phase 1" — is proven working.
 
-That distinction matters. You are not making a "1.20.1 is now beta 1.8" total conversion. You are making a **content gate**: vanilla content is filtered down to the b1.8 set, and everything from any other namespace passes through untouched. That single rule is what makes twenty-four unrelated mods survive contact with this project.
-
-### 1.2 Non-goals for Phase 1
-
-- Not reimplementing beta terrain generation (Moderner Beta does it, correctly, already).
-- Not reimplementing beta lighting/fog/animations/sounds (Nostalgic Tweaks does it).
-- Not shipping textures (Golden Days resource pack does it).
-- Not adding any new content. Zero. Phase 1 only subtracts and reverts.
-- Not touching the Nether. Beta 1.8 **has** the Nether. Removing it is a Phase 2 decision, and Phase 1 must merely make that flip cheap.
-
-### 1.3 The three deliverables of Phase 1
-
-| Artifact | What it is | Repo location |
-|---|---|---|
-| `unbeta-core` | Fabric mod: the rule engine, the gates, the mixin hooks, the audit commands | `/core` |
-| `unbeta-data` | A generated datapack (recipes, loot, structures, tags), built by Gradle datagen from the manifest | generated into `/core/src/main/generated`, shipped inside the jar |
-| `unbeta-pack` | The reproducible client instance (packwiz), pinning exact versions of all ~24 mods | separate repo, or `/pack` |
+| Area | State |
+|---|---|
+| Rule engine + precedence + diagnostics (`/unbeta audit/why/rules`) | ✅ done |
+| Recipe / loot / creative gates | ✅ done (~897 recipes removed) |
+| Spawn gate (biome tables + entity-load catch-all) | ✅ done (16 b1.8 mobs remain) |
+| Dimension gate (generic, parameterized) | ✅ done — End removed, Nether then removed in Phase 2 |
+| System reverts (swimming, breeding, vine-climb, enchanting, brewing) | ✅ done |
+| Worldgen: structure gating, feature gating | ✅ done (16 structures, ~40 features) |
+| Terrain (Moderner Beta Beta-1.8 preset) | ✅ delegated, working |
+| Compatibility (~30 mods + 4 datapacks, Prism) | ✅ verified, namespace scoping proven empirically |
+| **Phase 2:** Nether removed / no daylight burn / obsidian fire | ✅ done |
+| **Phase 2:** everything else (see §7) | 📋 planned |
 
 ---
 
-## 2. Research: what Beta 1.8 actually was
+## 2. What Beta 1.8 was (the keep-list reference)
 
-Released **September 14, 2011**. Part 1 of the Adventure Update; Part 2 was release 1.0.0 in November 2011. Everything from 1.0.0 onward is out of scope for us — including several things people misremember as "beta."
+Released **Sept 14, 2011**. Everything from **1.0.0 onward is out of scope**. Full block/item/version tables live in the keep-list (`tools/b18_keeplist.json`) and manifest; the essentials:
 
-### 2.1 What Beta 1.8 introduced (keep all of this)
+**16 mobs (the entire keep roster):** Pig, Cow, Sheep, Chicken, Squid, Wolf, Zombie, Skeleton, Creeper, Spider, Cave Spider, Slime, Enderman, Silverfish, Ghast, Zombie Pigman. (Vanilla 1.20.1 has ~80 mob types — the gap is the bulk of the spawn-gating work.)
 
-**Mobs (new):** Cave Spider (mineshaft spawners, poisons), Enderman, Silverfish (from monster eggs in strongholds).
+**Also absent (removed):** breeding & baby animals, villagers/trading, iron/snow golems, mooshrooms, all fish mobs, bats, and everything from 1.0.0+.
 
-Notable b1.8-era Enderman behavior, which is *not* modern behavior: it burns in daylight, it takes damage from water, it can pick up most full blocks (not a short whitelist), and it does **not** teleport away from incoming arrows.
+**Biomes:** Forest, Plains, Desert, Swamp, Extreme Hills, Taiga, River, Ocean. **No snow/ice biomes** (removed in b1.8, returned in 1.0.0) — flagged as a Phase 2 conflict for "Frozen Zombies," see §7.
 
-**Blocks (new):** Stone Bricks + Mossy + Cracked, Monster Egg (infested) blocks, Brick Slab/Stairs, Stone Brick Slab/Stairs, Glass Pane, Iron Bars, Fence Gate, Vines (**not climbable in b1.8**), Mushroom Blocks, Melon, Melon/Pumpkin Stems.
+**The b1.8 Nether** was netherrack, soul sand, glowstone, lava, ghasts, zombie pigmen — nothing else. (Phase 2 removes the Nether entirely; see §7.)
 
-**Items (new):** Raw Chicken, Cooked Chicken, Raw Beef, Steak, Melon Slice, Melon Seeds, Pumpkin Seeds, Rotten Flesh, Ender Pearl (**inert — cannot be thrown, has no use**).
-
-**Systems (new):** Hunger bar. Sprinting (double-tap forward). Experience orbs (**no use for XP yet**). Creative mode and creative flight. Status effects exist but only three are reachable: Regeneration (golden apple), Poison (cave spider), Hunger (raw chicken 30% / rotten flesh 80%).
-
-**Structures (new):** Villages (plains + desert, **completely uninhabited — no villagers exist**), Mineshafts with chests, Strongholds (**no End portal room — it didn't exist yet**), Ravines, Huge Mushrooms.
-
-**Changes:** Food restores hunger, not health; all food stacks except mushroom stew; 1.6s eating animation. Bow must be charged; damage scales with charge. Unarmed damage dropped to half a heart. Golden apple gives Regeneration instead of 10 hearts. Shears collect grass and vines. Player-placed leaves don't decay. Chests got a 3D model with open/close animation. Clouds moved to the top of the map and stopped clipping through blocks. Zombies drop rotten flesh instead of feathers. Skeletons hold bows properly. Dynamic-ish colored lighting (torches warm, night skylight blue). Multiplayer server list. One new achievement: Sniper Duel.
-
-### 2.2 Biomes in Beta 1.8
-
-Forest, Plains, Desert, Swamp, Extreme Hills, Taiga, River, Ocean. New fractal biome code — biomes are large and flat except Extreme Hills.
-
-**Snow and ice biomes were removed in Beta 1.8** and did not return until 1.0.0. Taiga generated without snow.
-
-> ⚠️ **Phase 2 conflict, flagged early:** your document specifies "Frozen Zombies from Minecraft Dungeons added for biomes that snow." In a strict b1.8 world there are no snowy biomes. You will need to either (a) accept 1.0-era snowy biomes as an exception, (b) configure Moderner Beta's Beta 1.8 preset to re-enable snowy biomes, or (c) tie Frozen Zombies to altitude/snow-layer presence rather than biome. Decide this before Phase 2 mob work starts.
-
-### 2.3 The full b1.8 mob roster (this is your keep-list)
-
-Passive: Pig, Cow, Sheep, Chicken, Squid, Wolf.
-Hostile: Zombie, Skeleton, Creeper, Spider, Cave Spider, Slime, Enderman, Silverfish, Ghast, Zombie Pigman.
-
-That's **16 mobs**. Vanilla 1.20.1 has roughly 80 entity types that are mobs. The gap is the single biggest chunk of Phase 1 work.
-
-Also absent in b1.8 and therefore removed: **breeding of any kind** (animals no longer despawn in b1.8, which is what makes them capturable, but you cannot breed them), baby animals, villagers, iron golems, snow golems, mooshrooms, all fish entities (fishing produces the fish item, but no fish mob exists), bats, and every mob added from 1.0.0 onward.
+Verification protocol: the keep-list is authoritative; when in doubt, check minecraft.wiki's Beta 1.8 tables. Never trust a remembered content list — generate from the running game (`/unbeta audit`).
 
 ---
 
-## 3. The delta: what leaves 1.20.1
+## 3. The three load-bearing rules (detail)
 
-This section is the source material for the manifest (§4.4). Organized by the update that introduced the content, because that's the least error-prone way to produce an exhaustive list and the easiest way for a collaborator to verify a chunk at a time.
+### 3.1 Gate, never unregister
+1.20.1 freezes registries after bootstrap; they're synced to clients and referenced by saved chunks and every mod. Deleting `minecraft:villager` crashes. Instead every removed thing stays a valid ID but is unreachable via up to six layers: no recipe, no loot, no spawn, no worldgen, no creative entry, (optionally) no use. Most things need 2–3. Removals are **reversible at runtime by config** — which is exactly what Phase 2 exploits.
 
-### 3.1 Systems to remove or revert
+### 3.2 Namespace scoping — the compatibility keystone
+Every gate checks the ID's namespace and returns "allowed" for anything not in the gated set (default: only `minecraft`). **Never** an allowlist over all namespaces. Verified empirically: after loading ~30 mods, `/unbeta audit` showed every `cloudboots:`, `immersive_paintings:`, `moderner_beta:` entry as `removed=false`. This is *the* property that makes the whole project viable.
 
-| System | Action | Notes |
-|---|---|---|
-| The End dimension | **Remove** (see §5.6) | Did not exist in b1.8 |
-| The Nether | **Keep** | Exists in b1.8. Gate exists but defaults ON |
-| Enchanting (table, XP cost, all enchantments) | Remove | 1.0.0 |
-| Brewing, potions, glass bottles, splash potions | Remove | 1.0.0. Only Regen/Poison/Hunger effects survive, from their b1.8 sources |
-| Villagers, trading, raids, pillager outposts | Remove | Villages stay, empty |
-| Anvils, grindstones, smithing tables, netherite | Remove | 1.4 / 1.14 / 1.16 |
-| Off-hand slot, dual wielding, shields | Remove | 1.9 |
-| Attack cooldown + sweep attack | **Revert to instant** | 1.9. Restore b1.8 combat feel |
-| Elytra, tridents, riptide, totems | Remove | 1.9 / 1.13 / 1.11 |
-| Swimming, crawling, sprint-swim | Remove | 1.13 |
-| Advancements + recipe book + knowledge book | Remove/disable | 1.12. Replace with the b1.8 achievement toast (Nostalgic Tweaks may cover the screen; verify) |
-| Spawn eggs | Remove | 1.1 |
-| Adventure/Spectator game modes | Remove from cycle | 1.3 / 1.8 |
-| Breeding, baby mobs, animal following food | Remove | Post-b1.8 |
-| World height −64→320 | **Optionally** clamp to 0→128 | Purist toggle; see §5.9 risk note |
-
-### 3.2 Content to remove, by introducing update
-
-Condensed. The manifest carries the exact registry IDs.
-
-- **1.0.0** — End + dragon + end stone/obsidian pillars, Nether fortress + blaze + nether wart + magma cube, villagers, mooshroom, snow golem, brewing, enchanting, eye of ender, ghast tear, blaze rod/powder, glowstone dust recipes tied to potions.
-- **1.1** — spawn eggs, beach biomes (ignore, worldgen is Moderner Beta's problem).
-- **1.2** — jungle biome + jungle wood + cocoa, ocelot, iron golem, **plank/stair/slab wood variants** (b1.8 has one plank type visually and only oak/cobble/brick/stone-brick stairs), redstone lamp, hardened clay, tall grass changes.
-- **1.3** — emerald, trading, ender chest, tripwire, desert/jungle temples, writable books, adventure mode.
-- **1.4** — wither, wither skeleton, bat, witch, anvil, item frame, beacon, carrot/potato/beetroot-adjacent farming, cobblestone wall, flower pot, nether star.
-- **1.5** — hopper, dropper, comparator, redstone block, daylight sensor, nether quartz + quartz blocks, weighted pressure plates, activator rail, TNT/hopper minecarts.
-- **1.6** — horse/donkey/mule, lead, carpet, hay bale, coal block, name tag.
-- **1.7** — mesa/roofed forest/savanna/etc biomes, acacia + dark oak, stained glass, red sand, podzol, packed ice, the expanded flower set, fishing loot overhaul.
-- **1.8** *(release 1.8, not beta)* — slime block, banner, armor stand, prismarine + ocean monument + guardian, granite/diorite/andesite, iron trapdoor, red sandstone, rabbit, endermite, coarse dirt, mutton, barrier.
-- **1.9** — see systems table; plus end cities, shulkers, chorus fruit, beetroot, igloo, grass path, frost walker.
-- **1.10** — polar bear, husk, stray, magma block, nether wart block, red nether brick, bone block, structure block, fossils.
-- **1.11** — llama, shulker box, observer, totem, woodland mansion + evoker + vindicator + vex, exploration maps.
-- **1.12** — parrot, concrete + concrete powder, glazed terracotta, advancements, recipe book.
-- **1.13 (Update Aquatic)** — **all of it**: dolphin, turtle, all fish, drowned, phantom, trident, coral, kelp, sea pickle, seagrass, buried treasure, shipwreck, ocean ruin, conduit, blue ice, bubble columns, debug stick, swimming.
-- **1.14** — village rework + all villager professions, pillager/ravager/raid, bamboo, panda, cat, fox, scaffolding, barrel, smoker, blast furnace, lectern, loom, stonecutter, composter, grindstone, cartography table, fletching table, smithing table, bell, campfire, lantern, sweet berries, crossbow, wandering trader, sign rework.
-- **1.15** — bee, beehive, honey.
-- **1.16 (Nether Update)** — every Nether biome and its blocks, netherite, piglin/brute, hoglin, zoglin, strider, soul fire/soul soil, target, respawn anchor, lodestone, chain, blackstone, basalt, crying obsidian, bastion, ruined portal, twisting/weeping vines, nether gold ore. **The b1.8 Nether is netherrack, soul sand, glowstone, lava, ghasts and zombie pigmen. Nothing else.**
-- **1.17** — copper (all forms), amethyst, deepslate (all forms), axolotl, glow squid, goat, dripstone, candle, tinted glass, lightning rod, powder snow, spyglass, glow item frame, moss/azalea, sculk sensor.
-- **1.18** — cave/cliff worldgen (Moderner Beta supersedes), aquifers, ore distribution.
-- **1.19** — deep dark, warden, sculk family, ancient city, allay, frog/tadpole, mangrove, mud, echo shard, recovery compass, goat horn, chest boat.
-- **1.20** — cherry grove + cherry wood, sniffer, archaeology (brush, suspicious sand/gravel, pottery sherds, decorated pot), camel, bamboo wood set, hanging signs, calibrated sculk sensor, armor trims, trail ruins, netherite upgrade template.
-
-### 3.3 Verification protocol
-
-Do **not** trust this list — or any LLM's expansion of it — as final. Before implementation, run one verification pass per bucket against the Minecraft Wiki's Beta 1.8 block/item tables and the version history pages, and record the result in the manifest as `verified: true|false` with a source URL. There are perhaps a dozen genuinely ambiguous items (lily pads, cobwebs, chainmail obtainability, lapis, sponge, exact slab/stair set) where memory is unreliable and the wiki is authoritative. The audit command in §5.10 exists partly to make this pass mechanical.
+### 3.3 Two modules
+`unbeta-core` = gate engine + vanilla rules. `unbeta-content` = Phase 2 content, depends on core, talks to it via the `unbeta:rules` entrypoint and public API. Content never mixins what core mixins.
 
 ---
 
-## 4. Architecture
+## 4. Architecture as-built
 
-### 4.1 Two mods, one engine
+### 4.1 The rule engine
+Every behavior is a named rule: `<kind>/<namespace>.<path>` (e.g. `entity/minecraft.villager`, `system/unbeta.enchanting`, `dimension/minecraft.the_nether`). **`true` = "Unbeta removed/disabled it."** For additive Phase 2 features the same boolean is read as an on-switch (documented at each such mixin).
 
+Precedence chain (later wins):
 ```
-unbeta-core   (Phase 1)  — the rule engine + vanilla gates. Ships the removal datapack.
-unbeta-content(Phase 2)  — depends on core. Adds mobs, blocks, items, classes, dungeons.
+manifest.json  <  config/unbeta/core.json  <  mod overrides (unbeta:rules entrypoint)  <  config/unbeta/overrides.json
 ```
+Phase 2 removes the Nether with one line in `content/.../ContentRules.java`: `ctx.set(RuleKey.of(ContentKind.DIMENSION, new Identifier("minecraft","the_nether")), true)`. No core edits. **This is proven working.**
 
-`unbeta-content` never mixins anything `unbeta-core` already mixins. It talks to core through core's public API. This is the whole reason Phase 1 exists as a separate artifact.
+Public API (semver'd, Phase 2 depends on it): `UnbetaApi.rules().isRemoved(...)`, `.isDimensionRemoved(...)`, `.isSystemDisabled(...)`, `.isGatedNamespace(...)`, `.resolve(RuleKey)` (provenance, powers `/unbeta why`).
 
-### 4.2 The prime directive: gate, never unregister
+### 4.2 The manifest (source of truth)
+`core/src/main/resources/unbeta/manifest.json` — 2443 entries. **Generated, never hand-edited:** `python3 tools/generate_manifest.py <audit.csv>` inverts `tools/b18_keeplist.json` against a `/unbeta audit` registry dump. To change what's gated, edit the keep-list and regenerate. The inversion emits explicit `minecraft:` IDs, preserving rule #2.
 
-Minecraft 1.20.1 freezes its registries after bootstrap. Registries are also synchronized to the client and referenced by every other mod, by every saved chunk, and by every datapack. Deleting `minecraft:villager` from the entity registry does not give you a beta game; it gives you a crash log.
-
-So: **every removed thing still exists in the registry and is still a valid ID.** It is simply unreachable:
-
-1. It cannot be crafted (recipe gone).
-2. It cannot drop (loot table gone).
-3. It cannot spawn (spawn entry removed / spawn cancelled).
-4. It cannot generate (structure/feature disabled).
-5. It cannot be seen in creative or in EMI/JEI (entry hidden).
-6. Optionally, it cannot be used if somehow obtained (use event cancelled).
-
-Six layers. Most things need two or three. This also means removals are **reversible at runtime by config**, which is exactly what Phase 2 needs when it wants some of them back.
-
-### 4.3 The rule engine
-
-Everything the mod does is expressed as a **rule** with a stable string key.
-
-```
-unbeta:entity/remove/minecraft.villager
-unbeta:item/hide/minecraft.netherite_ingot
-unbeta:system/enchanting
-unbeta:system/attack_cooldown
-unbeta:dimension/the_end
-unbeta:dimension/the_nether
-unbeta:mob/daylight_burn
-```
-
-Rule values resolve through a fixed precedence chain — this is the single most important mechanism for Phase 2 compatibility:
-
-```
-1. manifest default        (baked into unbeta-core at build time)
-2. core config file        (user edits: config/unbeta/core.json5)
-3. content-mod overrides   (registered by any mod via the `unbeta:rules` entrypoint)
-4. user override file      (config/unbeta/overrides.json5 — always wins)
-```
-
-Phase 2 therefore removes the Nether by shipping, in `unbeta-content`, a one-line rule override: `unbeta:dimension/the_nether = false`. No Phase 1 code changes. No mixin duplication. That is the test of whether Phase 1 was designed correctly.
-
-The public API surface, kept deliberately small:
-
-```java
-public interface UnbetaRules {
-    boolean isEnabled(RuleKey key);
-    boolean isAllowed(EntityType<?> type);
-    boolean isAllowed(Item item);
-    boolean isAllowed(Block block);
-    boolean isDimensionAllowed(RegistryKey<World> world);
-    void registerOverride(String modId, RuleKey key, boolean value);
-}
-```
-
-Plus a handful of events that Phase 2 will need and that only Phase 1 should ever mixin for:
-
-```java
-MobBehaviorEvents.MODIFY_GOALS      // fired at tail of MobEntity#initGoals
-MobBehaviorEvents.MODIFY_ATTRIBUTES
-SpawnEvents.SUBSTITUTE              // "when vanilla wants to spawn X here, spawn Y instead"
-EntityDeathEvents.REPLACE_DROP      // return a block/entity instead of item drops
-BlockBehaviorEvents.BLAST_RESISTANCE_OVERRIDE
-UnbetaTickScheduler                 // delayed world/item callbacks, persisted across save/load
-UnbetaWorldState                    // typed persistent per-world storage
-```
-
-Those last four exist in Phase 1 *unused or barely used*, purely because Phase 2 needs them and retrofitting them later means editing Phase 1's mixins — which is precisely the coupling this architecture is designed to avoid. Building them now costs maybe two days. Retrofitting them costs the project.
-
-### 4.4 The manifest — one JSON to rule them
-
-`/core/src/main/resources/unbeta/manifest.json` (or split per category). Single source of truth. Datagen reads it. The runtime gates read the compiled form. A collaborating LLM can be handed this file alone and asked to extend it.
-
-```json
-{
-  "schemaVersion": 1,
-  "entries": [
-    {
-      "id": "minecraft:villager",
-      "kind": "entity",
-      "action": "remove",
-      "mechanisms": ["spawn_gate", "creative_hide", "structure_dependency"],
-      "introducedIn": "1.0.0",
-      "phase": 1,
-      "verified": true,
-      "source": "https://minecraft.wiki/w/Java_Edition_1.0.0",
-      "note": "Villages still generate, empty, as in b1.8"
-    },
-    {
-      "id": "minecraft:iron_bars",
-      "kind": "block",
-      "action": "keep",
-      "introducedIn": "b1.8",
-      "phase": 1,
-      "verified": true
-    },
-    {
-      "id": "minecraft:the_nether",
-      "kind": "dimension",
-      "action": "keep",
-      "phase": 1,
-      "phase2Action": "remove",
-      "note": "Phase 2 flips this via rule override, not code change"
-    }
-  ]
-}
-```
-
-The `phase2Action` field is optional documentation, not behavior. It exists so that a collaborator reading the manifest can see where Phase 2 is going and avoid designing something that blocks it.
+### 4.3 Diagnostics (build habits — they solved most bugs)
+`/unbeta audit` (dumps all registered content + gate status to CSV), `/unbeta why <id>` (provenance — which precedence layer won), `/unbeta rules`, `/unbeta features` (dumps placed-feature IDs), `/unbeta reload` (re-reads overrides.json only). CSVs land in `core/run/`.
 
 ---
 
 ## 5. Removal mechanisms — the decision table
 
-For each category, exactly one preferred mechanism. Collaborators should not improvise alternatives.
+One preferred mechanism per category. Do not improvise alternatives.
 
-| Category | Mechanism | Why |
-|---|---|---|
-| Recipes | Datagen: emit an override JSON with a `fabric:load_conditions` block that can never be satisfied | Silent, data-driven, no code, respects other mods' recipes |
-| Loot tables | `LootTableEvents.MODIFY` in code, filtered by table namespace | Survives other mods editing the same tables; datapack overwrite does not |
-| Mob spawn entries | Fabric `BiomeModifications` + `ModificationPhase.REMOVALS` + `removeSpawnsOfEntityType` | Does not overwrite biome JSONs, so it composes with Moderner Beta and any biome mod |
-| Spawns that slip through (spawners, structures, breeding) | `SpawnEvents.SUBSTITUTE` / cancel in a `ServerEntityEvents.ENTITY_LOAD` guard | Catch-all safety net |
-| Structures | Datagen: override `worldgen/structure_set/*.json` with an empty `structures: []` | Cleanest disable, datapack-level, survives worldgen mods |
-| Worldgen features (ore, plants, decorations) | `BiomeModifications` removals by feature key | Same reason as spawns |
-| Creative menu / EMI / JEI | `ItemGroupEvents.MODIFY_ENTRIES_ALL` → `entries.getDisplayStacks().removeIf(...)`; plus EMI/JEI plugin if those are installed | Cosmetic layer, must be separate from functional layer |
-| Item use, if obtained anyway | `UseItemCallback` / `UseBlockCallback` cancel, gated behind `strictMode` | Off by default; only for purist runs |
-| Systems (enchanting, brewing, combat timing) | Targeted `@Inject(at = HEAD, cancellable = true)` mixins, each reading a rule key | Never `@Overwrite`. Never `@Redirect` in hot paths |
-| Dimensions | Portal-ignition + travel cancellation + activator item gating (§5.6) | Never delete the dimension |
-| Textures / models / sounds | **Not our job** — resource pack | Keeps the mod jar free of `minecraft:` asset overrides that would collide with Golden Days |
-
-### 5.6 Removing the End specifically
-
-Do not delete `minecraft:the_end`. Instead:
-
-1. Gate `EnderEyeItem#useOnBlock` — eyes never fill frames.
-2. Gate `EndPortalFrameBlock` interaction and `EndPortalBlock#onEntityCollided`.
-3. Cancel `ServerPlayerEntity#moveToWorld` when the destination is `the_end` and the rule is off; if a player somehow loads inside it, teleport them to their spawn point and log it.
-4. Mixin `StrongholdGenerator`'s portal-room piece to place stone bricks where the frames would go. This is the one place where b1.8's "stronghold without a portal room" needs code, because stronghold pieces are generated in Java, not from NBT templates. **Per D5 this is required, not optional** — "leave the inert frames as decorative ruins" is explicitly rejected. The portal room's silverfish spawner is also removed, which lines up with Phase 2's "mob spawners REMOVED from game" anyway.
-5. Remove the ender dragon, shulkers, endermites, chorus plants, end cities, elytra, dragon egg, end crystal, and end stone from the item/entity gates as normal manifest entries.
-
-The exact same five steps, with `NetherPortalBlock` and `FlintAndSteelItem`, become Phase 2's Nether removal. **Write the dimension gate generically in Phase 1** — parameterized by dimension key, portal block, and activator item — and Phase 2 is a config change.
-
-### 5.7 Reverting 1.9 combat
-
-`PlayerEntity#getAttackCooldownProgress` forced to `1.0F`, sweep attack suppressed in `PlayerEntity#attack`, off-hand slot rendering and interaction disabled, shields removed as an item. Check whether Nostalgic Tweaks already ships this before writing it — if it does, delete your version and declare Nostalgic Tweaks the owner (see §6.2).
-
-### 5.8 Hunger and food
-
-Keep. Hunger is a Beta 1.8 feature; this trips people up constantly. Keep sprinting too. Keep XP orbs (with no use). AppleSkin showing saturation is a deliberate modern QoL exception.
-
-### 5.9 World height — CLOSED (decision D1)
-
-Beta 1.8 was 0-127. Clamping 1.20.1 is possible (Moderner Beta even ships a datapack that raises min Y to 0 and restores pre-1.18 ore generation), but it is the single highest-risk change for mod compatibility, and **decision D1 rules it out**. World height stays -64 to 320. Do not reopen this without re-testing the whole pack.
-
-If a purist build is ever wanted, it belongs in `unbeta-pack` as an optional datapack, never in `unbeta-core`.
-
-### 5.10 The audit commands — build these first
-
-```
-/unbeta audit            → dumps every registered item/block/entity/structure with its gate status to a CSV in the run dir
-/unbeta why <id>         → prints which rule(s) affect that ID and where the value came from in the precedence chain
-/unbeta rules            → lists all rules and resolved values
-```
-
-`/unbeta audit` output, committed to the repo after each build, becomes a **diff-able artifact**. Add a mod, re-run, diff the CSV: you instantly see what the new mod added and whether your gates ate any of it. This turns "did I break the other twenty-three mods" from a vibe into a test. Build these in the first week; everything else gets easier afterward.
-
----
-
-## 6. Coexisting with the other mods
-
-### 6.1 Recommended mod slate
-
-Your six, plus the ones that carry the "feel" you'd otherwise have to write yourself:
-
-| Mod | Role | Notes |
-|---|---|---|
-| Fabric API | dependency | pin one version for the whole pack |
-| **Moderner Beta** | terrain, biomes | Fork of Modern Beta, actively maintained, supports 1.20.1 Fabric, and **ships a Beta 1.8 preset**. Prefer this over the original Modern Beta. Requires Cloth Config |
-| **Nostalgic Tweaks** | lighting, fog, sky, animations, old mob spawning, old combat feel, old screens, C418 music | 2.0 line targets 1.20.1. 400+ toggles. Requires Architectury API + Cloth Config |
-| **Golden Days** (resource pack) | beta textures/sounds | Not a mod; keeps `minecraft:` assets out of your jar |
-| AppleSkin | QoL | accepted modern exception |
-| WTHIT | QoL | accepted modern exception |
-| AmbientSounds, Presence Footsteps | atmosphere | accepted modern exception |
-| Immersive Paintings | content | **your own content mod, in a non-`minecraft` namespace → passes the gate untouched** |
-| Sodium (+ Iris) | performance | see §6.4 |
-| Mod Menu, Cloth Config, Architectury | plumbing | |
-
-### 6.2 One owner per subsystem
-
-Write this into `CONTRIBUTING.md` and enforce it in review:
-
-| Subsystem | Owner |
+| Category | Mechanism |
 |---|---|
-| Terrain, biome shape, caves, ore distribution | Moderner Beta |
-| Lighting, fog, sky, particles, item rendering, animations, screens | Nostalgic Tweaks |
-| Textures, sounds, music | Golden Days |
-| **Content existence: what can spawn, drop, craft, generate** | **unbeta-core** |
-| New content | unbeta-content (Phase 2) |
+| Recipes | Mixin `RecipeManager` apply-tail, rebuild set minus gated outputs |
+| Loot | `LootTableEvents.REPLACE` (v2 — **5 params**), filtered by namespace |
+| Mob spawns | `BiomeModifications` REMOVALS + `removeSpawnsOfEntityType` |
+| Spawns that slip through | `ServerEntityEvents.ENTITY_LOAD` guard, `discard()` gated MobEntity |
+| Structures | Override `data/minecraft/worldgen/structure_set/*.json` with empty `structures: []` |
+| Worldgen features | `BiomeModifications` REMOVALS + `removeFeature(RegistryKey)` (wrap in try/catch — it **throws** on unknown keys) |
+| Creative menu | `ItemGroupEvents.MODIFY_ENTRIES_ALL` → removeIf |
+| Systems (enchanting, brewing, combat timing, daylight burn) | `@Inject(at=HEAD/RETURN, cancellable=true)` mixin, each reading a rule. **Never `@Overwrite`.** |
+| Dimensions | Portal-traversal cancel + eviction + activator-item gating; **never delete the dimension** |
+| Textures / models / sounds | **Not our job** — resource pack (Golden Days). *Exception:* genuinely new Phase 2 content (e.g. obsidian fire textures) ships its assets in `unbeta-content`, since there's no vanilla asset to override. |
 
-If two owners claim the same behavior, the *other* mod wins and `unbeta-core` deletes its version. Your mod's value is the gate, not duplicated nostalgia.
+**Mixin hygiene:** `@Inject` HEAD/RETURN cancellable is the default; `@Overwrite` banned; never mixin rendering/chunk/lighting classes (Sodium/Iris live there). Every injection's first act is a rule check + early return.
 
-### 6.3 Namespace scoping — the compatibility keystone
-
-Every gate must be written as a predicate over the registry ID's **namespace**:
-
-```java
-if (!"minecraft".equals(id.getNamespace()) && !config.gatedNamespaces.contains(id.getNamespace())) {
-    return ALLOW;   // not ours to judge
-}
-```
-
-Consequences, all of them good:
-
-- Immersive Paintings' paintings are never hidden.
-- Moderner Beta's biome entries are never stripped.
-- Phase 2's `unbeta:siren` is never eaten by Phase 1's hostile-mob removal rule — because Phase 1 removes *listed vanilla mobs*, not "everything not on the b1.8 list."
-
-That last point is worth restating because it is the most common way a project like this fails. **Never write "remove all hostile mobs except [b1.8 list]".** Always write "remove [explicit list of vanilla IDs]." An allowlist over all namespaces is a time bomb that goes off the moment you add a mod.
-
-`config/unbeta/core.json5` exposes `gatedNamespaces: ["minecraft"]` so a user can opt an additional mod into gating if they want.
-
-### 6.4 Mixin hygiene
-
-- `@Inject(at = @At("HEAD"), cancellable = true)` as the default. `@Overwrite` is banned. `@Redirect` and `@ModifyVariable` require justification in the PR.
-- Every injection's first line reads a rule and returns early if disabled. No unconditional behavior.
-- Do not mixin rendering, chunk building, or lighting classes. Sodium and Iris live there and will not forgive you. If you think you need to, you actually need a Nostalgic Tweaks setting.
-- Keep mixins in two configs: `unbeta.mixins.json` (common) and `unbeta.client.mixins.json`, with `"client"` scoped properly so a dedicated server doesn't try to load client mixins.
-- Default mixin priority (1000) unless you have a documented reason.
-- Declare compat modules conditionally:
-
-```java
-if (FabricLoader.getInstance().isModLoaded("modernbeta")) { ModernBetaCompat.init(); }
-```
-
-### 6.5 `fabric.mod.json` contract
-
-```jsonc
-// core
-"depends": { "fabricloader": ">=0.15.0", "minecraft": "~1.20.1", "java": ">=17", "fabric-api": "*" },
-"recommends": { "moderner-beta": "*", "nostalgic_tweaks": "*" }
-
-// content (Phase 2)
-"depends": { "unbeta-core": ">=1.0.0" }
-```
-
-Java 17 for 1.20.1. (Java 21 only becomes the requirement at 1.20.5+.)
+**One owner per subsystem:** terrain → Moderner Beta; lighting/fog/animations/old-combat → Nostalgic Tweaks; textures → Golden Days; **content existence → unbeta-core**; new content → unbeta-content. If two owners claim a behavior, the *other* mod wins and Unbeta deletes its version.
 
 ---
 
-## 7. Repository and GitHub plan
+## 6. Deviations from the original plan (brisk — for historical context)
 
-### 7.1 Monorepo, Gradle multi-project
+The original Phase 1 plan and reality diverged in a few places. All intentional; noting them so nothing surprises a future reader:
+
+- **Config is `.json`, not `.json5`.** No functional difference.
+- **End removal (was "D5, hard"):** portal *travel* + eye + eviction are done, but the **stronghold portal ROOM still generates inert** (frames present, non-functional). The "strip the frames from `StrongholdGenerator`" layer was deferred — it's entangled with Phase 2's plan to replace strongholds with custom dungeons anyway. So D5 is *functionally* met (unreachable End) but not *cosmetically* (ruins remain).
+- **Obsidian fire became a new block,** not a recolor-of-vanilla-fire. Vanilla's fire system is built around fire-being-multiple-blocks (soul fire is a separate block), so a new `ObsidianFireBlock` follows the grain instead of fighting it.
+- **`GeneratedBlockGate` (lush-cave block scan) shipped but is DISABLED.** A chunk-load block scan stalled world saving twice. Lush caves still generate (gated, so no drops / not in creative) — deferred to Phase 2, where the glowmud chain (§7) gives them a *purpose*.
+- **Deepslate below y=0** persists — consequence of keeping 1.20 world height (decision D1: height stays −64→320). Accepted.
+- **Datagen pipeline** was lighter than planned — structure/feature gating uses direct JSON overrides + `BiomeModifications` rather than a full Gradle datagen system. Works fine.
+
+**Decisions still in force:** D1 (world height stays −64→320), D2 (1.9 combat delegated to Nostalgic Tweaks), D3 (advancements→achievements deferred), D4 (empty b1.8 villages — *still unbuilt*, villages currently trimmed to plains+desert but use some 1.14 blocks), D5 (End hard-removed — see above), D6 (code generated for the user, not specs).
+
+---
+
+## 7. Phase 2 — "Unbeta 1.7.3"
+
+### 7.1 Done
+- ✅ **Nether removed** — dimension gate + eviction; ghast/zombified_piglin/netherrack/soul_sand gated off. Proved the whole rule-override architecture.
+- ✅ **No hostile daylight burning** — zombies (via `burnsInDaylight`) and skeletons (via `isAffectedByDaylight`, instanceof-scoped) don't ignite in sun.
+- ✅ **Obsidian fire** — igniting obsidian yields permanent, random-colored (red/yellow/green/blue/purple), **silent, smokeless** fire. Obsidian-exclusive; regular orange fire unchanged and can't appear on obsidian. New `ObsidianFireBlock` + `FireColor` enum + `AbstractFireBlockMixin` reroute + client cutout render + 5 procedural animated textures (placeholder-quality, swappable with zero code change).
+
+### 7.2 The Lighting Tech-Tree (the unifying design idea)
+
+With the Nether gone, light becomes a **progression**. This braids together lush-cave leftovers, glowstone, obsidian fire, and a torch rework into one system.
 
 ```
-unbeta/
-├── settings.gradle              # include ':core', ':content'
-├── build.gradle                 # shared loom + java config via subprojects{}
-├── gradle.properties            # minecraft_version, yarn_mappings, loader_version, fabric_version
-├── gradle/wrapper/              # committed
-├── core/
-│   ├── build.gradle
-│   └── src/main/
-│       ├── java/net/yourname/unbeta/core/
-│       │   ├── UnbetaCore.java
-│       │   ├── api/            # PUBLIC — semver'd, Phase 2 depends on this
-│       │   ├── rules/          # RuleKey, RuleRegistry, precedence resolution
-│       │   ├── gates/          # Entity, Item, Block, Recipe, Structure, Dimension
-│       │   ├── events/         # MobBehaviorEvents, SpawnEvents, TickScheduler, WorldState
-│       │   ├── command/        # audit, why, rules
-│       │   ├── compat/         # modernbeta, nostalgic, emi, jei — all conditional
-│       │   ├── datagen/        # reads manifest.json, emits the datapack
-│       │   └── mixin/
-│       └── resources/
-│           ├── fabric.mod.json
-│           ├── unbeta.mixins.json
-│           ├── unbeta.client.mixins.json
-│           └── unbeta/manifest.json      # THE source of truth
-├── content/                      # empty scaffold in Phase 1, real in Phase 2
-├── docs/
-│   ├── MASTER_PLAN.md            # this document
-│   ├── BETA_1_8_REFERENCE.md     # §2 expanded, with wiki citations
-│   ├── PHASE2_CONTRACT.md        # §10 expanded
-│   └── audits/                   # committed /unbeta audit CSVs, one per release
-└── .github/
-    ├── workflows/build.yml
-    ├── workflows/release.yml
-    └── ISSUE_TEMPLATE/removal.yml
+Torches (temporary, durability) → Flinted Obsidian (permanent colored fire ✅) → Glowstone (permanent block)
+                                                                                        ↑
+                              Glowmud (sand + glow berries) → smelt → Glowstone → breaks into glowstone dust
+                                              ↑
+                                   Glow berries (re-added, from lush caves)
 ```
 
-`content` depends on `core` in Loom with:
+**Tier 0 — Reworked Torches** 💭
+- **Unstackable; use durability** as burn-life. Durability **ticks down even while PLACED** — the key technical requirement, and a deliberate precedent: the same "count down on a placed/stored item across save-load" machinery is what **creeper inventory bombs** need. Build once (the persisted tick scheduler, §8), reuse.
+- Crafted **UNLIT**. **Can't be hand-slapped off** — a placed torch is "mined" off like a fence (takes a short moment, not instant). This is deliberate: it lets you *hit* a placed torch once (to extinguish it, or to light another torch from it) **without** knocking it off the wall.
+- Interaction matrix (left-click / hit): hitting certain blocks **lights** it (e.g. gravel); hitting others **extinguishes** (e.g. dirt); rain/water **extinguish**; hitting wood/leaves **ignites those blocks** flint-style; hitting an **enemy** does NOT extinguish — it **sets the enemy on fire** (high-risk melee weapon: you burn your own light's clock for fire damage).
+- **"Wicking"** extends life: consumes a stick, stick gets shorter, torch lasts longer.
+- **Natural/world torches** (village torches etc.) are **immediately replaced with Unbeta UNLIT torches** → a lit torch in the world is ALWAYS a player action (world lighting becomes a readable trace of presence).
+- Impl: add Unbeta's own torch alongside vanilla during dev, swap over when solid. Needs the persisted scheduler (§8) for the placed-durability tick.
+- Open Qs: burn duration (held vs placed)? behavior at zero durability (drop or go dark)? full block-interaction lists.
 
-```gradle
-dependencies {
-    implementation project(path: ":core", configuration: "namedElements")
-}
+**Tier 1 — Flinted Obsidian** ✅ (obsidian fire, done). Slots in as mid-tier permanent light.
+
+**Tier 2 — Glowstone via a new chain** 💭
+- **Glowmud** = **sand + glow berries** (mirrors TNT's sand+gunpowder recipe shape). **Glowmud emits light via the dynamic-light datapack** already in the modpack (a designed dependency, not custom code). Glowmud is **gravity-affected** like sand/gravel and **drops itself** when mined.
+- **Glowmud → smelt → Glowstone block.** Glowstone **breaks into glowstone dust** as vanilla does — and since the Nether (dust's wild source) is gone, **mining Glowstone is now the only dust source.** So glowstone dust stays in the game; the whole glowstone economy reroutes through the player.
+- **Glow berries re-added** as collectable food + the glowmud ingredient. **Re-enable via `overrides.json` rule flip, NOT a keep-list edit** — keeps the manifest an honest beta record and frames the berry as intentional new content. Gives lush caves a reason to exist.
+
+### 7.3 The rest of the Phase 2 roadmap (from the "Unbeta 1.7.3" vision)
+
+**Obsidian (finish the set):** blast-immunity (all obsidian = mineable bedrock); portal-disable (mostly moot now Nether's gated); mining rules (needs Diamond Pick *or* class-item "Miner's Flint Pick" for a drop — **cross-dependency on the class system**).
+
+**Mobs:** no mob spawners (rule flip); zombie regen + Husk/Drowned/**Frozen** variants (**Frozen conflicts with b1.8 having no snow biomes** — resolve: allow 1.0-era snow biomes, re-enable in Moderner Beta, or tie to snow-layer/altitude); skeletons leave **re-animating bone piles** (needs scheduler); all spiders → cave spiders + wall/ceiling crawl (nyfsspiders mod may cover the crawling); creeper plants an **inventory bomb** (shares timer machinery with torches); new mobs **Siren / Will o' Wisp / Genius** (full entity registration — obsidian fire proved we can register new content).
+
+**World:** dungeons replace strongholds (undecided: repurpose `StrongholdGenerator` vs new jigsaw structures; floating-island dungeons need custom structure code; ties to deferred D5 stronghold work).
+
+**Items/systems:** rail & powered-rail recipe buffs + abandoned surface rails; minecarts with new physics; **Clamboxes** (block entity that "cooks" pearls); **Tree of Life / Life Blocks** (teleporting, indestructible-except-by-Wand connected structures — the hardest thing in the vision, needs `UnbetaWorldState`); **Origins-style class system** at world creation + **Flint tools** (needs `PlayerDataService`); XP orbs → lore splashscreens (ties to deferred D3).
+
+---
+
+## 8. Foundation services still needed (build before dependents)
+
+**Not yet built.** Each unlocks multiple features; retrofitting later means touching working code.
+
+- 📋 **Persisted tick scheduler** (survives save/load) — **highest leverage.** Unlocks torch burn-out, creeper-bomb timer, and skeleton bone-pile re-animation. Build this next when resuming feature work.
+- 📋 **`PlayerDataService`** (persistent per-player NBT) — unlocks class system, Flint tool stats, creeper-bomb tracking.
+- 📋 **`UnbetaWorldState`** (typed persistent cross-chunk storage) — unlocks Life Blocks (Wand UUID ↔ Life Block set identity model).
+
+---
+
+## 9. Dev environment & workflow
+
+### 9.1 Environment
 ```
+Project:   /home/blackmita/Desktop/Minecraft-mod-dev/unbeta   (the clean, GitHub-tracked project)
+Testbed:   /home/blackmita/Desktop/Minecraft-mod-dev-PlusAllMods/unbeta   (disposable copy for mod testing)
+OS:        Ubuntu 24.04 / Linux Mint
+Java:      OpenJDK 21 (compiles to release 17 — this is correct, don't "fix")
+Gradle:    wrapper 8.14.4;  Loom 1.10.5  (Loom 1.6 does NOT work with Gradle 8.14)
+Minecraft: 1.20.1;  Yarn 1.20.1+build.10;  Loader 0.15.11 (dev);  Fabric API 0.92.2
+```
+Real play/testing: **Prism Launcher**, a normal 1.20.1 Fabric instance (loader 0.19.3 is fine — the built jars require ≥0.15).
 
-(The `namedElements` configuration is the Loom-specific bit that trips people up — a plain `project(":core")` will fail to remap.)
-
-### 7.2 Branches
-
-`main` = always buildable. `phase-1` = integration branch until Phase 1 ships, then merge and tag `v1.0.0`. `phase-2` opens after. Feature branches named `remove/1-13-aquatic`, `system/combat-revert`, `gate/dimensions`.
-
-### 7.3 GitHub Issues as the removal checklist
-
-One issue per bucket from §3.2 (`remove/1.13 Update Aquatic`), using an issue template that forces the author to fill in: registry IDs touched, mechanism used (must be from §5's table), manifest entries added, audit-diff attached. Labels: `bucket:1.13`, `mechanism:datagen`, `mechanism:mixin`, `risk:compat`, `phase:1`, `phase:2`.
-
-A GitHub Project board with columns `Manifest → Implemented → Verified in-game → Audited` gives you a genuine progress bar across ~40 buckets, and gives a collaborating LLM a well-scoped unit of work ("do issue #23").
-
-### 7.4 CI
-
-`build.yml` on every push and PR: set up JDK 17, `./gradlew build`, upload `core/build/libs/*.jar` and `content/build/libs/*.jar` as artifacts. Fail the build if datagen output differs from what's committed (`./gradlew runDatagen && git diff --exit-code`) — that keeps the manifest and the generated datapack honest.
-
-`release.yml` on tag `v*`: build, create a GitHub Release, attach jars, optionally publish to Modrinth with the Minotaur Gradle plugin.
-
-### 7.5 Distributing the instance: packwiz + GitHub Pages
-
-Put the pack in `unbeta-pack` (its own repo). packwiz pins the exact file hash of every one of the ~24 mods. Publish the packwiz index via GitHub Pages; players (or you, on a second machine) point packwiz-installer at the URL and get a byte-identical instance. When you bump a mod version, the diff is a one-line commit and everyone updates.
-
-This matters more than it sounds. "It works on my machine" in a 24-mod pack is not debuggable. A pinned, hash-verified pack is.
-
-### 7.6 What to hand a collaborating LLM
-
-Give it: `docs/MASTER_PLAN.md` (this file) + `core/src/main/resources/unbeta/manifest.json` + the one issue. Do **not** give it the whole repo. Ask for: manifest entries + one gate class + one test note. Then run `/unbeta audit`, diff, and review.
+### 9.2 Build / run / deliver
+- Build both modules: `./gradlew build`
+- Run dev client: `./gradlew :core:runClient` (auto-loads content module via a `runtimeOnly project(':content')` line in `core/build.gradle`)
+- `./gradlew :core:genSources` (note the `:core:` prefix — bare `genSources` fails on this dual-module setup) decompiles Minecraft into a sources jar for reading real API. That sources jar is at:
+  `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/…-sources.jar`
+- Distributable jars: `core/build/libs/unbeta-core-0.1.0.jar` + `content/build/libs/unbeta-content-0.1.0.jar` (ignore the `-sources` ones). Both go into a Prism instance's mods folder alongside Fabric API.
+- **Delivery loop with the user:** the assistant packages changed files as a zip preserving repo-relative paths; user runs `unzip -o ~/Downloads/X.zip -d <project>` then `./gradlew build`. **For single-file edits, prefer a paste-into-terminal python snippet over a zip** — a single-file zip clobbers prior hand-edits to that file (this caused a regression). GitHub push needs a Personal Access Token with `repo`+`workflow` scopes.
 
 ---
 
-## 8. Phase 1 milestones
+## 10. Working practices (the hard-won lessons — do not skip)
 
-| # | Milestone | Acceptance test |
-|---|---|---|
-| M0 | Toolchain: Loom project builds, both subprojects, CI green, jar loads into a vanilla-plus-Fabric-API instance | `./gradlew build` passes; game boots |
-| M1 | Rule engine + config + precedence chain + `/unbeta rules` | A rule flipped in `overrides.json5` visibly changes behavior at runtime |
-| M2 | `/unbeta audit` and `/unbeta why` | CSV emitted for a stock 1.20.1 instance, committed as baseline |
-| M3 | Manifest v1 populated and verified for entities and dimensions | `verified: true` on every entity entry with a wiki source |
-| M4 | Datagen pipeline: manifest → recipe/structure/tag removals | Removed recipes absent from recipe book; ancient cities/monuments/mansions do not generate |
-| M5 | Entity gate: 16 mobs remain, all others unspawnable | 3 in-game hours across all biomes, audit shows zero non-b1.8 vanilla spawns |
-| M6 | Item/block gate + creative hiding + loot filtering | Creative menu contains only b1.8 content plus other mods' content |
-| M7 | Dimension gate: End removed **hard** (D5), Nether intact | Strongholds generate with no portal room; eyes/frames unobtainable; Nether fully playable with only b1.8 content |
-| M8 | System reverts: enchanting, brewing, trading, off-hand, spawn eggs, breeding (**not** combat, **not** advancements - D2/D3) | Manual checklist |
-| M8b | Empty b1.8-style villages (D4): custom plains + desert template set, oak/cobblestone only, no villagers, no 1.14 workstations | Ten villages surveyed, zero post-b1.8 blocks |
-| M9 | Compat pass: full 24-mod pack, audit diff reviewed, Moderner Beta 1.8 preset + Nostalgic Tweaks tuned | Pack boots, 2-hour playtest, no crash, no gate eating a mod's content |
-| M10 | Tag `v1.0.0`, publish pack, freeze `unbeta-core` API | — |
-
-Do M0–M2 before touching any content. The audit tooling is what makes M3–M9 tractable.
+- **⚠️ NEVER trust a remembered 1.20.1 API name.** Verify against the user's jars before writing code that depends on it. For Fabric API: `javap` the module jar. For Minecraft's own (obfuscated) classes: read the decompiled **sources jar** (grep it) or just build and let the compiler name the wrong method. Real mistakes this caught: `LootTableEvents.REPLACE` has 5 params not 4; `ServerEntityEvents` is in `event.lifecycle.v1` not `entity.event.v1`; `ServerChunkEvents` has no `CHUNK_GENERATE`; fire rendering needs vanilla's exact `multipart` blockstate + `template_fire_*` models; `AbstractFireBlock` requires an `isFlammable` override. Every feature so far had ≥1 wrong-name guess — the verification step is not optional.
+- **Generate lists from the running game, never from memory** — the manifest came from `/unbeta audit`, the feature list from `/unbeta features`. Guessed lists had wrong/nonexistent entries every time.
+- **Make gates fail soft** — anything reading user config wraps per-item work in try/catch (e.g. `removeFeature` throws on a bad key). A content gate must never crash the game over a config typo.
+- **Don't scan blocks on chunk load** — it froze world-saving twice. Worldgen block-swaps must happen at generation time, not per-load.
+- **`overrides.json` is the HIGHEST precedence layer** — it outranks even Phase 2 content. A stale example line in it once silently countermanded the Nether removal; `/unbeta why` pinpointed it instantly. The shipped stub now has an empty rules object (footgun fixed).
+- **Datapacks: test in Prism, not the dev client.** The Loom dev client fails to load world datapacks ("Missing metadata" despite valid packs). This is a dev-harness quirk, not a real incompatibility — the same packs load fine in Prism. Don't re-investigate it.
+- **Commit at every known-good state.** `git add . && git commit -m "…" && git push`.
 
 ---
 
-## 9. Risks and open questions
+## 11. Known cosmetic quirks (not bugs)
 
-- **Nostalgic Tweaks overlap.** It may already implement half of §5.7 and §5.8-adjacent behavior. Audit its 400+ options *before* writing any system-revert mixin. Every overlap you avoid is a conflict you never debug.
-- **Moderner Beta's Beta 1.8 preset vs. your structure gates.** Both touch structure placement. Test together early (M4), not at M9.
-- **Empty villages.** 1.20.1 villages are jigsaw structures full of 1.14 blocks (barrels, lecterns, composters, bells). A b1.8 village is oak and cobblestone, uninhabited. You will likely need a custom village template set rather than a gate — budget for this, it's the largest single non-obvious task in Phase 1.
-- **Advancement→achievement replacement** is UI work and may be better solved by disabling advancements entirely in Phase 1 and letting Phase 2's "Experience Orbs replace achievement notifications" system fill the gap. Consider deferring.
-- **World height** — see §5.9. Default off.
-- **Multiplayer config sync.** If you ever run this on a server, rules must sync client-side or the client will render creative menus and portals inconsistently. Design the config as sync-capable from day one even if you only play single-player.
-
----
-
-## 10. The Phase 2 contract
-
-This is the section that answers "will Phase 1 support what I actually want to build." For each item in your *Unbeta 1.7.3* document, the Phase 1 capability it depends on:
-
-| Phase 2 feature | Required Phase 1 capability | Built in Phase 1? |
-|---|---|---|
-| Nether removed | Generic parameterized dimension gate (§5.6) | ✅ built for the End, reused |
-| Obsidian: no portal, permanent colored fire, blast-immune, faster mining | `BlockBehaviorEvents.BLAST_RESISTANCE_OVERRIDE`, block-state hooks, tag `unbeta:blast_immune` | ✅ hooks exist, unused |
-| Rail/powered-rail recipe buffs, abandoned surface rails | Recipe datagen pipeline (additive, same as removal) + structure datagen | ✅ |
-| Minecarts with new physics | Entity behavior mixin — **new Phase 2 mixin**, no Phase 1 conflict | n/a |
-| No hostile daylight burning | `unbeta:mob/daylight_burn` rule, default ON in Phase 1 | ✅ rule exists |
-| Mob spawners removed | Block gate + loot/structure datagen | ✅ |
-| Zombie regen, Husk/Drowned/Frozen variants | `SpawnEvents.SUBSTITUTE` + `MobBehaviorEvents.MODIFY_GOALS` + `MODIFY_ATTRIBUTES` | ✅ built, barely used |
-| Skeleton bone piles that re-animate | `EntityDeathEvents.REPLACE_DROP` + `UnbetaTickScheduler` (persisted 60s timer) | ✅ |
-| All spiders become cave spiders, wall-crawling | `SpawnEvents.SUBSTITUTE` + navigation override | ✅ substitution; navigation is new Phase 2 code |
-| Creeper plants a bomb in your inventory | Inventory service + per-item persisted timer + `UnbetaTickScheduler` | ✅ scheduler; inventory manipulation is thin Phase 2 code |
-| Siren, Will o' Wisp, Genius | Entity registration helper + spawn registration that is **not** eaten by Phase 1 gates | ✅ **guaranteed by namespace scoping, §6.3** |
-| Dungeons replace strongholds | Structure gate (disable stronghold set) + structure datagen for new sets | ✅ |
-| Clamboxes (block entity + "cooking" pearls) | Block entity registration helper + recipe type registration | ✅ helpers exist |
-| Tree of Life, Life Blocks, Wands, teleporting structures | `UnbetaWorldState` (typed, persistent, cross-chunk) + indestructible-block hook | ✅ built in Phase 1 specifically for this |
-| Classes chosen at world creation; Flint tools | Player-persistent data service + first-join event + per-class stat override hook | ⚠️ **player-data service should be added to Phase 1** — see below |
-| XP orbs → lore splashscreens | Notification system (the same one that could replace advancements) | ⚠️ deferred; see §9 |
-
-**Two additions to the Phase 1 scope, justified purely by Phase 2:**
-
-1. A `PlayerDataService` (persistent per-player NBT with a typed key API). Phase 2's class system, Flint tool stat overrides, and creeper-bomb tracking all need it. Adding it in Phase 1 is a day; retrofitting it means touching Phase 1 mixins.
-2. `UnbetaWorldState`. Life Blocks are the most technically demanding thing in your Phase 2 document — a set of blocks that teleport as a connected group, are indestructible except by their originating Wand, and persist across sessions. That needs real persistent world state with a stable identity model (Wand UUID ↔ Life Block set). Build the storage layer in Phase 1; build the Life Block logic in Phase 2.
-
-Everything else in your Unbeta 1.7.3 document is additive content that sits cleanly on top of the Phase 1 gate, provided §6.3 is honored.
+- **Audible-but-invisible gated mobs** — camels/cats/goats make a sound the tick before the spawn catch-all discards them. Harmless; fixable later by suppressing spawn sound or catching a tick earlier.
+- **Lush caves generate** underground (gated: no drops, not in creative). Deferred; the glowmud chain gives them purpose.
+- **Deepslate below y=0** — consequence of D1. Accepted.
+- **Obsidian-fire textures are procedural placeholders** — pure asset swap to improve, no code.
+- **Empty villages use some 1.14 blocks** — D4 (custom b1.8 village template set) is still unbuilt; the largest untackled Phase 1-scope task.
 
 ---
 
-## Appendix A — one-paragraph brief for a collaborating LLM
+## Appendix — one-paragraph brief for a collaborating LLM
 
-> We are building `unbeta-core`, a Fabric mod for Minecraft Java 1.20.1 (Java 17, Fabric API, Yarn mappings) that makes vanilla 1.20.1 present only the content that existed in Java Beta 1.8 (September 2011), while leaving all non-`minecraft` namespace content from ~24 other Fabric mods completely untouched. Content is never unregistered — it is gated: no recipe, no loot, no spawn, no worldgen, no creative entry. Every gate is a named rule resolved through a precedence chain (manifest default → core config → other mods' overrides → user override), so a future Phase 2 mod can flip any rule without editing this mod. All mixins are cancellable `@Inject` at HEAD guarded by a rule check; `@Overwrite` is banned; rendering, chunk-building, and lighting classes are off-limits. Terrain is owned by Moderner Beta, visuals/animations by Nostalgic Tweaks, textures by the Golden Days resource pack — do not duplicate their work.
+> `unbeta-core` is a Fabric mod for Minecraft 1.20.1 (Java 17, Yarn mappings, Fabric API 0.92.2, Loom 1.10.5) that makes vanilla 1.20.1 present only content that existed in Java Beta 1.8, while leaving all non-`minecraft` namespace content from ~30 other mods untouched. Content is never unregistered — it is gated (no recipe/loot/spawn/worldgen/creative entry) via named rules resolved through a precedence chain (manifest → core config → mod overrides → user overrides), so `unbeta-content` (Phase 2) flips any rule without editing core. All mixins are cancellable `@Inject` guarded by a rule check; `@Overwrite` is banned; rendering/chunk/lighting classes are off-limits. Terrain is Moderner Beta's job, visuals Nostalgic Tweaks', textures Golden Days'. Phase 1 is done and verified compatible with ~30 mods + 4 datapacks in Prism; Phase 2 has removed the Nether, stopped hostile daylight burning, and added permanent colored obsidian fire. Verify every 1.20.1 API name against the user's decompiled sources jar before writing code — every feature so far had at least one wrong-name guess.
