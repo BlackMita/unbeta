@@ -67,7 +67,7 @@ public class UnbetaTorchBlock extends TorchBlock implements BlockEntityProvider 
         //  source. So only if THIS one is lit.)
         if (TorchItems.isUnlitTorch(held)) {
             if (isLit) {
-                TorchItems.lightHeldTorch(held);
+                TorchItems.lightHeldTorch(held, world.getTime());
                 world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE,
                         SoundCategory.BLOCKS, 0.6F, 1.3F);
                 return ActionResult.SUCCESS;
@@ -127,15 +127,20 @@ public class UnbetaTorchBlock extends TorchBlock implements BlockEntityProvider 
                          @Nullable net.minecraft.entity.LivingEntity placer, ItemStack itemStack) {
         super.onPlaced(world, pos, state, placer, itemStack);
         boolean lit = TorchItems.isLit(itemStack);
-        long ticks = TorchItems.getTicks(itemStack);
         if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be) {
-            be.setRemainingTicks(ticks);
+            be.adoptFromItem(lit,
+                    TorchItems.getBurnoutAt(itemStack),
+                    TorchItems.getRemaining(itemStack, world.getTime()),
+                    TorchItems.getFull(itemStack));
         }
         if (lit && !state.get(LIT)) {
             // Set lit quietly - no ignition sound on placement (the torch was already lit).
             world.setBlockState(pos, state.with(LIT, true), Block.NOTIFY_ALL);
-            if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be2) {
-                be2.onLit(world, pos);
+            // Deadline already adopted from the item - just (re)schedule the burnout event.
+            if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be2
+                    && world instanceof net.minecraft.server.world.ServerWorld sw) {
+                net.unbeta.core.sched.UnbetaScheduler.schedule(
+                        sw, pos, be2.getRemainingTicks(), TorchBurnout.HANDLER_ID);
             }
         }
     }
@@ -156,12 +161,9 @@ public class UnbetaTorchBlock extends TorchBlock implements BlockEntityProvider 
         if (state.get(LIT)) {
             net.minecraft.block.entity.BlockEntity be =
                     builder.getOptional(net.minecraft.loot.context.LootContextParameters.BLOCK_ENTITY);
-            long ticks = (be instanceof UnbetaTorchBlockEntity tbe)
-                    ? tbe.getRemainingTicks() : UnbetaTorchBlockEntity.DEFAULT_BURN_TICKS;
             for (ItemStack drop : drops) {
-                if (drop.isOf(UnbetaTorchRegistry.TORCH_ITEM)) {
-                    TorchItems.lightHeldTorch(drop);
-                    drop.getOrCreateNbt().putLong(TorchItems.NBT_TICKS, ticks);
+                if (drop.isOf(UnbetaTorchRegistry.TORCH_ITEM) && be instanceof UnbetaTorchBlockEntity tbe) {
+                    TorchItems.stampLitFromBurnout(drop, tbe.getBurnoutAt(), tbe.getFull());
                 }
             }
         }

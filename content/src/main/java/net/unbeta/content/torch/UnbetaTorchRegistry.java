@@ -70,7 +70,7 @@ public final class UnbetaTorchRegistry {
         // Item: unstackable, places the standing torch but auto-uses wall variant on walls
         // (vanilla WallStandingBlockItem behaviour).
         TORCH_ITEM = Registry.register(Registries.ITEM, id("torch"),
-                new net.minecraft.item.VerticallyAttachableBlockItem(TORCH, WALL_TORCH,
+                new UnbetaTorchItem(TORCH, WALL_TORCH,
                         new Item.Settings().maxCount(1), net.minecraft.util.math.Direction.DOWN));
     }
 }

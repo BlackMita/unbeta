@@ -4,60 +4,82 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /**
- * Stores a placed torch's remaining burn-life (in ticks). When lit, it schedules a
- * burnout via the core scheduler's POSITION callback ("go unlit here in N ticks"). The
- * remaining life persists in NBT so it survives save/load, and is read back when a torch
- * is placed from an item carrying leftover life.
- *
- * <p>Design note: we lean on the scheduler for the actual timing rather than ticking the
- * block entity ourselves, so a placed torch in an unloaded chunk simply pauses (the
- * scheduler task rides in per-world persistent state) - matching the item behaviour.
+ * BLOCK-side torch state, mirroring TorchItems' one rule:
+ * LIT -> burnoutAt (absolute world time) is truth; UNLIT -> frozenRemaining is truth.
+ * Conversion happens only at a lit/unlit transition, never on place/mine, so burn-life
+ * carries across those without drift.
  */
 public class UnbetaTorchBlockEntity extends BlockEntity {
 
-    /** Default full burn-life for a freshly-lit torch: 4 minutes (4800 ticks). */
-    public static final long DEFAULT_BURN_TICKS = 4800L;
+    public static final long DEFAULT_BURN_TICKS = 4800L; // 4 minutes
 
-    private long remainingTicks = DEFAULT_BURN_TICKS;
+    private long burnoutAt = -1L;                 // valid when lit
+    private long frozenRemaining = DEFAULT_BURN_TICKS; // valid when unlit
+    private long full = DEFAULT_BURN_TICKS;       // bar denominator
 
     public UnbetaTorchBlockEntity(BlockPos pos, BlockState state) {
         super(UnbetaTorchRegistry.TORCH_BLOCK_ENTITY, pos, state);
     }
 
-    public long getRemainingTicks() { return remainingTicks; }
+    public long getFull() { return full; }
+    public long getBurnoutAt() { return burnoutAt; }
 
-    public void setRemainingTicks(long ticks) {
-        this.remainingTicks = Math.max(0, ticks);
-        markDirty();
+    /** True remaining ticks right now. */
+    public long getRemainingTicks() {
+        if (burnoutAt >= 0 && world != null) {
+            return Math.max(0, burnoutAt - world.getTime());
+        }
+        return frozenRemaining;
     }
 
-    /** Called when the placed torch is lit. Schedules its burnout. */
-    public void onLit(net.minecraft.world.World world, BlockPos pos) {
-        if (remainingTicks <= 0) remainingTicks = DEFAULT_BURN_TICKS;
-        if (world instanceof net.minecraft.server.world.ServerWorld sw) {
-            net.unbeta.core.sched.UnbetaScheduler.schedule(
-                    sw, pos, remainingTicks, TorchBurnout.HANDLER_ID);
+    /** Adopt state from a placed item (verbatim - no re-anchoring). */
+    public void adoptFromItem(boolean lit, long itemBurnoutAt, long itemRemaining, long itemFull) {
+        this.full = itemFull > 0 ? itemFull : DEFAULT_BURN_TICKS;
+        if (lit && itemBurnoutAt >= 0) {
+            this.burnoutAt = itemBurnoutAt;     // carry the SAME deadline
+            this.frozenRemaining = DEFAULT_BURN_TICKS;
+        } else {
+            this.burnoutAt = -1L;
+            this.frozenRemaining = itemRemaining > 0 ? itemRemaining : DEFAULT_BURN_TICKS;
         }
         markDirty();
     }
 
+    /** Light: frozen remaining -> absolute deadline, and schedule the burnout event. */
+    public void onLit(World world, BlockPos pos) {
+        long remaining = (burnoutAt >= 0) ? getRemainingTicks() : frozenRemaining;
+        if (remaining <= 0) remaining = DEFAULT_BURN_TICKS;
+        this.burnoutAt = world.getTime() + remaining;
+        if (world instanceof net.minecraft.server.world.ServerWorld sw) {
+            net.unbeta.core.sched.UnbetaScheduler.schedule(sw, pos, remaining, TorchBurnout.HANDLER_ID);
+        }
+        markDirty();
+    }
+
+    /** Extinguish: absolute deadline -> frozen remaining. */
     public void onExtinguished() {
-        // Torch went out by player action; keep remainingTicks as-is (re-lightable).
-        // The scheduled burnout, if any, will find the torch already unlit and no-op.
+        long remaining = getRemainingTicks();
+        this.frozenRemaining = (remaining > 0) ? remaining : DEFAULT_BURN_TICKS;
+        this.burnoutAt = -1L;
         markDirty();
     }
 
     @Override
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
-        nbt.putLong("BurnTicks", remainingTicks);
+        nbt.putLong("BurnoutAt", burnoutAt);
+        nbt.putLong("FrozenRemaining", frozenRemaining);
+        nbt.putLong("Full", full);
     }
 
     @Override
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
-        if (nbt.contains("BurnTicks")) remainingTicks = nbt.getLong("BurnTicks");
+        if (nbt.contains("BurnoutAt")) burnoutAt = nbt.getLong("BurnoutAt");
+        if (nbt.contains("FrozenRemaining")) frozenRemaining = nbt.getLong("FrozenRemaining");
+        if (nbt.contains("Full")) full = nbt.getLong("Full");
     }
 }

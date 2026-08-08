@@ -29,7 +29,7 @@ public final class TorchBurnout {
         }
         // Reset the block entity's remaining life to full so it can be re-lit later.
         if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be) {
-            be.setRemainingTicks(UnbetaTorchBlockEntity.DEFAULT_BURN_TICKS);
+            be.onExtinguished(); // freezes remaining and clears the deadline (relightable)
         }
     }
 }
