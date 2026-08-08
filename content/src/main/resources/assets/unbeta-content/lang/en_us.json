@@ -1,5 +1,19 @@
 {
   "block.unbeta-content.torch": "Unbeta Torch",
   "block.unbeta-content.wall_torch": "Unbeta Torch",
-  "item.unbeta-content.torch": "Unbeta Torch"
+  "item.unbeta-content.torch": "Unbeta Torch",
+  "block.minecraft.oak_planks": "Wood Planks",
+  "block.minecraft.oak_slab": "Wooden Slab",
+  "block.minecraft.oak_stairs": "Wooden Stairs",
+  "block.minecraft.oak_fence": "Wooden Fence",
+  "block.minecraft.oak_fence_gate": "Wooden Fence Gate",
+  "block.minecraft.oak_door": "Wooden Door",
+  "block.minecraft.oak_trapdoor": "Wooden Trapdoor",
+  "block.minecraft.oak_pressure_plate": "Wooden Pressure Plate",
+  "block.minecraft.oak_sign": "Wooden Sign",
+  "block.minecraft.oak_wall_sign": "Wooden Sign",
+  "block.minecraft.oak_log": "Wood Log",
+  "block.minecraft.oak_leaves": "Leaves",
+  "block.minecraft.oak_sapling": "Sapling",
+  "item.minecraft.oak_boat": "Boat"
 }
