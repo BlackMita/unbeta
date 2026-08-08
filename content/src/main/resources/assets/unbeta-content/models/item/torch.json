@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "unbeta-content:block/unlit_torch"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "unbeta-content:lit": 1.0
+      },
+      "model": "minecraft:item/torch"
+    }
+  ]
+}

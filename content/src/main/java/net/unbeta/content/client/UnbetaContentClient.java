@@ -14,6 +14,7 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.unbeta.content.torch.TorchClient.register();
         if (UnbetaContent.OBSIDIAN_FIRE != null) {
             BlockRenderLayerMap.INSTANCE.putBlock(
                     UnbetaContent.OBSIDIAN_FIRE, RenderLayer.getCutout());

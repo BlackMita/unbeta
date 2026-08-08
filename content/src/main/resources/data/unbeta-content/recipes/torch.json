@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "C", "S" ],
+  "key": {
+    "C": { "item": "minecraft:coal" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": { "item": "unbeta-content:torch", "count": 1 }
+}

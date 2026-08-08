@@ -1,6 +1,8 @@
 package net.unbeta.content;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.MapColor;
@@ -40,9 +42,22 @@ public final class UnbetaContent implements ModInitializer {
                                 .luminance(state -> 15)
                                 .sounds(BlockSoundGroup.WOOL)
                                 .pistonBehavior(PistonBehavior.DESTROY)
+                                .replaceable()
+                                .dropsNothing()
                 )
         );
 
         LOG.info("Registered {} (obsidian-exclusive coloured fire).", OBSIDIAN_FIRE_ID);
+
+        // Unbeta torches (Phase 2 lighting tech-tree, tier 0).
+        net.unbeta.content.torch.UnbetaTorchRegistry.register();
+        net.unbeta.content.torch.TorchBurnout.register();
+        net.unbeta.content.torch.UnbetaTorchItemBurnout.register();
+        net.unbeta.content.torch.TorchLightingHooks.register();
+        LOG.info("Registered Unbeta torches.");
+
+        // TEMP (testing): put the torch in the creative functional-blocks tab so it can be obtained.
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries ->
+                entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.TORCH_ITEM));
     }
 }
