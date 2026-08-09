@@ -49,7 +49,7 @@ public final class UnbetaTorchRegistry {
         // Unlit torch: plain VerticallyAttachableBlockItem (no bar needed)
         TORCH_ITEM = Registry.register(Registries.ITEM, id("torch"),
                 new VerticallyAttachableBlockItem(TORCH, WALL_TORCH,
-                        new Item.Settings().maxCount(1), Direction.DOWN));
+                        new Item.Settings().maxCount(16), Direction.DOWN));
 
         // Lit torch: custom item with burn bar
         LIT_TORCH_ITEM = Registry.register(Registries.ITEM, id("lit_torch"),

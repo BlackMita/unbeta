@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     {"id": "unbeta-content:lit_torch", "required": false},
-    {"id": "unbeta-content:glowsand", "required": false}
+    {"id": "unbeta-content:glowsand", "required": false},
+    {"id": "unbeta-content:lit_jack_o_lantern", "required": false}
   ]
 }

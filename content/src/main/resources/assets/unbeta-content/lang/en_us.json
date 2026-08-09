@@ -4,5 +4,10 @@
   "item.unbeta-content.torch": "Unbeta Torch",
   "item.unbeta-content.lit_torch": "Unbeta Torch (Lit)",
   "block.minecraft.torch": "Vanilla Torch",
-  "block.minecraft.wall_torch": "Vanilla Torch"
+  "block.minecraft.wall_torch": "Vanilla Torch",
+  "block.unbeta-content.jack_o_lantern": "Unbeta Jack o'Lantern",
+  "block.unbeta-content.lit_jack_o_lantern": "Unbeta Jack o'Lantern (Lit)",
+  "item.unbeta-content.jack_o_lantern": "Unbeta Jack o'Lantern",
+  "item.unbeta-content.lit_jack_o_lantern": "Unbeta Jack o'Lantern (Lit)",
+  "block.minecraft.jack_o_lantern": "Vanilla Jack o'Lantern"
 }

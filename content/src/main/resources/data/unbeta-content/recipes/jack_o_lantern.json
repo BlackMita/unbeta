@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "A": {"item": "minecraft:carved_pumpkin"},
+    "B": {"tag": "unbeta-content:unbeta_torches"}
+  },
+  "pattern": ["A", "B"],
+  "result": {"item": "unbeta-content:jack_o_lantern"}
+}

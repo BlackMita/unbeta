@@ -76,6 +76,11 @@ public final class UnbetaContent implements ModInitializer {
                 .register(entries -> entries.add(glowsandItem));
         LOG.info("Registered Glowsand.");
 
+        // Unbeta Jack o'Lanterns (Phase 2 lighting tier 1.5 - semi-permanent, waterproof).
+        net.unbeta.content.jackolantern.JackOLanternRegistry.register();
+        net.unbeta.content.jackolantern.JackOLanternBurnout.register();
+        LOG.info("Registered Unbeta Jack o\'Lanterns.");
+
         // TEMP (testing): put the torch in the creative functional-blocks tab so it can be obtained.
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
                 entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.TORCH_ITEM);
