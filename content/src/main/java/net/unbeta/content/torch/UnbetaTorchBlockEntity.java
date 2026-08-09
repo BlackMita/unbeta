@@ -6,19 +6,12 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/**
- * BLOCK-side torch state, mirroring TorchItems' one rule:
- * LIT -> burnoutAt (absolute world time) is truth; UNLIT -> frozenRemaining is truth.
- * Conversion happens only at a lit/unlit transition, never on place/mine, so burn-life
- * carries across those without drift.
- */
 public class UnbetaTorchBlockEntity extends BlockEntity {
 
     public static final long DEFAULT_BURN_TICKS = 4800L; // 4 minutes
 
-    private long burnoutAt = -1L;                 // valid when lit
-    private long frozenRemaining = DEFAULT_BURN_TICKS; // valid when unlit
-    private long full = DEFAULT_BURN_TICKS;       // bar denominator
+    private long burnoutAt = -1L;
+    private long full = DEFAULT_BURN_TICKS;
 
     public UnbetaTorchBlockEntity(BlockPos pos, BlockState state) {
         super(UnbetaTorchRegistry.TORCH_BLOCK_ENTITY, pos, state);
@@ -27,43 +20,30 @@ public class UnbetaTorchBlockEntity extends BlockEntity {
     public long getFull() { return full; }
     public long getBurnoutAt() { return burnoutAt; }
 
-    /** True remaining ticks right now. */
     public long getRemainingTicks() {
-        if (burnoutAt >= 0 && world != null) {
-            return Math.max(0, burnoutAt - world.getTime());
-        }
-        return frozenRemaining;
+        if (burnoutAt < 0 || world == null) return 0L;
+        return Math.max(0L, burnoutAt - world.getTime());
     }
 
-    /** Adopt state from a placed item (verbatim - no re-anchoring). */
-    public void adoptFromItem(boolean lit, long itemBurnoutAt, long itemRemaining, long itemFull) {
-        this.full = itemFull > 0 ? itemFull : DEFAULT_BURN_TICKS;
-        if (lit && itemBurnoutAt >= 0) {
-            this.burnoutAt = itemBurnoutAt;     // carry the SAME deadline
-            this.frozenRemaining = DEFAULT_BURN_TICKS;
-        } else {
-            this.burnoutAt = -1L;
-            this.frozenRemaining = itemRemaining > 0 ? itemRemaining : DEFAULT_BURN_TICKS;
-        }
-        markDirty();
-    }
-
-    /** Light: frozen remaining -> absolute deadline, and schedule the burnout event. */
-    public void onLit(World world, BlockPos pos) {
-        long remaining = (burnoutAt >= 0) ? getRemainingTicks() : frozenRemaining;
-        if (remaining <= 0) remaining = DEFAULT_BURN_TICKS;
-        this.burnoutAt = world.getTime() + remaining;
+    /** Light: ALWAYS a full burn. */
+    public void light(World world, BlockPos pos) {
+        this.burnoutAt = world.getTime() + this.full;
         if (world instanceof net.minecraft.server.world.ServerWorld sw) {
-            net.unbeta.core.sched.UnbetaScheduler.schedule(sw, pos, remaining, TorchBurnout.HANDLER_ID);
+            net.unbeta.core.sched.UnbetaScheduler.schedule(sw, pos, this.full, TorchBurnout.HANDLER_ID);
         }
         markDirty();
     }
 
-    /** Extinguish: absolute deadline -> frozen remaining. */
-    public void onExtinguished() {
-        long remaining = getRemainingTicks();
-        this.frozenRemaining = (remaining > 0) ? remaining : DEFAULT_BURN_TICKS;
+    /** Extinguish: stop the clock. Remaining discarded. */
+    public void extinguish() {
         this.burnoutAt = -1L;
+        markDirty();
+    }
+
+    /** Adopt a placed item's state verbatim. */
+    public void adopt(boolean lit, long itemBurnoutAt, long itemFull) {
+        this.full = itemFull > 0 ? itemFull : DEFAULT_BURN_TICKS;
+        this.burnoutAt = (lit && itemBurnoutAt >= 0) ? itemBurnoutAt : -1L;
         markDirty();
     }
 
@@ -71,7 +51,6 @@ public class UnbetaTorchBlockEntity extends BlockEntity {
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
         nbt.putLong("BurnoutAt", burnoutAt);
-        nbt.putLong("FrozenRemaining", frozenRemaining);
         nbt.putLong("Full", full);
     }
 
@@ -79,7 +58,6 @@ public class UnbetaTorchBlockEntity extends BlockEntity {
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
         if (nbt.contains("BurnoutAt")) burnoutAt = nbt.getLong("BurnoutAt");
-        if (nbt.contains("FrozenRemaining")) frozenRemaining = nbt.getLong("FrozenRemaining");
         if (nbt.contains("Full")) full = nbt.getLong("Full");
     }
 }

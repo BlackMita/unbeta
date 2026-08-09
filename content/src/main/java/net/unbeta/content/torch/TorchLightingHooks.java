@@ -1,73 +1,77 @@
 package net.unbeta.content.torch;
 
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.block.AbstractFireBlock;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 
-/**
- * Two extra lighting paths from the spec:
- * <ul>
- *   <li><b>Fire block:</b> right-clicking any fire block while holding an unlit torch
- *       lights the held torch. (UseBlockCallback.)</li>
- *   <li><b>Dual-wield:</b> holding an unlit torch in one hand and a LIT torch in the
- *       other lights the unlit one. (Checked each server tick, cheaply, per player.)</li>
- * </ul>
- */
 public final class TorchLightingHooks {
 
     private TorchLightingHooks() {}
 
     public static void register() {
-        // Fire block -> light held unlit torch.
+        // Fire block → light held unlit torch (item swap)
         UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
             ItemStack held = player.getStackInHand(hand);
             if (!TorchItems.isUnlitTorch(held)) return ActionResult.PASS;
-            var state = world.getBlockState(hit.getBlockPos());
-            if (state.getBlock() instanceof AbstractFireBlock) {
-                if (!world.isClient) TorchItems.lightHeldTorch(held, world.getTime());
+            if (world.getBlockState(hit.getBlockPos()).getBlock() instanceof AbstractFireBlock) {
+                if (!world.isClient) {
+                    player.setStackInHand(hand, TorchItems.createLit(held, world.getTime()));
+                }
                 return ActionResult.SUCCESS;
             }
             return ActionResult.PASS;
         });
 
-        // Dual-wield: unlit in one hand + lit in the other -> light the unlit.
         ServerTickEvents.END_WORLD_TICK.register(world -> {
             long now = world.getTime();
             for (var player : world.getPlayers()) {
+                // Burnout check across full inventory
+                PlayerInventory inv = player.getInventory();
+                for (int i = 0; i < inv.size(); i++) {
+                    ItemStack stack = inv.getStack(i);
+                    if (!TorchItems.isLitTorch(stack)) continue;
+                    long burnoutAt = TorchItems.getBurnoutAt(stack);
+                    if (burnoutAt < 0) {
+                        // Lit with no deadline (edge case): give it one
+                        inv.setStack(i, TorchItems.createLit(stack, now));
+                    } else if (now >= burnoutAt) {
+                        inv.setStack(i, TorchItems.createUnlit());
+                    }
+                }
+
+                // Dropped lit torches that have expired → discard and respawn as unlit.
+                // We MUST spawn a new entity rather than swapping the stack, because the
+                // dynamic lights datapack caches a light-level score on the entity. Swapping
+                // the stack doesn't clear that score, so the old entity keeps emitting
+                // level-15 light forever. A fresh entity gets re-parsed from scratch.
+                world.getEntitiesByClass(ItemEntity.class,
+                        player.getBoundingBox().expand(16),
+                        e -> TorchItems.isLitTorch(e.getStack())).forEach(e -> {
+                    long burnoutAt = TorchItems.getBurnoutAt(e.getStack());
+                    if (burnoutAt >= 0 && now >= burnoutAt) {
+                        net.minecraft.entity.ItemEntity fresh = new net.minecraft.entity.ItemEntity(
+                                world, e.getX(), e.getY(), e.getZ(),
+                                TorchItems.createUnlit(),
+                                e.getVelocity().x, e.getVelocity().y, e.getVelocity().z);
+                        world.spawnEntity(fresh);
+                        e.discard();
+                    }
+                });
+
+                // Dual-wield: unlit in one hand + lit in the other → light the unlit
                 ItemStack main = player.getMainHandStack();
                 ItemStack off = player.getOffHandStack();
-
-                // Burnout check (timestamp model - no per-second NBT writes, so no item "dip").
-                burnoutTick(main, now);
-                burnoutTick(off, now);
-                boolean mainUnlit = TorchItems.isUnlitTorch(main);
-                boolean offUnlit = TorchItems.isUnlitTorch(off);
-                boolean mainLit = TorchItems.isTorchItem(main) && TorchItems.isLit(main);
-                boolean offLit = TorchItems.isTorchItem(off) && TorchItems.isLit(off);
-                if (mainUnlit && offLit) TorchItems.lightHeldTorch(main, now);
-                else if (offUnlit && mainLit) TorchItems.lightHeldTorch(off, now);
+                if (TorchItems.isUnlitTorch(main) && TorchItems.isLitTorch(off)) {
+                    player.setStackInHand(Hand.MAIN_HAND, TorchItems.createLit(main, now));
+                } else if (TorchItems.isUnlitTorch(off) && TorchItems.isLitTorch(main)) {
+                    player.setStackInHand(Hand.OFF_HAND, TorchItems.createLit(off, now));
+                }
             }
         });
-    }
-
-    /**
-     * Burnout check for a held torch. Under the new model a LIT torch always carries an
-     * absolute NBT_BURNOUT_AT, so we NEVER re-anchor it here (re-anchoring on pickup was
-     * what silently refilled torches). We only check whether the deadline has passed.
-     */
-    private static void burnoutTick(ItemStack stack, long now) {
-        if (!TorchItems.isTorchItem(stack) || !TorchItems.isLit(stack)) return;
-        long burnoutAt = TorchItems.getBurnoutAt(stack);
-        if (burnoutAt < 0) {
-            // Lit but no deadline (legacy/edge): anchor once from remaining, then leave alone.
-            TorchItems.lightHeldTorch(stack, now);
-            return;
-        }
-        if (now >= burnoutAt) {
-            TorchItems.extinguishHeldTorch(stack, now); // goes unlit, remaining resets for relight
-        }
     }
 }

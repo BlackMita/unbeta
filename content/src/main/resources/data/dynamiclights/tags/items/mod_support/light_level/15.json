@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "unbeta-content:lit_torch",
+      "required": false
+    }
+  ]
+}

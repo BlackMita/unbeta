@@ -1,20 +1,18 @@
 package net.unbeta.content.torch;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.WallTorchBlock;
-import net.minecraft.block.HorizontalFacingBlock;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.BlockEntityProvider;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.HorizontalFacingBlock;
+import net.minecraft.block.WallTorchBlock;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.loot.context.LootContextParameterSet;
+import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -23,25 +21,22 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import java.util.List;
 
-/** Wall-mounted variant of the Unbeta torch. Same lit/unlit + interaction behaviour. */
 public class UnbetaWallTorchBlock extends WallTorchBlock implements BlockEntityProvider {
 
-    public static final BooleanProperty LIT = Properties.LIT;
+    public static final net.minecraft.state.property.BooleanProperty LIT = TorchLogic.LIT;
 
     public UnbetaWallTorchBlock(Settings settings) {
         super(settings, ParticleTypes.FLAME);
         setDefaultState(getDefaultState().with(LIT, false));
     }
 
-    @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder); // FACING
-        builder.add(LIT);
+    @Override protected void appendProperties(StateManager.Builder<Block, BlockState> b) {
+        super.appendProperties(b); b.add(LIT);
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
         return new UnbetaTorchBlockEntity(pos, state);
     }
@@ -49,75 +44,20 @@ public class UnbetaWallTorchBlock extends WallTorchBlock implements BlockEntityP
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
-        ItemStack held = player.getStackInHand(hand);
-        boolean isLit = state.get(LIT);
-
-        if (TorchItems.isUnlitTorch(held)) {
-            if (isLit) {
-                TorchItems.lightHeldTorch(held, world.getTime());
-                world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 0.6F, 1.3F);
-                return ActionResult.SUCCESS;
-            }
-            return ActionResult.PASS;
-        }
-        // NEW: holding a LIT unbeta torch, click an UNLIT placed torch -> light it. (held-lit-torch lights placed unlit)
-        if (!isLit && TorchItems.isTorchItem(held) && TorchItems.isLit(held)) {
-            world.setBlockState(pos, state.with(LIT, true), Block.NOTIFY_ALL);
-            world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 0.6F, 1.1F);
-            if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be) be.onLit(world, pos);
-            return ActionResult.SUCCESS;
-        }
-        if (!isLit && held.isOf(Items.FLINT_AND_STEEL)) {
-            world.setBlockState(pos, state.with(LIT, true), Block.NOTIFY_ALL);
-            world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 0.6F, 1.1F);
-            if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be) be.onLit(world, pos);
-            if (!player.getAbilities().creativeMode) held.damage(1, player, p -> p.sendToolBreakStatus(hand));
-            return ActionResult.SUCCESS;
-        }
-        if (isLit && !held.isOf(Items.FLINT_AND_STEEL)) {
-            world.setBlockState(pos, state.with(LIT, false), Block.NOTIFY_ALL);
-            world.playSound(null, pos, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.4F, 1.4F);
-            if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be) be.onExtinguished();
-            return ActionResult.SUCCESS;
-        }
-        return ActionResult.PASS;
+        return TorchLogic.onUse(state, world, pos, player, hand);
     }
-
 
     @Override
     public void onPlaced(World world, BlockPos pos, BlockState state,
-                         @org.jetbrains.annotations.Nullable net.minecraft.entity.LivingEntity placer, ItemStack itemStack) {
+                         @Nullable LivingEntity placer, ItemStack itemStack) {
         super.onPlaced(world, pos, state, placer, itemStack);
-        boolean lit = TorchItems.isLit(itemStack);
-        if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be) {
-            be.adoptFromItem(lit,
-                    TorchItems.getBurnoutAt(itemStack),
-                    TorchItems.getRemaining(itemStack, world.getTime()),
-                    TorchItems.getFull(itemStack));
-        }
-        if (lit && !state.get(LIT)) {
-            world.setBlockState(pos, state.with(LIT, true), Block.NOTIFY_ALL);
-            if (world.getBlockEntity(pos) instanceof UnbetaTorchBlockEntity be2
-                    && world instanceof net.minecraft.server.world.ServerWorld sw) {
-                net.unbeta.core.sched.UnbetaScheduler.schedule(
-                        sw, pos, be2.getRemainingTicks(), TorchBurnout.HANDLER_ID);
-            }
-        }
+        TorchLogic.onPlaced(world, pos, state, itemStack);
     }
 
-
     @Override
-    public java.util.List<ItemStack> getDroppedStacks(BlockState state, net.minecraft.loot.context.LootContextParameterSet.Builder builder) {
-        java.util.List<ItemStack> drops = super.getDroppedStacks(state, builder);
-        if (state.get(LIT)) {
-            net.minecraft.block.entity.BlockEntity be =
-                    builder.getOptional(net.minecraft.loot.context.LootContextParameters.BLOCK_ENTITY);
-            for (ItemStack drop : drops) {
-                if (drop.isOf(UnbetaTorchRegistry.TORCH_ITEM) && be instanceof UnbetaTorchBlockEntity tbe) {
-                    TorchItems.stampLitFromBurnout(drop, tbe.getBurnoutAt(), tbe.getFull());
-                }
-            }
-        }
+    public List<ItemStack> getDroppedStacks(BlockState state, LootContextParameterSet.Builder builder) {
+        List<ItemStack> drops = super.getDroppedStacks(state, builder);
+        TorchLogic.stampDrops(drops, state, builder.getOptional(LootContextParameters.BLOCK_ENTITY));
         return drops;
     }
 

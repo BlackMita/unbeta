@@ -57,7 +57,9 @@ public final class UnbetaContent implements ModInitializer {
         LOG.info("Registered Unbeta torches.");
 
         // TEMP (testing): put the torch in the creative functional-blocks tab so it can be obtained.
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries ->
-                entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.TORCH_ITEM));
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
+                entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.TORCH_ITEM);
+                entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.LIT_TORCH_ITEM);
+        });
     }
 }
