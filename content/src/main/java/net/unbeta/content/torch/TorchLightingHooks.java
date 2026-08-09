@@ -7,6 +7,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.Hand;
 
 public final class TorchLightingHooks {
@@ -63,7 +64,24 @@ public final class TorchLightingHooks {
                     }
                 });
 
-                // Dual-wield: unlit in one hand + lit in the other → light the unlit
+                // Placed lit torches in fluid → extinguish.
+                // Vanilla water flow will pop the block off anyway, but we extinguish first
+                // so the dropped item is UNLIT (not a lit torch dropped into water).
+                var bb = player.getBoundingBox().expand(16);
+                for (var pos : net.minecraft.util.math.BlockPos.iterateOutwards(
+                        player.getBlockPos(), 16, 16, 16)) {
+                    if (!bb.contains(pos.getX(), pos.getY(), pos.getZ())) continue;
+                    var state = world.getBlockState(pos);
+                    boolean isLitTorch = (state.getBlock() instanceof UnbetaTorchBlock
+                            || state.getBlock() instanceof UnbetaWallTorchBlock)
+                            && state.get(TorchLogic.LIT);
+                    if (!isLitTorch) continue;
+                    if (!world.getFluidState(pos).isEmpty()) {
+                        TorchLogic.extinguishPlaced(world, pos, state);
+                    }
+                }
+
+                                // Dual-wield: unlit in one hand + lit in the other → light the unlit
                 ItemStack main = player.getMainHandStack();
                 ItemStack off = player.getOffHandStack();
                 if (TorchItems.isUnlitTorch(main) && TorchItems.isLitTorch(off)) {
