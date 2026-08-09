@@ -1,46 +1,62 @@
 package net.unbeta.content.mixin;
 
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
-import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Makes powered rails noticeably better:
- * - 2x top speed cap (0.4 -> 0.8 blocks/tick on land)
- * - 2x powered rail acceleration (0.0078125 -> 0.015625)
- * - Much less friction (0.96 -> 0.998 empty, 0.997 -> 0.9995 with passengers)
+ * Tuned minecart physics:
+ * - 1.3x top speed (0.4 -> 0.52) - noticeable but won't overshoot turns
+ * - Passenger multiplier 0.75 -> 0.95 - fixes turn momentum loss with rider
+ * - Uphill drag halved (0.0078125 -> 0.00390625) - ascents feel less punishing
+ * - Powered rail boost force 0.06 -> 0.10 - meaningful without flying off track
+ * - Friction 0.96 -> 0.985 (empty), 0.997 -> 0.999 (loaded) - momentum preserved longer
  */
 @Mixin(AbstractMinecartEntity.class)
 public class MinecartPhysicsMixin {
 
-    /** Double the speed cap. */
+    /** 1.3x top speed cap. */
     @Inject(method = "getMaxSpeed", at = @At("RETURN"), cancellable = true)
-    private void unbeta_doubleMaxSpeed(CallbackInfoReturnable<Double> cir) {
-        cir.setReturnValue(cir.getReturnValue() * 2.0);
+    private void unbeta_tuneMaxSpeed(CallbackInfoReturnable<Double> cir) {
+        cir.setReturnValue(cir.getReturnValue() * 1.3);
     }
 
-    /** Double the powered rail acceleration constant. */
+    /** Halve uphill drag so ascents feel less punishing. */
     @ModifyConstant(method = "moveOnRail",
             constant = @Constant(doubleValue = 0.0078125))
-    private double unbeta_doubleAcceleration(double original) {
-        return original * 2.0;
+    private double unbeta_reduceUphillDrag(double original) {
+        return original * 0.5;
     }
 
-    /** Much less friction - boost lasts far longer. */
+    /** Passenger speed multiplier: 0.75 -> 0.95 fixes turn momentum loss with rider. */
+    @ModifyConstant(method = "moveOnRail",
+            constant = @Constant(doubleValue = 0.75))
+    private double unbeta_improvePassengerMultiplier(double original) {
+        return 0.95;
+    }
+
+    /** Powered rail boost force: 0.06 -> 0.10. */
+    @ModifyConstant(method = "moveOnRail",
+            constant = @Constant(doubleValue = 0.06))
+    private double unbeta_improveBoostForce(double original) {
+        return 0.10;
+    }
+
+    /** Less friction when empty: 0.96 -> 0.985. */
     @ModifyConstant(method = "applySlowdown",
             constant = @Constant(doubleValue = 0.96))
     private double unbeta_lessEmptyFriction(double original) {
-        return 0.998;
+        return 0.985;
     }
 
+    /** Less friction when loaded: 0.997 -> 0.999. */
     @ModifyConstant(method = "applySlowdown",
             constant = @Constant(doubleValue = 0.997))
     private double unbeta_lessLoadedFriction(double original) {
-        return 0.9995;
+        return 0.999;
     }
 }
