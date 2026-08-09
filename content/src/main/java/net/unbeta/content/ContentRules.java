@@ -53,6 +53,13 @@ public final class ContentRules implements RuleProvider {
         // 1. The dimension. This one line is the architecture-validation test.
         ctx.set(RuleKey.of(ContentKind.DIMENSION, mc("the_nether")), true);
 
+        // Phase 2: re-enable glow berries (Phase 1 gated them; now they're the
+        // ingredient for Glowsand and a held light source via dynamic lights).
+        // Cave vines re-enabled so they drop berries from lush caves.
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("cave_vines")), false);
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("cave_vines_plant")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("glow_berries")), false);
+
         // 2. Nether mobs (Phase 1 keeps -> Phase 2 removes).
         for (String mob : new String[]{ "ghast", "zombified_piglin" }) {
             ctx.set(RuleKey.of(ContentKind.ENTITY, mc(mob)), true);
