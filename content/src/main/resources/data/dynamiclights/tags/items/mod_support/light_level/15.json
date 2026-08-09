@@ -1,9 +1,7 @@
 {
   "replace": false,
   "values": [
-    {
-      "id": "unbeta-content:lit_torch",
-      "required": false
-    }
+    {"id": "unbeta-content:lit_torch", "required": false},
+    {"id": "unbeta-content:glowsand", "required": false}
   ]
 }

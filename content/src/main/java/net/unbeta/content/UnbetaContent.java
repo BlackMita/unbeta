@@ -56,6 +56,26 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.torch.TorchLightingHooks.register();
         LOG.info("Registered Unbeta torches.");
 
+        // Glowsand: luminous gravity-affected block. Smelts to glowstone.
+        net.minecraft.block.Block glowsand = net.minecraft.registry.Registry.register(
+                net.minecraft.registry.Registries.BLOCK,
+                new net.minecraft.util.Identifier("unbeta-content", "glowsand"),
+                new net.unbeta.content.block.GlowsandBlock(
+                        net.minecraft.block.AbstractBlock.Settings.create()
+                                .mapColor(net.minecraft.block.MapColor.YELLOW)
+                                .strength(0.5F)
+                                .sounds(net.minecraft.sound.BlockSoundGroup.SAND)
+                                .luminance(state -> 15)));
+        net.minecraft.item.Item glowsandItem = net.minecraft.registry.Registry.register(
+                net.minecraft.registry.Registries.ITEM,
+                new net.minecraft.util.Identifier("unbeta-content", "glowsand"),
+                new net.minecraft.item.BlockItem(glowsand,
+                        new net.minecraft.item.Item.Settings()));
+        // Add to creative building blocks tab
+        ItemGroupEvents.modifyEntriesEvent(net.minecraft.item.ItemGroups.BUILDING_BLOCKS)
+                .register(entries -> entries.add(glowsandItem));
+        LOG.info("Registered Glowsand.");
+
         // TEMP (testing): put the torch in the creative functional-blocks tab so it can be obtained.
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
                 entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.TORCH_ITEM);

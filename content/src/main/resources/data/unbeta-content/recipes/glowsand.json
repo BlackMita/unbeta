@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "#": {"item": "minecraft:sand"},
+    "X": {"item": "minecraft:glow_berries"}
+  },
+  "pattern": ["X#X", "#X#", "X#X"],
+  "result": {"item": "unbeta-content:glowsand", "count": 1}
+}
