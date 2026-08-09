@@ -2,5 +2,7 @@
   "block.unbeta-content.torch": "Unbeta Torch",
   "block.unbeta-content.wall_torch": "Unbeta Torch",
   "item.unbeta-content.torch": "Unbeta Torch",
-  "item.unbeta-content.lit_torch": "Unbeta Torch (Lit)"
+  "item.unbeta-content.lit_torch": "Unbeta Torch (Lit)",
+  "block.minecraft.torch": "Vanilla Torch",
+  "block.minecraft.wall_torch": "Vanilla Torch"
 }
