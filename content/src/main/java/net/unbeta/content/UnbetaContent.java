@@ -72,7 +72,7 @@ public final class UnbetaContent implements ModInitializer {
                 new net.minecraft.item.BlockItem(glowsand,
                         new net.minecraft.item.Item.Settings()));
         // Add to creative building blocks tab
-        ItemGroupEvents.modifyEntriesEvent(net.minecraft.item.ItemGroups.BUILDING_BLOCKS)
+        ItemGroupEvents.modifyEntriesEvent(net.minecraft.item.ItemGroups.FUNCTIONAL)
                 .register(entries -> entries.add(glowsandItem));
         LOG.info("Registered Glowsand.");
 
