@@ -22,7 +22,8 @@
     "minecraft": "~1.20.1",
     "java": ">=17",
     "fabric-api": "*",
-    "unbeta-core": ">=0.1.0"
+    "unbeta-core": ">=0.1.0",
+    "moderner_beta": ">=3.0.0"
   },
   "mixins": [
     "unbeta-content.mixins.json"

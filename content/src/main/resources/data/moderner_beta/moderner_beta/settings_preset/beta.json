@@ -1,0 +1,198 @@
+{
+  "biomeSettings": {
+    "moderner_beta:climate_distribution": {
+      "fuzzyGrass": true,
+      "smoothBorders": false
+    },
+    "moderner_beta:climate_mappings": {
+      "desert": {
+        "biome": "moderner_beta:beta_desert",
+        "deepOceanBiome": "moderner_beta:beta_ocean",
+        "oceanBiome": "moderner_beta:beta_ocean"
+      },
+      "forest": {
+        "biome": "moderner_beta:beta_forest",
+        "deepOceanBiome": "moderner_beta:beta_ocean",
+        "oceanBiome": "moderner_beta:beta_ocean"
+      },
+      "ice_desert": {
+        "biome": "moderner_beta:beta_tundra",
+        "deepOceanBiome": "moderner_beta:beta_frozen_ocean",
+        "oceanBiome": "moderner_beta:beta_frozen_ocean"
+      },
+      "plains": {
+        "biome": "moderner_beta:beta_plains",
+        "deepOceanBiome": "moderner_beta:beta_ocean",
+        "oceanBiome": "moderner_beta:beta_ocean"
+      },
+      "rainforest": {
+        "biome": "moderner_beta:beta_rainforest",
+        "deepOceanBiome": "moderner_beta:beta_warm_ocean",
+        "oceanBiome": "moderner_beta:beta_warm_ocean"
+      },
+      "savanna": {
+        "biome": "moderner_beta:beta_savanna",
+        "deepOceanBiome": "moderner_beta:beta_ocean",
+        "oceanBiome": "moderner_beta:beta_ocean"
+      },
+      "seasonal_forest": {
+        "biome": "moderner_beta:beta_seasonal_forest",
+        "deepOceanBiome": "moderner_beta:beta_lukewarm_ocean",
+        "oceanBiome": "moderner_beta:beta_lukewarm_ocean"
+      },
+      "shrubland": {
+        "biome": "moderner_beta:beta_shrubland",
+        "deepOceanBiome": "moderner_beta:beta_ocean",
+        "oceanBiome": "moderner_beta:beta_ocean"
+      },
+      "swampland": {
+        "biome": "moderner_beta:beta_swampland",
+        "deepOceanBiome": "moderner_beta:beta_cold_ocean",
+        "oceanBiome": "moderner_beta:beta_cold_ocean"
+      },
+      "taiga": {
+        "biome": "moderner_beta:beta_taiga",
+        "deepOceanBiome": "moderner_beta:beta_frozen_ocean",
+        "oceanBiome": "moderner_beta:beta_frozen_ocean"
+      },
+      "tundra": {
+        "biome": "moderner_beta:beta_tundra",
+        "deepOceanBiome": "moderner_beta:beta_frozen_ocean",
+        "oceanBiome": "moderner_beta:beta_frozen_ocean"
+      }
+    },
+    "moderner_beta:climate_scale": {
+      "detail": 0.25,
+      "rain": 0.05,
+      "temp": 0.025,
+      "weird": 0.003125
+    },
+    "moderner_beta:provider": "moderner_beta:beta",
+    "moderner_beta:temperature_height_scaling": "beta",
+    "moderner_beta:use_ocean_biomes": true
+  },
+  "caveBiomeSettings": {
+    "moderner_beta:cave_biome_voronoi": {
+      "depthMaxY": 64,
+      "depthMinY": -64,
+      "horizontalScale": 32.0,
+      "points": [
+        {
+          "biome": "",
+          "depth": 0.75,
+          "rain": 0.5,
+          "temp": 0.0
+        },
+        {
+          "biome": "minecraft:lush_caves",
+          "depth": 0.75,
+          "rain": 0.5,
+          "temp": 0.1
+        },
+        {
+          "biome": "",
+          "depth": 0.75,
+          "rain": 0.5,
+          "temp": 0.5
+        },
+        {
+          "biome": "minecraft:dripstone_caves",
+          "depth": 0.75,
+          "rain": 0.5,
+          "temp": 0.9
+        },
+        {
+          "biome": "",
+          "depth": 0.75,
+          "rain": 0.5,
+          "temp": 1.0
+        },
+        {
+          "biome": "",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 0.0
+        },
+        {
+          "biome": "minecraft:lush_caves",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 0.2
+        },
+        {
+          "biome": "",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 0.4
+        },
+        {
+          "biome": "minecraft:deep_dark",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 0.5
+        },
+        {
+          "biome": "",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 0.6
+        },
+        {
+          "biome": "minecraft:dripstone_caves",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 0.8
+        },
+        {
+          "biome": "",
+          "depth": 0.25,
+          "rain": 0.5,
+          "temp": 1.0
+        }
+      ],
+      "verticalScale": 16.0
+    },
+    "moderner_beta:provider": "moderner_beta:voronoi"
+  },
+  "chunkSettings": {
+    "moderner_beta:cave_generation": {
+      "fixCaveBorders": false,
+      "forceBetaCanyons": true,
+      "forceBetaCaves": true,
+      "seedMethod": "beta",
+      "useCarvers": true,
+      "useNoiseCaves": false
+    },
+    "moderner_beta:deepslate_generation": {
+      "block": "minecraft:deepslate",
+      "enabled": false,
+      "maxY": 8,
+      "minY": 0
+    },
+    "moderner_beta:noise_scale": {
+      "baseSize": 8.5,
+      "coordinate": 684.412,
+      "depthNoiseX": 200.0,
+      "depthNoiseZ": 200.0,
+      "farlands": false,
+      "height": 684.412,
+      "lowerLimit": 512.0,
+      "mainNoiseX": 80.0,
+      "mainNoiseY": 160.0,
+      "mainNoiseZ": 80.0,
+      "stretchY": 12.0,
+      "upperLimit": 512.0
+    },
+    "moderner_beta:noise_slide": {
+      "bottomOffset": 0,
+      "bottomSize": 3,
+      "bottomTarget": 15,
+      "topOffset": 0,
+      "topSize": 3,
+      "topTarget": -10
+    },
+    "moderner_beta:provider": "moderner_beta:beta",
+    "moderner_beta:sea_level_offset": 0,
+    "moderner_beta:use_surface_rules": false
+  }
+}
