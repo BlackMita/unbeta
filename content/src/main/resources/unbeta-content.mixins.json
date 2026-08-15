@@ -7,7 +7,9 @@
     "ChunkRegionTorchMixin",
     "MinecartPhysicsMixin",
     "EndermanMixin",
-    "EnderPearlParticleMixin"
+    "EnderPearlParticleMixin",
+    "CreeperBehaviorMixin",
+    "CreeperRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
