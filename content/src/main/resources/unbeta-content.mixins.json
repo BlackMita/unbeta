@@ -5,7 +5,8 @@
   "mixins": [
     "AbstractFireBlockMixin",
     "ChunkRegionTorchMixin",
-    "MinecartPhysicsMixin"
+    "MinecartPhysicsMixin",
+    "EndermanMixin"
   ],
   "injectors": {
     "defaultRequire": 1
