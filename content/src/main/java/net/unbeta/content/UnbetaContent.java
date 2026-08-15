@@ -84,6 +84,43 @@ public final class UnbetaContent implements ModInitializer {
         // Boom Spore: creeper-planted grenade, throwable like snowball.
         net.unbeta.content.boomspore.BoomSporeRegistry.register();
         LOG.info("Registered Boom Spore.");
+
+        // Mining hierarchy: stone/obsidian indestructible without correct tool.
+        // Using PlayerBlockBreakEvents.BEFORE (returns false = cancel break entirely)
+        // so the block never becomes air — true "indestructible" illusion.
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register(
+            (world, player, pos, state, blockEntity) -> {
+                net.minecraft.item.ItemStack tool = player.getMainHandStack();
+
+                // Stone/deepslate: needs iron+ pickaxe
+                if (state.isIn(net.minecraft.registry.tag.BlockTags.NEEDS_IRON_TOOL)) {
+                    boolean hasIron = tool.isOf(net.minecraft.item.Items.IRON_PICKAXE)
+                            || tool.isOf(net.minecraft.item.Items.DIAMOND_PICKAXE)
+                            || tool.isOf(net.minecraft.item.Items.NETHERITE_PICKAXE);
+                    if (!hasIron) return false; // cancel - block stays
+                }
+
+                // Obsidian: needs diamond pickaxe
+                if (state.isIn(net.minecraft.registry.tag.BlockTags.NEEDS_DIAMOND_TOOL)) {
+                    boolean hasDiamond = tool.isOf(net.minecraft.item.Items.DIAMOND_PICKAXE)
+                            || tool.isOf(net.minecraft.item.Items.NETHERITE_PICKAXE);
+                    if (!hasDiamond) return false; // cancel - block stays
+                }
+
+                return true; // allow break
+            });
+
+        // When obsidian is mined, remove any fire block above it.
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register(
+            (world, player, pos, state, blockEntity) -> {
+                if (state.isOf(net.minecraft.block.Blocks.OBSIDIAN)
+                        || state.isOf(net.minecraft.block.Blocks.CRYING_OBSIDIAN)) {
+                    var above = world.getBlockState(pos.up());
+                    if (above.getBlock() instanceof net.minecraft.block.AbstractFireBlock) {
+                        world.removeBlock(pos.up(), false);
+                    }
+                }
+            });
         // Remove all burnt mod creative entries except the 11 approved burnt-aesthetic blocks.
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, entries) -> {
             entries.getDisplayStacks().removeIf(stack -> {

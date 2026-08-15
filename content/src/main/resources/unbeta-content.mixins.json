@@ -10,7 +10,9 @@
     "EnderPearlParticleMixin",
     "CreeperBehaviorMixin",
     "CreeperRendererMixin",
-    "BlockBreakMixin"
+    "BlockBreakMixin",
+    "DiamondOreMiningMixin",
+    "WoodToolDurabilityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
