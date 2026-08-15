@@ -53,6 +53,10 @@ public final class ContentRules implements RuleProvider {
         // 1. The dimension. This one line is the architecture-validation test.
         ctx.set(RuleKey.of(ContentKind.DIMENSION, mc("the_nether")), true);
 
+        // Re-enable wet sponge (gated by Phase 1, but needed for sponge mechanics).
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("wet_sponge")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("wet_sponge")), false);
+
         // Phase 2: Remove stone tools (hierarchy is now Wood -> Iron -> Diamond).
         for (String tool : new String[]{"stone_pickaxe","stone_axe","stone_shovel","stone_hoe","stone_sword"}) {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(tool)), true);

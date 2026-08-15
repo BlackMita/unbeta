@@ -12,7 +12,9 @@
     "CreeperRendererMixin",
     "BlockBreakMixin",
     "DiamondOreMiningMixin",
-    "WoodToolDurabilityMixin"
+    "WoodToolDurabilityMixin",
+    "PigTemptMixin",
+    "ChickenTemptMixin"
   ],
   "injectors": {
     "defaultRequire": 1
