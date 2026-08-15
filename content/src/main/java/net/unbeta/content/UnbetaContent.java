@@ -80,6 +80,18 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.jackolantern.JackOLanternRegistry.register();
         net.unbeta.content.jackolantern.JackOLanternBurnout.register();
         LOG.info("Registered Unbeta Jack o\'Lanterns.");
+        // Remove all burnt mod creative entries except the 11 approved burnt-aesthetic blocks.
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, entries) -> {
+            entries.getDisplayStacks().removeIf(stack -> {
+                var id = net.minecraft.registry.Registries.ITEM.getId(stack.getItem()).toString();
+                return id.startsWith("burnt:") && !java.util.Set.of(
+                    "burnt:burnt_log", "burnt:burnt_planks", "burnt:burnt_stairs",
+                    "burnt:burnt_slab", "burnt:burnt_fence", "burnt:burnt_fencegate",
+                    "burnt:burnt_pressure_plate", "burnt:burnt_oak_door",
+                    "burnt:burnt_oak_trapdoor", "burnt:burnt_ladder", "burnt:burnt_carpet"
+                ).contains(id);
+            });
+        });
 
         // TEMP (testing): put the torch in the creative functional-blocks tab so it can be obtained.
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {

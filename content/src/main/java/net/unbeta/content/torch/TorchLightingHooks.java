@@ -19,7 +19,14 @@ public final class TorchLightingHooks {
         UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
             ItemStack held = player.getStackInHand(hand);
             if (!TorchItems.isUnlitTorch(held)) return ActionResult.PASS;
-            if (world.getBlockState(hit.getBlockPos()).getBlock() instanceof AbstractFireBlock) {
+            var clickedState = world.getBlockState(hit.getBlockPos());
+                var clickedId = net.minecraft.registry.Registries.BLOCK.getId(clickedState.getBlock());
+                boolean isFire = clickedState.getBlock() instanceof AbstractFireBlock
+                        || (clickedId.getNamespace().equals("burnt")
+                            && (clickedId.getPath().startsWith("blazing_")
+                                || clickedId.getPath().startsWith("smoldering_")
+                                || clickedId.getPath().startsWith("ember_")));
+                if (isFire) {
                 if (!world.isClient) {
                     player.setStackInHand(hand, TorchItems.createLit(held, world.getTime()));
                 }

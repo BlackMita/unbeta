@@ -21,6 +21,6 @@
     }
   },
   "rewards": {
-    "function": "mp.attr:health_gain/landing"
+    "function": "unbeta-content:golden_apple_health_gain"
   }
 }
