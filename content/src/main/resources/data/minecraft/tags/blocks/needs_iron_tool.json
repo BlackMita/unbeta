@@ -1,0 +1,17 @@
+{
+  "replace": true,
+  "values": [
+    "minecraft:stone",
+    "minecraft:granite",
+    "minecraft:diorite",
+    "minecraft:andesite",
+    "minecraft:deepslate",
+    "minecraft:cobbled_deepslate",
+    "minecraft:polished_deepslate",
+    "minecraft:deepslate_bricks",
+    "minecraft:deepslate_tiles",
+    "minecraft:chiseled_deepslate",
+    "minecraft:cracked_deepslate_bricks",
+    "minecraft:cracked_deepslate_tiles"
+  ]
+}

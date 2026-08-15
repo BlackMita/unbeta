@@ -53,6 +53,11 @@ public final class ContentRules implements RuleProvider {
         // 1. The dimension. This one line is the architecture-validation test.
         ctx.set(RuleKey.of(ContentKind.DIMENSION, mc("the_nether")), true);
 
+        // Phase 2: Remove stone tools (hierarchy is now Wood -> Iron -> Diamond).
+        for (String tool : new String[]{"stone_pickaxe","stone_axe","stone_shovel","stone_hoe","stone_sword"}) {
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(tool)), true);
+        }
+
         // Phase 2: re-enable glow berries (Phase 1 gated them; now they're the
         // ingredient for Glowsand and a held light source via dynamic lights).
         // Cave vines re-enabled so they drop berries from lush caves.

@@ -9,7 +9,8 @@
     "EndermanMixin",
     "EnderPearlParticleMixin",
     "CreeperBehaviorMixin",
-    "CreeperRendererMixin"
+    "CreeperRendererMixin",
+    "BlockBreakMixin"
   ],
   "injectors": {
     "defaultRequire": 1
