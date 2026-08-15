@@ -17,7 +17,7 @@ public class EnderPearlParticleMixin {
     private static final Vector3f UNBETA_NAVY = Vec3d.unpackRgb(0x1B2A6B).toVector3f();
 
     @ModifyArg(
-        method = "tick",
+        method = "onCollision",
         at = @At(value = "INVOKE",
                  target = "Lnet/minecraft/world/World;addParticle(Lnet/minecraft/particle/ParticleEffect;DDDDDD)V"),
         index = 0
