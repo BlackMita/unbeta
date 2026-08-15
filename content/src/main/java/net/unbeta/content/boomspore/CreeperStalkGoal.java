@@ -75,6 +75,8 @@ public class CreeperStalkGoal extends Goal {
         state = State.IDLE;
         target = null;
         creeper.getNavigation().stop();
+        // Always reset the grin when the goal stops, regardless of reason
+        creeper.getDataTracker().set(CreeperDataTracker.HAS_PLANTED, false);
     }
 
     @Override
