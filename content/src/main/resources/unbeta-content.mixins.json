@@ -6,7 +6,8 @@
     "AbstractFireBlockMixin",
     "ChunkRegionTorchMixin",
     "MinecartPhysicsMixin",
-    "EndermanMixin"
+    "EndermanMixin",
+    "EnderPearlParticleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
