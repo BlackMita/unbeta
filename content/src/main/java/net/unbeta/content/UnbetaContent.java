@@ -80,6 +80,10 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.jackolantern.JackOLanternRegistry.register();
         net.unbeta.content.jackolantern.JackOLanternBurnout.register();
         LOG.info("Registered Unbeta Jack o\'Lanterns.");
+
+        // Boom Spore: creeper-planted grenade, throwable like snowball.
+        net.unbeta.content.boomspore.BoomSporeRegistry.register();
+        LOG.info("Registered Boom Spore.");
         // Remove all burnt mod creative entries except the 11 approved burnt-aesthetic blocks.
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, entries) -> {
             entries.getDisplayStacks().removeIf(stack -> {
