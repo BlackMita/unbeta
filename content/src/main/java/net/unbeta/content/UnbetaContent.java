@@ -85,6 +85,20 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.boomspore.BoomSporeRegistry.register();
         LOG.info("Registered Boom Spore.");
 
+        // Lit torch melee: 50% chance to set mob on fire for 4 seconds when struck.
+        net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
+            (player, world, hand, entity, hitResult) -> {
+                if (world.isClient) return net.minecraft.util.ActionResult.PASS;
+                net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+                boolean litTorch = net.unbeta.content.torch.TorchItems.isLitTorch(held)
+                        || net.unbeta.content.jackolantern.JackOLanternItems.isLit(held);
+                if (litTorch && entity instanceof net.minecraft.entity.LivingEntity
+                        && world.random.nextFloat() < 0.5F) {
+                    entity.setOnFireFor(4);
+                }
+                return net.minecraft.util.ActionResult.PASS;
+            });
+
         // Furnace ignition: must right-click with flint+steel or lit torch to start.
         // Right-clicking a lit furnace with an unlit torch lights the torch.
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
