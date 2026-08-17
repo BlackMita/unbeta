@@ -19,14 +19,25 @@ public final class TorchLightingHooks {
         UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
             ItemStack held = player.getStackInHand(hand);
             if (!TorchItems.isUnlitTorch(held)) return ActionResult.PASS;
-            var clickedState = world.getBlockState(hit.getBlockPos());
-                var clickedId = net.minecraft.registry.Registries.BLOCK.getId(clickedState.getBlock());
-                boolean isFire = clickedState.getBlock() instanceof AbstractFireBlock
-                        || (clickedId.getNamespace().equals("burnt")
-                            && (clickedId.getPath().startsWith("blazing_")
-                                || clickedId.getPath().startsWith("smoldering_")
-                                || clickedId.getPath().startsWith("ember_")));
-                if (isFire) {
+            // Check BOTH the clicked block AND the adjacent block (where torch would be placed).
+            // Burnt mod renders fire on block faces — clicking that face targets the adjacent pos.
+            boolean isFire = false;
+            for (net.minecraft.util.math.BlockPos checkPos : new net.minecraft.util.math.BlockPos[]{
+                    hit.getBlockPos(), hit.getBlockPos().offset(hit.getSide())}) {
+                var checkState = world.getBlockState(checkPos);
+                var checkId = net.minecraft.registry.Registries.BLOCK.getId(checkState.getBlock());
+                if (checkState.getBlock() instanceof AbstractFireBlock
+                        || (checkId.getNamespace().equals("burnt")
+                            && (checkId.getPath().startsWith("blazing_")
+                                || checkId.getPath().startsWith("smoldering_")
+                                || checkId.getPath().startsWith("ember_")
+                                || checkId.getPath().contains("fire")
+                                || checkId.getPath().contains("flame")))) {
+                    isFire = true;
+                    break;
+                }
+            }
+            if (isFire) {
                 if (!world.isClient) {
                     player.setStackInHand(hand, TorchItems.createLit(held, world.getTime()));
                 }
