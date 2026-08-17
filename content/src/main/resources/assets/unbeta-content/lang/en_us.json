@@ -12,5 +12,11 @@
   "block.minecraft.jack_o_lantern": "Vanilla Jack o'Lantern",
   "block.unbeta-content.glowsand": "Glowsand",
   "item.unbeta-content.glowsand": "Glowsand",
-  "item.unbeta-content.boom_spore": "Boom Spore"
+  "item.unbeta-content.boom_spore": "Boom Spore",
+  "block.minecraft.granite": "Anstone",
+  "block.minecraft.diorite": "Stonerite",
+  "block.minecraft.andesite": "Stonite",
+  "item.minecraft.granite": "Anstone",
+  "item.minecraft.diorite": "Stonerite",
+  "item.minecraft.andesite": "Stonite"
 }
