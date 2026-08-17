@@ -14,7 +14,8 @@
     "DiamondOreMiningMixin",
     "WoodToolDurabilityMixin",
     "PigTemptMixin",
-    "ChickenTemptMixin"
+    "ChickenTemptMixin",
+    "FurnaceIgnitionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -85,6 +85,44 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.boomspore.BoomSporeRegistry.register();
         LOG.info("Registered Boom Spore.");
 
+        // Furnace ignition: must right-click with flint+steel or lit torch to start.
+        // Right-clicking a lit furnace with an unlit torch lights the torch.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
+            var state = world.getBlockState(hit.getBlockPos());
+            if (!(state.getBlock() instanceof net.minecraft.block.AbstractFurnaceBlock)) {
+                return net.minecraft.util.ActionResult.PASS;
+            }
+            net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+            boolean isIgniter = held.isOf(net.minecraft.item.Items.FLINT_AND_STEEL)
+                    || net.unbeta.content.torch.TorchItems.isLitTorch(held)
+                    || net.unbeta.content.jackolantern.JackOLanternItems.isLit(held);
+            boolean isUnlitTorch = net.unbeta.content.torch.TorchItems.isUnlitTorch(held);
+            boolean furnaceLit = state.get(net.minecraft.block.AbstractFurnaceBlock.LIT);
+
+            // Unlit torch + lit furnace → light the torch
+            if (isUnlitTorch && furnaceLit) {
+                if (!world.isClient) {
+                    player.setStackInHand(hand,
+                        net.unbeta.content.torch.TorchItems.createLit(held, world.getTime()));
+                }
+                return net.minecraft.util.ActionResult.SUCCESS;
+            }
+
+            // Igniter + unlit furnace → ignite it
+            if (isIgniter && !furnaceLit) {
+                if (!world.isClient) {
+                    // Mark this furnace as ignited so getFuelTime will work
+                    net.unbeta.content.furnace.FurnaceIgnitionTracker.ignite(hit.getBlockPos());
+                    if (held.isOf(net.minecraft.item.Items.FLINT_AND_STEEL)
+                            && !player.getAbilities().creativeMode) {
+                        held.damage(1, player, p2 -> p2.sendToolBreakStatus(hand));
+                    }
+                }
+                return net.minecraft.util.ActionResult.SUCCESS;
+            }
+            return net.minecraft.util.ActionResult.PASS;
+        });
+
         // Mining hierarchy: stone/obsidian indestructible without correct tool.
         // Using PlayerBlockBreakEvents.BEFORE (returns false = cancel break entirely)
         // so the block never becomes air — true "indestructible" illusion.
