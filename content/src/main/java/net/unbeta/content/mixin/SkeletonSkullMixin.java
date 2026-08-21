@@ -19,7 +19,9 @@ public abstract class SkeletonSkullMixin {
         if (self.getWorld().isClient) return;
         if (!(self.getTarget() instanceof PlayerEntity player)) return;
         boolean wearingSkull = player.getEquippedStack(EquipmentSlot.HEAD)
-                .isOf(Items.SKELETON_SKULL);
+                .isOf(Items.SKELETON_SKULL)
+                || player.getEquippedStack(EquipmentSlot.HEAD)
+                .isOf(net.unbeta.content.jackolantern.JackOLanternRegistry.UNLIT_ITEM);
         boolean playerAttackedUs = self.getAttacker() == player;
         if (wearingSkull && !playerAttackedUs) {
             self.setTarget(null);

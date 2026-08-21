@@ -110,4 +110,22 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
     public BlockRenderType getRenderType(BlockState state) {
         return BlockRenderType.MODEL;
     }
+
+    @Override
+    public void neighborUpdate(BlockState state, net.minecraft.world.World world, BlockPos pos,
+                               net.minecraft.block.Block sourceBlock, BlockPos sourcePos, boolean notify) {
+        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify);
+        if (world.isClient) return;
+        // Source water or lava adjacent destroys the bone pile
+        net.minecraft.fluid.FluidState fluid = world.getFluidState(pos);
+        if (!fluid.isEmpty() && fluid.isStill()) {
+            var be = world.getBlockEntity(pos);
+            if (be instanceof BonePileBlockEntity bonePile) {
+                bonePile.scatterItems(world);
+                bonePile.clear();
+            }
+            world.removeBlock(pos, false);
+        }
+    }
+
 }

@@ -35,7 +35,7 @@ public class CreeperStalkGoal extends Goal {
     private static final int FLEE_DURATION_TICKS = 160; // 8 seconds
 
     private final CreeperEntity creeper;
-    private PlayerEntity target;
+    private net.minecraft.entity.LivingEntity target;
 
     private enum State { STALK, FREEZE, PLANT, FLEE, IDLE }
     private State state = State.IDLE;
@@ -49,9 +49,22 @@ public class CreeperStalkGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        var t = creeper.getTarget();
-        if (t instanceof PlayerEntity p && p.isAlive() && !p.isSpectator()) {
-            this.target = p;
+        net.minecraft.entity.LivingEntity t = creeper.getTarget();
+        if (t == null || !t.isAlive()) return false;
+
+        // If target is a player wearing unlit JoL who hasn't attacked us — don't stalk
+        if (t instanceof PlayerEntity p) {
+            if (!p.isSpectator()) {
+                boolean wearingJol = p.getEquippedStack(net.minecraft.entity.EquipmentSlot.HEAD)
+                        .isOf(net.unbeta.content.jackolantern.JackOLanternRegistry.UNLIT_ITEM);
+                boolean attacked = creeper.getAttacker() == p;
+                if (wearingJol && !attacked) return false;
+                this.target = p;
+                return true;
+            }
+        } else if (t instanceof net.minecraft.entity.LivingEntity) {
+            // Non-player attacker (skeleton, zombie, etc.) — retaliate
+            this.target = t;
             return true;
         }
         return false;
@@ -72,11 +85,14 @@ public class CreeperStalkGoal extends Goal {
 
     @Override
     public void stop() {
+        // Only reset grin if we HAVEN'T planted yet.
+        // If we have planted, keep HAS_PLANTED=true until the spore explodes.
+        if (state != State.FLEE) {
+            creeper.getDataTracker().set(CreeperDataTracker.HAS_PLANTED, false);
+        }
         state = State.IDLE;
         target = null;
         creeper.getNavigation().stop();
-        // Always reset the grin when the goal stops, regardless of reason
-        creeper.getDataTracker().set(CreeperDataTracker.HAS_PLANTED, false);
     }
 
     @Override
@@ -129,21 +145,28 @@ public class CreeperStalkGoal extends Goal {
     private void plant() {
         if (creeper.getWorld().isClient) return;
 
-        // Create a live boom spore and insert it into the player's inventory
+        // Create a live boom spore
         ItemStack spore = BoomSporeItem.createLive(creeper.getWorld().getTime());
 
-        // Try to insert into inventory — if full, drop it at their feet
-        if (!target.getInventory().insertStack(spore)) {
-            target.dropItem(spore, false);
+        if (target instanceof PlayerEntity playerTarget) {
+            // Insert into player inventory, drop at feet if full
+            if (!playerTarget.getInventory().insertStack(spore)) {
+                playerTarget.dropItem(spore, false);
+            }
+        } else {
+            // For mobs, drop the spore at their feet (explodes on landing)
+            net.minecraft.entity.ItemEntity drop = new net.minecraft.entity.ItemEntity(
+                    creeper.getWorld(),
+                    target.getX(), target.getY(), target.getZ(), spore);
+            drop.setPickupDelayInfinite();
+            creeper.getWorld().spawnEntity(drop);
         }
 
         // Play sounds: long fuse hiss + slowed-down item pickup
         creeper.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                SoundEvents.ENTITY_CREEPER_PRIMED, SoundCategory.HOSTILE,
-                1.0F, 0.7F); // fuse sound, slightly lower pitch
+                SoundEvents.ENTITY_CREEPER_PRIMED, SoundCategory.HOSTILE, 1.0F, 0.7F);
         creeper.getWorld().playSound(null, target.getX(), target.getY(), target.getZ(),
-                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.HOSTILE,
-                0.5F, 0.5F); // slowed pickup pop (lower pitch = slower)
+                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.HOSTILE, 0.5F, 0.5F);
 
         // Mark the creeper as having planted (for the grin texture + flee behavior)
         creeper.getDataTracker().set(

@@ -48,8 +48,24 @@ public abstract class SkeletonDeathMixin {
         if (landingPos == null) return;
 
         BlockState landingState = world.getBlockState(landingPos);
-        if (!landingState.isAir() && !landingState.isOf(Blocks.LAVA)
-                && !landingState.isOf(BonePileRegistry.BONE_PILE_BLOCK)) {
+        // Blocks the bone pile can REPLACE (land on top of/displace)
+        boolean canReplace = landingState.isAir()
+                || landingState.isOf(BonePileRegistry.BONE_PILE_BLOCK)
+                || landingState.isOf(Blocks.SNOW)
+                || landingState.isOf(Blocks.GRASS)
+                || landingState.isOf(Blocks.TALL_GRASS)
+                || landingState.isIn(net.minecraft.registry.tag.BlockTags.FLOWERS)
+                || (landingState.isOf(Blocks.WATER) && !landingState.get(net.minecraft.state.property.Properties.LEVEL_15.equals(net.minecraft.state.property.Properties.LEVEL_15) ? net.minecraft.state.property.Properties.LEVEL_15 : net.minecraft.state.property.Properties.LEVEL_15).equals(0));
+        // Flowing water/lava: use fluid state level check
+        net.minecraft.fluid.FluidState fluidState = world.getFluidState(landingPos);
+        boolean isFlowing = !fluidState.isEmpty() && !fluidState.isStill();
+        boolean isSource = !fluidState.isEmpty() && fluidState.isStill();
+        if (isSource) {
+            // Source water/lava destroys bone pile before landing
+            scatterGear(skeleton, world, landingPos);
+            return;
+        }
+        if (!canReplace && !isFlowing) {
             scatterGear(skeleton, world, landingPos);
             return;
         }

@@ -18,7 +18,9 @@
     "FurnaceIgnitionMixin",
     "SkeletonDeathMixin",
     "SkeletonSkullMixin",
-    "SkeletonDaylightMixin"
+    "SkeletonDaylightMixin",
+    "JolDisguiseMixin",
+    "PumpkinShearMixin"
   ],
   "injectors": {
     "defaultRequire": 1

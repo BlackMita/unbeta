@@ -53,6 +53,9 @@ public final class ContentRules implements RuleProvider {
         // 1. The dimension. This one line is the architecture-validation test.
         ctx.set(RuleKey.of(ContentKind.DIMENSION, mc("the_nether")), true);
 
+        // Soft-lock carved pumpkin — shears on pumpkin now produces unlit Unbeta JoL instead.
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("carved_pumpkin")), true);
+
         // Re-enable wet sponge (gated by Phase 1, but needed for sponge mechanics).
         ctx.set(RuleKey.of(ContentKind.BLOCK, mc("wet_sponge")), false);
         ctx.set(RuleKey.of(ContentKind.ITEM, mc("wet_sponge")), false);

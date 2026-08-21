@@ -49,7 +49,7 @@ public final class JackOLanternRegistry {
                         UNLIT_BLOCK, LIT_BLOCK).build());
 
         UNLIT_ITEM = Registry.register(Registries.ITEM, id("jack_o_lantern"),
-                new BlockItem(UNLIT_BLOCK, new Item.Settings().maxCount(16)));
+                new JackOLanternUnlitItem(UNLIT_BLOCK, new Item.Settings().maxCount(16)));
 
         LIT_ITEM = Registry.register(Registries.ITEM, id("lit_jack_o_lantern"),
                 new JackOLanternLitItem(LIT_BLOCK, new Item.Settings().maxCount(1)));
