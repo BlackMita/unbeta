@@ -18,5 +18,6 @@
   "block.minecraft.andesite": "Stonite",
   "item.minecraft.granite": "Anstone",
   "item.minecraft.diorite": "Stonerite",
-  "item.minecraft.andesite": "Stonite"
+  "item.minecraft.andesite": "Stonite",
+  "block.unbeta-content.bone_pile": "Bone Pile"
 }

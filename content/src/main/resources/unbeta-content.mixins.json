@@ -15,7 +15,10 @@
     "WoodToolDurabilityMixin",
     "PigTemptMixin",
     "ChickenTemptMixin",
-    "FurnaceIgnitionMixin"
+    "FurnaceIgnitionMixin",
+    "SkeletonDeathMixin",
+    "SkeletonSkullMixin",
+    "SkeletonDaylightMixin"
   ],
   "injectors": {
     "defaultRequire": 1

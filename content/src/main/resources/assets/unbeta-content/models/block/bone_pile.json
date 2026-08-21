@@ -1,0 +1,121 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "top": "unbeta-content:block/bone_pile_top",
+    "side": "unbeta-content:block/bone_pile_side",
+    "particle": "unbeta-content:block/bone_pile_side"
+  },
+  "elements": [
+    {
+      "name": "bone_base",
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        3,
+        16
+      ],
+      "faces": {
+        "up": {
+          "texture": "#top"
+        },
+        "down": {
+          "texture": "#top"
+        },
+        "north": {
+          "texture": "#side"
+        },
+        "south": {
+          "texture": "#side"
+        },
+        "east": {
+          "texture": "#side"
+        },
+        "west": {
+          "texture": "#side"
+        }
+      }
+    },
+    {
+      "name": "skull",
+      "from": [
+        4,
+        3,
+        4
+      ],
+      "to": [
+        12,
+        9,
+        12
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          6,
+          8
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#top",
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ]
+        },
+        "down": {
+          "texture": "#side",
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ]
+        },
+        "north": {
+          "texture": "#top",
+          "uv": [
+            4,
+            4,
+            12,
+            10
+          ]
+        },
+        "south": {
+          "texture": "#top",
+          "uv": [
+            4,
+            4,
+            12,
+            10
+          ]
+        },
+        "east": {
+          "texture": "#side",
+          "uv": [
+            4,
+            4,
+            12,
+            10
+          ]
+        },
+        "west": {
+          "texture": "#side",
+          "uv": [
+            4,
+            4,
+            12,
+            10
+          ]
+        }
+      }
+    }
+  ]
+}

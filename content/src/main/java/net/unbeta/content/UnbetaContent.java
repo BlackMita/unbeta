@@ -85,6 +85,11 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.boomspore.BoomSporeRegistry.register();
         LOG.info("Registered Boom Spore.");
 
+        // Bone Pile: skeleton death remnant with 9-slot inventory, respawns after 20s.
+        net.unbeta.content.skeleton.BonePileRegistry.register();
+        net.unbeta.content.skeleton.BonePileRespawn.register();
+        LOG.info("Registered Bone Pile.");
+
         // Lit torch melee: 50% chance to set mob on fire for 4 seconds when struck.
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
             (player, world, hand, entity, hitResult) -> {
