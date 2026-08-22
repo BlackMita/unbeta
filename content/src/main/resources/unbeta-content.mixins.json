@@ -23,7 +23,8 @@
     "PumpkinShearMixin",
     "CaveSpiderPoisonMixin",
     "SpiderBurstMixin",
-    "CaveSpiderScaleMixin"
+    "CaveSpiderScaleMixin",
+    "ZombieAccelerationMixin"
   ],
   "injectors": {
     "defaultRequire": 1
