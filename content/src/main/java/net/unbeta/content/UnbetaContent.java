@@ -94,6 +94,10 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.zombie.SulliedChunkTick.register();
         LOG.info("Sullied chunk system registered.");
 
+        // Overworld rail network: deterministic grid of tunnels and surface trails.
+        net.unbeta.content.rails.RailRegistry.register();
+        LOG.info("Registered rail network.");
+
         // Lit torch melee: 50% chance to set mob on fire for 4 seconds when struck.
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
             (player, world, hand, entity, hitResult) -> {
@@ -151,6 +155,8 @@ public final class UnbetaContent implements ModInitializer {
         // so the block never becomes air — true "indestructible" illusion.
         net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register(
             (world, player, pos, state, blockEntity) -> {
+                // Creative mode bypasses all reform rules (same as bedrock)
+                if (player.getAbilities().creativeMode) return true;
                 net.minecraft.item.ItemStack tool = player.getMainHandStack();
 
                 // Stone/deepslate: needs iron+ pickaxe

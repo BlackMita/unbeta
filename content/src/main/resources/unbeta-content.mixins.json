@@ -25,7 +25,9 @@
     "SpiderBurstMixin",
     "CaveSpiderScaleMixin",
     "ZombieAccelerationMixin",
-    "ZombieSulliedMixin"
+    "ZombieSulliedMixin",
+    "AbstractRailBlockMixin",
+    "FenceRailSupportMixin"
   ],
   "injectors": {
     "defaultRequire": 1
