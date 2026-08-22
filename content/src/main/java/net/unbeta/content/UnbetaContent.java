@@ -90,6 +90,10 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.skeleton.BonePileRespawn.register();
         LOG.info("Registered Bone Pile.");
 
+        // Sullied chunks: zombie death marks chunk, rising zombie spawns on next player entry.
+        net.unbeta.content.zombie.SulliedChunkTick.register();
+        LOG.info("Sullied chunk system registered.");
+
         // Lit torch melee: 50% chance to set mob on fire for 4 seconds when struck.
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
             (player, world, hand, entity, hitResult) -> {

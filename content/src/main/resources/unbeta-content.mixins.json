@@ -24,7 +24,8 @@
     "CaveSpiderPoisonMixin",
     "SpiderBurstMixin",
     "CaveSpiderScaleMixin",
-    "ZombieAccelerationMixin"
+    "ZombieAccelerationMixin",
+    "ZombieSulliedMixin"
   ],
   "injectors": {
     "defaultRequire": 1
