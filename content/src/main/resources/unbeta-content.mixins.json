@@ -20,7 +20,10 @@
     "SkeletonSkullMixin",
     "SkeletonDaylightMixin",
     "JolDisguiseMixin",
-    "PumpkinShearMixin"
+    "PumpkinShearMixin",
+    "CaveSpiderPoisonMixin",
+    "SpiderBurstMixin",
+    "CaveSpiderScaleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
