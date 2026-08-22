@@ -98,6 +98,10 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.rails.RailRegistry.register();
         LOG.info("Registered rail network.");
 
+        // Bundled datapacks: auto-install into every new world's datapacks folder.
+        net.unbeta.content.datapack.BundledDatapackInstaller.register();
+        LOG.info("Bundled datapack installer registered.");
+
         // Lit torch melee: 50% chance to set mob on fire for 4 seconds when struck.
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
             (player, world, hand, entity, hitResult) -> {
