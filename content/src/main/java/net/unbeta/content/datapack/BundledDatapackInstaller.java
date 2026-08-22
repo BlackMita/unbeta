@@ -45,10 +45,17 @@ public final class BundledDatapackInstaller {
         }
 
         if (installedAny) {
-            // Rescan so the pack manager discovers the newly copied zips,
-            // then reload with ALL known pack names so they get enabled.
+            // Rescan so the pack manager discovers the newly copied zips.
             server.getDataPackManager().scanPacks();
-            server.reloadResources(server.getDataPackManager().getNames())
+            // Pass currently-enabled names PLUS our new pack names only.
+            // Using getNames() would enable disabled/experimental packs too.
+            java.util.Set<String> toEnable = new java.util.LinkedHashSet<>(
+                    server.getDataPackManager().getEnabledNames());
+            for (String packName : PACKS) {
+                // Pack name as Minecraft sees it (filename without .zip, prefixed with "file/")
+                toEnable.add("file/" + packName);
+            }
+            server.reloadResources(toEnable)
                 .exceptionally(t -> { net.unbeta.content.UnbetaContent.LOG.error("[Unbeta] Reload failed", t); return null; });
         }
     }

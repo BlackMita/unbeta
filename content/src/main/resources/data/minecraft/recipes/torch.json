@@ -1,13 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
-  "category": "decorations",
-  "pattern": [ "C", "S" ],
-  "key": {
-    "C": { "tag": "minecraft:coals" },
-    "S": { "item": "minecraft:stick" }
-  },
-  "result": {
-    "item": "unbeta-content:torch",
-    "count": 1
-  }
+  "pattern": [ "X" ],
+  "key": { "X": { "item": "minecraft:barrier" } },
+  "result": { "item": "minecraft:barrier", "count": 1 }
 }
