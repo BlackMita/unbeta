@@ -27,7 +27,8 @@
     "ZombieAccelerationMixin",
     "ZombieSulliedMixin",
     "AbstractRailBlockMixin",
-    "FenceRailSupportMixin"
+    "FenceRailSupportMixin",
+    "JolOverlayMixin"
   ],
   "injectors": {
     "defaultRequire": 1

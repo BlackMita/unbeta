@@ -53,6 +53,69 @@ public final class ContentRules implements RuleProvider {
         // 1. The dimension. This one line is the architecture-validation test.
         ctx.set(RuleKey.of(ContentKind.DIMENSION, mc("the_nether")), true);
 
+        // Creative inventory additions
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("carrot")), false);
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("carrots")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("sweet_berries")), false);
+
+        // Creative inventory removals
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("cod")), true);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("cooked_cod")), true);
+
+        // Netherite cloud boots removed via ItemGroupEvents in UnbetaContent.java
+
+        // Additional re-enables batch 2
+        for (String id : new String[]{
+                "flowering_azalea", "azalea", "moss_block", "moss_carpet",
+                "white_carpet", "orange_carpet", "magenta_carpet", "light_blue_carpet",
+                "yellow_carpet", "lime_carpet", "pink_carpet", "gray_carpet",
+                "light_gray_carpet", "cyan_carpet", "purple_carpet", "blue_carpet",
+                "brown_carpet", "green_carpet", "red_carpet", "black_carpet"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
+        }
+
+        // Additional re-enables
+        for (String id : new String[]{
+                "oak_button", "azure_bluet", "cornflower", "oxeye_daisy", "rose_bush",
+                "composter", "chiseled_stone_bricks", "stonecutter"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
+        }
+
+        // Sandstone variants (no red sandstone)
+        for (String id : new String[]{
+                "chiseled_sandstone", "cut_sandstone", "cut_sandstone_slab",
+                "sandstone_wall", "cobblestone_wall", "mossy_cobblestone_wall",
+                "sandstone_stairs", "sandstone_slab", "smooth_sandstone",
+                "smooth_sandstone_stairs", "smooth_sandstone_slab"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
+        }
+
+        // Terracotta (plain only)
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("terracotta")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("terracotta")), false);
+
+        // Peony
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("peony")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("peony")), false);
+
+        // Flower pot
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("flower_pot")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("flower_pot")), false);
+
+        // Potted plants (flowers, mushrooms, cactus, fern, dead bush — no saplings, no nether)
+        for (String id : new String[]{
+                "potted_allium", "potted_azure_bluet", "potted_blue_orchid",
+                "potted_brown_mushroom", "potted_cactus", "potted_cornflower",
+                "potted_dandelion", "potted_dead_bush", "potted_fern",
+                "potted_lily_of_the_valley", "potted_orange_tulip",
+                "potted_oxeye_daisy", "potted_pink_tulip", "potted_poppy",
+                "potted_red_mushroom", "potted_white_tulip"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
+        } // cloudboots:netherite_cloud_boots
+
         // Soft-lock carved pumpkin — shears on pumpkin now produces unlit Unbeta JoL instead.
         ctx.set(RuleKey.of(ContentKind.ITEM, mc("carved_pumpkin")), true);
 

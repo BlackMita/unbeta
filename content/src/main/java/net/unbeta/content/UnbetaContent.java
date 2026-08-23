@@ -102,6 +102,12 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.datapack.BundledDatapackInstaller.register();
         LOG.info("Bundled datapack installer registered.");
 
+        // Remove netherite cloud boots from creative menu
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, entries) -> {
+            entries.getDisplayStacks().removeIf(stack ->
+                stack.getItem().toString().contains("netherite_cloud_boots"));
+        });
+
         // Lit torch melee: 50% chance to set mob on fire for 4 seconds when struck.
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
             (player, world, hand, entity, hitResult) -> {
