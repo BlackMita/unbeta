@@ -64,6 +64,11 @@ public final class ContentRules implements RuleProvider {
 
         // Netherite cloud boots removed via ItemGroupEvents in UnbetaContent.java
 
+        // Unlike-Like prerequisites
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("shield")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("slime_block")), false);
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("slime_block")), false);
+
         // Food fixes
         // Mutton
         ctx.set(RuleKey.of(ContentKind.ITEM, mc("mutton")), false);

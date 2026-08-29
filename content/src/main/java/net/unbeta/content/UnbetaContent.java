@@ -147,6 +147,10 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.datapack.BundledDatapackInstaller.register();
         LOG.info("Bundled datapack installer registered.");
 
+        // Unlike-Like: gelatinous item-stealing hostile mob.
+        net.unbeta.content.unlikelike.UnlikeLikeRegistry.register();
+        LOG.info("Unlike-Like registered.");
+
         // Remove netherite cloud boots from creative menu
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, entries) -> {
             entries.getDisplayStacks().removeIf(stack ->
