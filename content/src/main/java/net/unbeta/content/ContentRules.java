@@ -64,6 +64,17 @@ public final class ContentRules implements RuleProvider {
 
         // Netherite cloud boots removed via ItemGroupEvents in UnbetaContent.java
 
+        // Food fixes
+        // Mutton
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("mutton")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("cooked_mutton")), false);
+        // Potatoes
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("potato")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("baked_potato")), false);
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("potatoes")), false);
+        // Leather (needed for rotten flesh → leather smelting)
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("leather")), false);
+
         // Additional re-enables batch 2
         for (String id : new String[]{
                 "flowering_azalea", "azalea", "moss_block", "moss_carpet",
