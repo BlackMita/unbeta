@@ -18,7 +18,9 @@ public final class TorchLightingHooks {
         // Fire block → light held unlit torch (item swap)
         UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
             ItemStack held = player.getStackInHand(hand);
-            if (!TorchItems.isUnlitTorch(held)) return ActionResult.PASS;
+            boolean heldUnlitTorch = TorchItems.isUnlitTorch(held);
+            boolean heldUnlitJol = net.unbeta.content.jackolantern.JackOLanternItems.isUnlit(held);
+            if (!heldUnlitTorch && !heldUnlitJol) return ActionResult.PASS;
             // Check BOTH the clicked block AND the adjacent block (where torch would be placed).
             // Burnt mod renders fire on block faces — clicking that face targets the adjacent pos.
             boolean isFire = false;
@@ -39,7 +41,13 @@ public final class TorchLightingHooks {
             }
             if (isFire) {
                 if (!world.isClient) {
-                    player.setStackInHand(hand, TorchItems.createLit(held, world.getTime()));
+                    if (heldUnlitTorch) {
+                        TorchItems.lightOneFromStack(player, hand, world.getTime());
+                    } else {
+                        // Unlit JoL → lit JoL (always count 1, no stack math needed)
+                        player.setStackInHand(hand,
+                            net.unbeta.content.jackolantern.JackOLanternItems.createLit(held, world.getTime()));
+                    }
                 }
                 return ActionResult.SUCCESS;
             }
@@ -103,9 +111,9 @@ public final class TorchLightingHooks {
                 ItemStack main = player.getMainHandStack();
                 ItemStack off = player.getOffHandStack();
                 if (TorchItems.isUnlitTorch(main) && TorchItems.isLitTorch(off)) {
-                    player.setStackInHand(Hand.MAIN_HAND, TorchItems.createLit(main, now));
+                    TorchItems.lightOneFromStack(player, Hand.MAIN_HAND, now);
                 } else if (TorchItems.isUnlitTorch(off) && TorchItems.isLitTorch(main)) {
-                    player.setStackInHand(Hand.OFF_HAND, TorchItems.createLit(off, now));
+                    TorchItems.lightOneFromStack(player, Hand.OFF_HAND, now);
                 }
             }
         });

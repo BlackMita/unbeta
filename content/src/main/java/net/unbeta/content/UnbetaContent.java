@@ -179,13 +179,18 @@ public final class UnbetaContent implements ModInitializer {
                     || net.unbeta.content.torch.TorchItems.isLitTorch(held)
                     || net.unbeta.content.jackolantern.JackOLanternItems.isLit(held);
             boolean isUnlitTorch = net.unbeta.content.torch.TorchItems.isUnlitTorch(held);
+            boolean isUnlitJol = net.unbeta.content.jackolantern.JackOLanternItems.isUnlit(held);
             boolean furnaceLit = state.get(net.minecraft.block.AbstractFurnaceBlock.LIT);
 
             // Unlit torch + lit furnace → light the torch
-            if (isUnlitTorch && furnaceLit) {
+            if ((isUnlitTorch || isUnlitJol) && furnaceLit) {
                 if (!world.isClient) {
-                    player.setStackInHand(hand,
-                        net.unbeta.content.torch.TorchItems.createLit(held, world.getTime()));
+                    if (isUnlitTorch) {
+                        net.unbeta.content.torch.TorchItems.lightOneFromStack(player, hand, world.getTime());
+                    } else {
+                        player.setStackInHand(hand,
+                            net.unbeta.content.jackolantern.JackOLanternItems.createLit(held, world.getTime()));
+                    }
                 }
                 return net.minecraft.util.ActionResult.SUCCESS;
             }

@@ -67,4 +67,25 @@ public final class TorchItems {
         nbt.putLong(NBT_BURNOUT_AT, burnoutAt);
         return lit;
     }
+
+    /**
+     * Light exactly ONE unlit torch from the player's held stack.
+     * If stack > 1: decrement by 1, add lit torch to inventory (or drop if full).
+     * If stack == 1: replace held item with lit torch.
+     */
+    public static void lightOneFromStack(net.minecraft.entity.player.PlayerEntity player,
+                                         net.minecraft.util.Hand hand, long now) {
+        net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+        net.minecraft.item.ItemStack lit = createLit(held, now);
+        if (held.getCount() > 1) {
+            held.decrement(1);
+            player.setStackInHand(hand, held);
+            if (!player.getInventory().insertStack(lit)) {
+                player.dropItem(lit, false);
+            }
+        } else {
+            player.setStackInHand(hand, lit);
+        }
+    }
+
 }
