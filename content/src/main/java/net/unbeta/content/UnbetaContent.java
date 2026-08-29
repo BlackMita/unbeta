@@ -98,6 +98,51 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.rails.RailRegistry.register();
         LOG.info("Registered rail network.");
 
+        // Stripped logs drop their unstripped variant when broken.
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register(
+            (world, player, pos, state, blockEntity) -> {
+                if (world.isClient) return;
+                var block = state.getBlock();
+                net.minecraft.item.ItemStack drop = null;
+                if (block == net.minecraft.block.Blocks.STRIPPED_OAK_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.OAK_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_SPRUCE_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.SPRUCE_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_BIRCH_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.BIRCH_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_JUNGLE_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.JUNGLE_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_ACACIA_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.ACACIA_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_DARK_OAK_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.DARK_OAK_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_MANGROVE_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.MANGROVE_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_CHERRY_LOG)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.CHERRY_LOG);
+                // Stripped wood variants also drop their log
+                else if (block == net.minecraft.block.Blocks.STRIPPED_OAK_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.OAK_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_SPRUCE_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.SPRUCE_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_BIRCH_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.BIRCH_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_JUNGLE_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.JUNGLE_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_ACACIA_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.ACACIA_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_DARK_OAK_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.DARK_OAK_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_MANGROVE_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.MANGROVE_LOG);
+                else if (block == net.minecraft.block.Blocks.STRIPPED_CHERRY_WOOD)
+                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.CHERRY_LOG);
+                if (drop != null) {
+                    net.minecraft.block.Block.dropStack(world, pos, drop);
+                }
+            });
+        LOG.info("Stripped log drop hook registered.");
+
         // Bundled datapacks: auto-install into every new world's datapacks folder.
         net.unbeta.content.datapack.BundledDatapackInstaller.register();
         LOG.info("Bundled datapack installer registered.");
