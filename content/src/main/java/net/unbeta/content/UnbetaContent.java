@@ -151,6 +151,26 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.unlikelike.UnlikeLikeRegistry.register();
         LOG.info("Unlike-Like registered.");
 
+        // Block all player interaction while grabbed by Unlike-Like
+        net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
+            (player, world, hand, entity, hitResult) -> {
+                for (var e : world.getEntitiesByClass(
+                        net.unbeta.content.unlikelike.UnlikeLikeEntity.class,
+                        player.getBoundingBox().expand(3), ul -> ul.grabbedPlayer == player)) {
+                    return net.minecraft.util.ActionResult.FAIL;
+                }
+                return net.minecraft.util.ActionResult.PASS;
+            });
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
+            (player, world, hand, hitResult) -> {
+                for (var e : world.getEntitiesByClass(
+                        net.unbeta.content.unlikelike.UnlikeLikeEntity.class,
+                        player.getBoundingBox().expand(3), ul -> ul.grabbedPlayer == player)) {
+                    return net.minecraft.util.ActionResult.FAIL;
+                }
+                return net.minecraft.util.ActionResult.PASS;
+            });
+
         // Remove netherite cloud boots from creative menu
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, entries) -> {
             entries.getDisplayStacks().removeIf(stack ->
