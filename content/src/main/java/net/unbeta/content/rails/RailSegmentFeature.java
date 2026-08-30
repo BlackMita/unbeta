@@ -59,9 +59,65 @@ public class RailSegmentFeature extends Feature<DefaultFeatureConfig> {
                         cx + 1, cz, minX, minZ, maxX, maxZ);
                 any |= trySegment(world, seed, cx, cz, RailNetwork.DIR_SOUTH,
                         cx, cz + 1, minX, minZ, maxX, maxZ);
+                // Deep network — same drawing, deeper nodes
+                any |= tryDeepSegment(world, seed, cx, cz, RailNetwork.DEEP_DIR_EAST,
+                        cx + 1, cz, minX, minZ, maxX, maxZ);
+                any |= tryDeepSegment(world, seed, cx, cz, RailNetwork.DEEP_DIR_SOUTH,
+                        cx, cz + 1, minX, minZ, maxX, maxZ);
             }
         }
         return any;
+    }
+
+    private boolean tryDeepSegment(StructureWorldAccess world, long seed,
+                                   int cx, int cz, int dir, int ncx, int ncz,
+                                   int minX, int minZ, int maxX, int maxZ) {
+        if (!RailNetwork.deepHasConnection(seed, cx, cz, dir)) return false;
+        int x1 = RailNetwork.deepNodeX(seed, cx, cz);
+        int z1 = RailNetwork.deepNodeZ(seed, cx, cz);
+        int y1 = RailNetwork.deepNodeY(seed, cx, cz);
+        int x2 = RailNetwork.deepNodeX(seed, ncx, ncz);
+        int z2 = RailNetwork.deepNodeZ(seed, ncx, ncz);
+        int y2 = RailNetwork.deepNodeY(seed, ncx, ncz);
+
+        int pad = 3;
+        if (Math.max(x1, x2) + pad < minX || Math.min(x1, x2) - pad > maxX) return false;
+        if (Math.max(z1, z2) + pad < minZ || Math.min(z1, z2) - pad > maxZ) return false;
+
+        long segSeed = RailNetwork.deepSegmentSeed(seed, cx, cz, dir);
+        boolean xFirst = (dir == RailNetwork.DEEP_DIR_EAST);
+        int[][] path = buildLPath(x1, z1, x2, z2, xFirst);
+        if (path.length < 2) return false;
+
+        int lastIdx = path.length - 1;
+        int yDiff = y2 - y1;
+        int absYDiff = Math.abs(yDiff);
+        int rampStart = (lastIdx - absYDiff) / 2;
+        int rampEnd = rampStart + absYDiff;
+        if (rampStart < 0) rampStart = 0;
+        if (rampEnd > lastIdx) rampEnd = lastIdx;
+
+        boolean placed = false;
+        for (int i = 0; i < path.length; i++) {
+            int x = path[i][0];
+            int z = path[i][1];
+            if (x < minX || x > maxX || z < minZ || z > maxZ) continue;
+
+            int railY = concentratedY(y1, y2, i, rampStart, rampEnd);
+            int prevRailY = (i > 0) ? concentratedY(y1, y2, i - 1, rampStart, rampEnd) : railY;
+            int nextRailY = (i < lastIdx) ? concentratedY(y1, y2, i + 1, rampStart, rampEnd) : railY;
+
+            boolean gap = pointHash(segSeed, i, 1) < GAP_CHANCE;
+            boolean torch = pointHash(segSeed, i, 2) < TORCH_CHANCE;
+            int torchSide = pointHash(segSeed, i, 3) % 2;
+
+            Direction toPrev = (i > 0) ? dirBetween(x, z, path[i-1][0], path[i-1][1]) : null;
+            Direction toNext = (i < lastIdx) ? dirBetween(x, z, path[i+1][0], path[i+1][1]) : null;
+
+            placePoint(world, x, railY, z, toPrev, toNext, prevRailY, nextRailY, gap, torch, torchSide, segSeed, i);
+            placed = true;
+        }
+        return placed;
     }
 
     private boolean trySegment(StructureWorldAccess world, long seed,

@@ -28,6 +28,9 @@ public final class RailNetwork {
      *  Later: extend downward (55, 47, 39, ...) for underground rail layers. */
     private static final int[] NODE_Y_TIERS = {56, 64, 72, 80};
 
+    /** Deep network node elevation tiers: cave level, mid-underground, diamond/deepslate. */
+    private static final int[] DEEP_Y_TIERS = {40, 24, 8};
+
     private RailNetwork() {}
 
     private static long hash(long seed, int cx, int cz, int salt) {
@@ -72,6 +75,40 @@ public final class RailNetwork {
     }
 
     public static long segmentSeed(long seed, int cx, int cz, int dir) {
+        return hash(seed, cx, cz, dir + 3);
+    }
+
+    // ---- DEEP NETWORK ----
+    // A second, independent grid using different hash salts so deep nodes do NOT
+    // sit under surface nodes. Same cell size, same drawing machinery, deeper Y.
+
+    public static int deepNodeX(long seed, int cx, int cz) {
+        int span = CELL_SIZE - CELL_MARGIN * 2;
+        return cx * CELL_SIZE + CELL_MARGIN + hashRange(seed, cx, cz, 101, span);
+    }
+
+    public static int deepNodeZ(long seed, int cx, int cz) {
+        int span = CELL_SIZE - CELL_MARGIN * 2;
+        return cz * CELL_SIZE + CELL_MARGIN + hashRange(seed, cx, cz, 102, span);
+    }
+
+    public static int deepNodeY(long seed, int cx, int cz) {
+        return DEEP_Y_TIERS[hashRange(seed, cx, cz, 105, DEEP_Y_TIERS.length)];
+    }
+
+    public static final int DEEP_DIR_EAST = 110;
+    public static final int DEEP_DIR_SOUTH = 120;
+
+    public static boolean deepHasConnection(long seed, int cx, int cz, int dir) {
+        return hashRange(seed, cx, cz, dir, 100) < CONNECT_CHANCE;
+    }
+
+    public static boolean deepIsTunnel(long seed, int cx, int cz, int dir) {
+        // Deep network is almost always tunnel (it's underground)
+        return hashRange(seed, cx, cz, dir + 1, 100) < 95;
+    }
+
+    public static long deepSegmentSeed(long seed, int cx, int cz, int dir) {
         return hash(seed, cx, cz, dir + 3);
     }
 
