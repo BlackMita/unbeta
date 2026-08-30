@@ -38,7 +38,7 @@ public class UnlikeLikeGrabGoal extends Goal {
         target = (PlayerEntity) unlikeLike.getTarget();
         if (target == null) return;
         target.addStatusEffect(new StatusEffectInstance(
-                StatusEffects.BLINDNESS, UnlikeLikeEntity.GRAB_DURATION + 10,
+                StatusEffects.BLINDNESS, UnlikeLikeEntity.GRAB_DURATION * 2 + 20,
                 0, false, false));
         grabTimer = UnlikeLikeEntity.GRAB_DURATION;
         unlikeLike.grabbedPlayer = target;

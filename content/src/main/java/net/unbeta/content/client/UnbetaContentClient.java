@@ -15,6 +15,9 @@ public final class UnbetaContentClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         net.unbeta.content.torch.TorchClient.register();
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(
+                net.unbeta.content.unlikelike.UnlikeLikeRenderer.LAYER,
+                net.unbeta.content.unlikelike.UnlikeLikeModel::getTexturedModelData);
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 net.unbeta.content.unlikelike.UnlikeLikeRegistry.UNLIKE_LIKE,
                 net.unbeta.content.unlikelike.UnlikeLikeRenderer::new);
