@@ -37,6 +37,23 @@ public class UnlikeLikeGrabGoal extends Goal {
     public void start() {
         target = (PlayerEntity) unlikeLike.getTarget();
         if (target == null) return;
+
+        // If the player is in a vehicle, deal with it before grabbing
+        if (target.hasVehicle()) {
+            net.minecraft.entity.Entity vehicle = target.getVehicle();
+            target.stopRiding();
+            if (vehicle instanceof net.minecraft.entity.vehicle.BoatEntity
+                    || vehicle instanceof net.minecraft.entity.vehicle.AbstractMinecartEntity) {
+                // Non-living vehicle → drop-ify it
+                net.minecraft.item.ItemStack drop = vehicle.getPickBlockStack();
+                if (drop != null && !drop.isEmpty()) {
+                    net.minecraft.block.Block.dropStack(
+                            vehicle.getWorld(), vehicle.getBlockPos(), drop);
+                }
+                vehicle.discard();
+            }
+            // Living vehicles (pig/horse) just get the player dismounted — already done above
+        }
         target.addStatusEffect(new StatusEffectInstance(
                 StatusEffects.BLINDNESS, UnlikeLikeEntity.GRAB_DURATION * 2 + 20,
                 0, false, false));
