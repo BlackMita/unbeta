@@ -1,0 +1,32 @@
+{
+  "mob.unlike_like.crawl": {
+    "sounds": [
+      "unbeta-content:mob/unlike_like/crawl"
+    ]
+  },
+  "mob.unlike_like.growl": {
+    "sounds": [
+      "unbeta-content:mob/unlike_like/growl"
+    ]
+  },
+  "mob.unlike_like.chew": {
+    "sounds": [
+      "unbeta-content:mob/unlike_like/chew"
+    ]
+  },
+  "mob.unlike_like.hurt": {
+    "sounds": [
+      "unbeta-content:mob/unlike_like/hurt"
+    ]
+  },
+  "mob.unlike_like.scream": {
+    "sounds": [
+      "unbeta-content:mob/unlike_like/scream"
+    ]
+  },
+  "mob.unlike_like.spew": {
+    "sounds": [
+      "unbeta-content:mob/unlike_like/spew"
+    ]
+  }
+}

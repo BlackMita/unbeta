@@ -148,6 +148,7 @@ public final class UnbetaContent implements ModInitializer {
         LOG.info("Bundled datapack installer registered.");
 
         // Unlike-Like: gelatinous item-stealing hostile mob.
+        net.unbeta.content.unlikelike.UnlikeLikeSounds.register();
         net.unbeta.content.unlikelike.UnlikeLikeRegistry.register();
         LOG.info("Unlike-Like registered.");
 

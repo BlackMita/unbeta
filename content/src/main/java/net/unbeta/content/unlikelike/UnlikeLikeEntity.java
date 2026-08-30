@@ -90,6 +90,43 @@ public class UnlikeLikeEntity extends HostileEntity {
                 grabbedPlayer = null;
             }
         }
+        // Crawl/chew — client-side only so Sound Physics Remastered hooks in
+        if (!this.getWorld().isClient) {
+            long now = this.getWorld().getTime();
+            if (grabbedPlayer == null && getTarget() != null && now - lastCrawlSound >= 20) {
+                this.playSound(UnlikeLikeSounds.CRAWL, 0.8F, 1.0F);
+                lastCrawlSound = now;
+            } else if (grabbedPlayer != null && now - lastCrawlSound >= 10) {
+                this.playSound(UnlikeLikeSounds.CHEW, 0.8F, 1.0F);
+                lastCrawlSound = now;
+            }
+        }
+
+        // Growl when close but not grabbing
+        if (!this.getWorld().isClient) {
+            if (growlCooldown > 0) growlCooldown--;
+            if (growlCooldown == 0 && grabCooldown == 0 && grabbedPlayer == null && getTarget() != null) {
+                double dist = squaredDistanceTo(getTarget());
+                if (dist <= 25.0 && dist > 9.0) {
+                    this.playSound(UnlikeLikeSounds.GROWL, 1.0F, 1.0F);
+                    growlCooldown = 200;
+                }
+            }
+        }
+
+        // Water speed boost: 8x faster in water
+        java.util.UUID WATER_SPEED = java.util.UUID.fromString("b1c2d3e4-f5a6-7890-abcd-ef1234567890");
+        var speedAttr = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (speedAttr != null) {
+            if ((this.isTouchingWater() || this.isSubmergedInWater()) && speedAttr.getModifier(WATER_SPEED) == null) {
+                speedAttr.addTemporaryModifier(new net.minecraft.entity.attribute.EntityAttributeModifier(
+                    WATER_SPEED, "unbeta:unlike_like_water_speed", 7.0,
+                    net.minecraft.entity.attribute.EntityAttributeModifier.Operation.MULTIPLY_BASE));
+            } else if (!this.isTouchingWater() && !this.isSubmergedInWater()) {
+                speedAttr.removeModifier(WATER_SPEED);
+            }
+        }
+
         if (this.isSubmergedInWater() || this.isTouchingWater()) {
             this.setStepHeight(1.0F);
         } else {
@@ -99,6 +136,30 @@ public class UnlikeLikeEntity extends HostileEntity {
 
     @Override
     protected void jump() {
+        // Crawl/chew — client-side only so Sound Physics Remastered hooks in
+        if (!this.getWorld().isClient) {
+            long now = this.getWorld().getTime();
+            if (grabbedPlayer == null && getTarget() != null && now - lastCrawlSound >= 20) {
+                this.playSound(UnlikeLikeSounds.CRAWL, 0.8F, 1.0F);
+                lastCrawlSound = now;
+            } else if (grabbedPlayer != null && now - lastCrawlSound >= 10) {
+                this.playSound(UnlikeLikeSounds.CHEW, 0.8F, 1.0F);
+                lastCrawlSound = now;
+            }
+        }
+
+        // Growl when close but not grabbing
+        if (!this.getWorld().isClient) {
+            if (growlCooldown > 0) growlCooldown--;
+            if (growlCooldown == 0 && grabCooldown == 0 && grabbedPlayer == null && getTarget() != null) {
+                double dist = squaredDistanceTo(getTarget());
+                if (dist <= 25.0 && dist > 9.0) {
+                    this.playSound(UnlikeLikeSounds.GROWL, 1.0F, 1.0F);
+                    growlCooldown = 200;
+                }
+            }
+        }
+
         if (this.isSubmergedInWater() || this.isTouchingWater()) {
             super.jump();
         }
@@ -113,6 +174,8 @@ public class UnlikeLikeEntity extends HostileEntity {
 
     @Override
     public void onDeath(DamageSource source) {
+        if (!this.getWorld().isClient) {
+            }
         grabbedPlayer = null; // release player on death
         forceEjectPassengers(); // eject before death so client syncs
         super.onDeath(source);
@@ -183,6 +246,29 @@ public class UnlikeLikeEntity extends HostileEntity {
     public boolean tryAttack(net.minecraft.entity.Entity target) {
         return false; // Unlike-Like never melee attacks — grab goal handles everything
     }
+
+    private int growlCooldown = 0;
+    private long lastCrawlSound = 0;
+
+    @Override
+    protected net.minecraft.sound.SoundEvent getHurtSound(net.minecraft.entity.damage.DamageSource src) { return UnlikeLikeSounds.HURT; }
+
+    @Override
+    protected net.minecraft.sound.SoundEvent getDeathSound() { return UnlikeLikeSounds.SCREAM; }
+
+    @Override
+    protected net.minecraft.sound.SoundEvent getAmbientSound() { return null; }
+
+
+
+
+
+
+    @Override
+    protected void playStepSound(net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state) {
+        // silence — Unlike-Like makes no footstep sounds
+    }
+
 
     @Override
     public boolean canBreatheInWater() { return true; }

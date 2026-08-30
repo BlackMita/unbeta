@@ -75,6 +75,9 @@ public class UnlikeLikeGrabGoal extends Goal {
 
         // Blindness fades naturally while player is mid-air
 
+        // Spew sound at spit
+        unlikeLike.playSound(UnlikeLikeSounds.SPEW, 1.0F, 1.0F);
+
         // Fling player away hard
         Vec3d dir = target.getPos().subtract(unlikeLike.getPos()).normalize();
         if (dir.lengthSquared() < 0.01) dir = new Vec3d(1, 0, 0);
