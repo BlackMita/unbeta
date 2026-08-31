@@ -24776,6 +24776,11 @@
       "action": "keep",
       "verified": true,
       "note": "DECISION D1: CLOSED. World height stays -64..320. 'keep' here means the 1.20.1 behaviour is kept."
+    },
+    {
+      "action": "keep",
+      "kind": "entity",
+      "id": "unbeta-content:unlike_like"
     }
   ]
 }

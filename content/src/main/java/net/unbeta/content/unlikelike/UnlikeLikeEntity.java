@@ -127,6 +127,15 @@ public class UnlikeLikeEntity extends HostileEntity {
             }
         }
 
+        // Swim upward toward target, but never breach the surface
+        if (this.isSubmergedInWater() && getTarget() != null) {
+            double targetY = getTarget().getY();
+            double myY = this.getY();
+            if (targetY > myY + 1.0 && myY < this.getWorld().getSeaLevel() - 1) {
+                this.setVelocity(this.getVelocity().add(0, 0.06, 0));
+            }
+        }
+
         if (this.isSubmergedInWater() || this.isTouchingWater()) {
             this.setStepHeight(1.0F);
         } else {
@@ -217,7 +226,6 @@ public class UnlikeLikeEntity extends HostileEntity {
     public static boolean canSpawn(EntityType<UnlikeLikeEntity> type,
                                    ServerWorldAccess world, SpawnReason reason,
                                    BlockPos pos, Random random) {
-        if (!HostileEntity.canSpawnInDark(type, world, reason, pos, random)) return false;
         if (pos.getY() >= 0) {
             var biome = world.getBiome(pos);
             boolean isOcean = biome.isIn(net.minecraft.registry.tag.BiomeTags.IS_OCEAN);
@@ -272,4 +280,7 @@ public class UnlikeLikeEntity extends HostileEntity {
 
     @Override
     public boolean canBreatheInWater() { return true; }
+
+    @Override
+    public boolean isPushedByFluids() { return false; }
 }

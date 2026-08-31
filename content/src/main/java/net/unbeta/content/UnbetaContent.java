@@ -152,6 +152,20 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.unlikelike.UnlikeLikeRegistry.register();
         LOG.info("Unlike-Like registered.");
 
+        // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register(
+            (entity, world) -> {
+                if (!(entity instanceof net.minecraft.entity.passive.SquidEntity squid)) return;
+                if (squid.getRandom().nextInt(5) != 0) return;
+                net.unbeta.content.unlikelike.UnlikeLikeEntity ul =
+                    net.unbeta.content.unlikelike.UnlikeLikeRegistry.UNLIKE_LIKE.create(world);
+                if (ul == null) return;
+                ul.refreshPositionAndAngles(squid.getX(), squid.getY(), squid.getZ(),
+                        squid.getYaw(), squid.getPitch());
+                world.spawnEntity(ul);
+                squid.discard();
+            });
+
         // Block all player interaction while grabbed by Unlike-Like
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register(
             (player, world, hand, entity, hitResult) -> {
