@@ -152,6 +152,29 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.unlikelike.UnlikeLikeRegistry.register();
         LOG.info("Unlike-Like registered.");
 
+        // Gold sword: clear chunk sully + drop zombie gear on kill
+        net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register(
+            (entity, damageSource) -> {
+                var attacker = damageSource.getAttacker();
+                if (!(attacker instanceof net.minecraft.entity.player.PlayerEntity player)) return;
+                if (!player.getMainHandStack().isOf(net.minecraft.item.Items.GOLDEN_SWORD)) return;
+                if (entity.getWorld().isClient) return;
+                net.minecraft.server.world.ServerWorld sw =
+                    (net.minecraft.server.world.ServerWorld) entity.getWorld();
+                net.unbeta.content.zombie.SulliedChunkState.getOrCreate(sw)
+                    .clear(new net.minecraft.util.math.ChunkPos(entity.getBlockPos()));
+                if (entity instanceof net.minecraft.entity.mob.ZombieEntity zombie) {
+                    for (net.minecraft.entity.EquipmentSlot slot :
+                            net.minecraft.entity.EquipmentSlot.values()) {
+                        net.minecraft.item.ItemStack gear = zombie.getEquippedStack(slot);
+                        if (!gear.isEmpty()) {
+                            net.minecraft.block.Block.dropStack(sw, entity.getBlockPos(), gear.copy());
+                        }
+                    }
+                }
+            });
+        LOG.info("Gold sword effects registered.");
+
         // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register(
             (entity, world) -> {
@@ -262,7 +285,8 @@ public final class UnbetaContent implements ModInitializer {
                 if (state.isIn(net.minecraft.registry.tag.BlockTags.NEEDS_IRON_TOOL)) {
                     boolean hasIron = tool.isOf(net.minecraft.item.Items.IRON_PICKAXE)
                             || tool.isOf(net.minecraft.item.Items.DIAMOND_PICKAXE)
-                            || tool.isOf(net.minecraft.item.Items.NETHERITE_PICKAXE);
+                            || tool.isOf(net.minecraft.item.Items.NETHERITE_PICKAXE)
+                            || tool.isOf(net.minecraft.item.Items.GOLDEN_PICKAXE);
                     if (!hasIron) return false; // cancel - block stays
                 }
 
@@ -279,6 +303,13 @@ public final class UnbetaContent implements ModInitializer {
         // When obsidian is mined, remove any fire block above it.
         net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register(
             (world, player, pos, state, blockEntity) -> {
+                // Gold pickaxe on stone: manually drop stone block
+                if (player.getMainHandStack().isOf(net.minecraft.item.Items.GOLDEN_PICKAXE)
+                        && state.isIn(net.minecraft.registry.tag.BlockTags.NEEDS_IRON_TOOL)
+                        && state.isOf(net.minecraft.block.Blocks.STONE)) {
+                    net.minecraft.block.Block.dropStack(world, pos,
+                            new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.STONE));
+                }
                 if (state.isOf(net.minecraft.block.Blocks.OBSIDIAN)
                         || state.isOf(net.minecraft.block.Blocks.CRYING_OBSIDIAN)) {
                     var above = world.getBlockState(pos.up());

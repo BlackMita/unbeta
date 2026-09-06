@@ -20,6 +20,13 @@ public abstract class ZombieSulliedMixin {
         if (zombie.getWorld().isClient) return;
         ServerWorld world = (ServerWorld) zombie.getWorld();
         ChunkPos chunkPos = new ChunkPos(zombie.getBlockPos());
+        // Gold sword kill = clean kill, no sully
+        var attacker = source.getAttacker();
+        if (attacker instanceof net.minecraft.entity.player.PlayerEntity player
+                && (player.getMainHandStack().isOf(net.minecraft.item.Items.GOLDEN_SWORD)
+                || player.getMainHandStack().isOf(net.minecraft.item.Items.GOLDEN_AXE))) {
+            return;
+        }
         SulliedChunkState.getOrCreate(world).sully(chunkPos, world.getTime());
     }
 }

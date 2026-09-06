@@ -25,6 +25,8 @@ public class BlockBreakMixin {
                                    BlockState state, @Nullable BlockEntity blockEntity,
                                    ItemStack tool, CallbackInfo ci) {
         if (world.isClient) return;
+        // Gold pickaxe has silk touch — no cobblestone reform
+        if (tool.isOf(net.minecraft.item.Items.GOLDEN_PICKAXE)) return;
         if (state.isIn(BlockTags.COAL_ORES)
                 || state.isIn(BlockTags.IRON_ORES)
                 || state.isIn(BlockTags.GOLD_ORES)

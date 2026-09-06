@@ -28,7 +28,9 @@
     "ZombieSulliedMixin",
     "AbstractRailBlockMixin",
     "FenceRailSupportMixin",
-    "JolOverlayMixin"
+    "JolOverlayMixin",
+    "GoldToolSilkTouchMixin",
+    "GoldSwordLootingMixin"
   ],
   "injectors": {
     "defaultRequire": 1
