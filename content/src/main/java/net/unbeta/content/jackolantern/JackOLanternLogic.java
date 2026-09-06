@@ -31,7 +31,7 @@ public final class JackOLanternLogic {
     public static final BooleanProperty LIT = Properties.LIT;
 
     /** Burn duration: 1 full Minecraft day+night = 24000 ticks. */
-    public static final long FULL_BURN_TICKS = 24000L;
+    public static final long FULL_BURN_TICKS = 24000L; // 1 full Minecraft day
 
     private JackOLanternLogic() {}
 

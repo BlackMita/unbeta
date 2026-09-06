@@ -64,6 +64,15 @@ public final class ContentRules implements RuleProvider {
 
         // Netherite cloud boots removed via ItemGroupEvents in UnbetaContent.java
 
+        // Re-enable all bed colors
+        for (String color : new String[]{
+                "white", "orange", "magenta", "light_blue", "yellow", "lime",
+                "pink", "gray", "light_gray", "cyan", "purple", "blue",
+                "brown", "green", "black"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(color + "_bed")), false);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(color + "_bed")), false);
+        }
+
         // Unlike-Like prerequisites
         ctx.set(RuleKey.of(ContentKind.ITEM, mc("shield")), false);
         ctx.set(RuleKey.of(ContentKind.ITEM, mc("slime_block")), false);
