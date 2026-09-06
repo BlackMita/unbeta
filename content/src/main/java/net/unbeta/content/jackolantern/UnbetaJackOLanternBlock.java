@@ -57,4 +57,17 @@ public class UnbetaJackOLanternBlock extends CarvedPumpkinBlock implements Block
         JackOLanternLogic.stampDrops(drops, state, builder.getOptional(LootContextParameters.BLOCK_ENTITY));
         return drops;
     }
+
+    @Override
+    public <T extends net.minecraft.block.entity.BlockEntity>
+            net.minecraft.block.entity.BlockEntityTicker<T> getTicker(
+            net.minecraft.world.World world, BlockState state,
+            net.minecraft.block.entity.BlockEntityType<T> type) {
+        if (world.isClient) return null;
+        return (w, p, st, be) -> {
+            if (be instanceof JackOLanternBlockEntity jol) {
+                JackOLanternBlockEntity.serverTick(w, p, st, jol);
+            }
+        };
+    }
 }

@@ -61,7 +61,26 @@ public class UnbetaLitJackOLanternBlock extends CarvedPumpkinBlock implements Bl
     @Override
     public net.minecraft.item.ItemStack getPickStack(net.minecraft.world.BlockView world,
             net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state) {
-        // Return the lit JoL item so wthit shows the correct icon
-        return new net.minecraft.item.ItemStack(JackOLanternRegistry.LIT_ITEM);
+        // Return lit JoL with burnout NBT copied from block entity so wthit bar is live
+        net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(JackOLanternRegistry.LIT_ITEM);
+        if (world.getBlockEntity(pos) instanceof JackOLanternBlockEntity be) {
+            net.minecraft.nbt.NbtCompound nbt = stack.getOrCreateNbt();
+            nbt.putLong(JackOLanternItems.NBT_BURNOUT_AT, be.getBurnoutAt());
+            nbt.putLong(JackOLanternItems.NBT_FULL, be.getFull());
+        }
+        return stack;
+    }
+
+    @Override
+    public <T extends net.minecraft.block.entity.BlockEntity>
+            net.minecraft.block.entity.BlockEntityTicker<T> getTicker(
+            net.minecraft.world.World world, BlockState state,
+            net.minecraft.block.entity.BlockEntityType<T> type) {
+        if (world.isClient) return null;
+        return (w, p, st, be) -> {
+            if (be instanceof JackOLanternBlockEntity jol) {
+                JackOLanternBlockEntity.serverTick(w, p, st, jol);
+            }
+        };
     }
 }

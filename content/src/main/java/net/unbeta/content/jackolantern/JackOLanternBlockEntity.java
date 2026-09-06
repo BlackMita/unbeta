@@ -46,10 +46,39 @@ public class JackOLanternBlockEntity extends BlockEntity {
         markDirty();
     }
 
-    private void sync() {
-        if (world != null && !world.isClient) {
-            world.updateListeners(pos, getCachedState(), getCachedState(), 3);
+    /** Re-send this BE's data to nearby clients. Safe to call every tick. */
+    public void sync() {
+        if (world == null || world.isClient) return;
+        net.minecraft.server.world.ServerWorld sw = (net.minecraft.server.world.ServerWorld) world;
+        var packet = toUpdatePacket();
+        if (packet == null) return;
+        sw.getChunkManager().markForUpdate(pos);
+    }
+
+    /**
+     * Server ticker. Attached by both JoL blocks, so every loaded JoL runs this
+     * regardless of how it came to exist (placed, lit, loaded from disk, restart).
+     *
+     * Re-broadcasts BE data once a second so the client can never hold a stale
+     * burnoutAt -- the light-time sync alone is unreliable because the block-state
+     * packet from setBlockState arrives in the same tick and rebuilds the client BE.
+     *
+     * Also owns the burnout deadline, replacing the scheduler as source of truth.
+     */
+    public static void serverTick(net.minecraft.world.World world, BlockPos pos,
+                                  BlockState state, JackOLanternBlockEntity be) {
+        if (world.isClient) return;
+        if (!state.contains(JackOLanternLogic.LIT) || !state.get(JackOLanternLogic.LIT)) return;
+
+        long now = world.getTime();
+        long burnoutAt = be.getBurnoutAt();
+
+        if (burnoutAt >= 0 && now >= burnoutAt) {
+            JackOLanternLogic.extinguishPlaced(world, pos, state);
+            return;
         }
+
+        if (now % 20 == 0) be.sync();
     }
 
     @Override

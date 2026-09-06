@@ -79,6 +79,7 @@ public final class UnbetaContent implements ModInitializer {
         // Unbeta Jack o'Lanterns (Phase 2 lighting tier 1.5 - semi-permanent, waterproof).
         net.unbeta.content.jackolantern.JackOLanternRegistry.register();
         net.unbeta.content.jackolantern.JackOLanternBurnout.register();
+        net.unbeta.content.jackolantern.JackOLanternBlockSync.register();
         net.unbeta.content.jackolantern.JackOLanternItemBurnout.register();
         LOG.info("Registered Unbeta Jack o\'Lanterns.");
 
