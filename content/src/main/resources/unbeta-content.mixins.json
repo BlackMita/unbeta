@@ -30,7 +30,8 @@
     "FenceRailSupportMixin",
     "JolOverlayMixin",
     "GoldToolSilkTouchMixin",
-    "GoldSwordLootingMixin"
+    "GoldSwordLootingMixin",
+    "FurnaceBurnoutMixin"
   ],
   "injectors": {
     "defaultRequire": 1

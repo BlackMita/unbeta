@@ -57,4 +57,11 @@ public class UnbetaLitJackOLanternBlock extends CarvedPumpkinBlock implements Bl
         JackOLanternLogic.stampDrops(drops, state, builder.getOptional(LootContextParameters.BLOCK_ENTITY));
         return drops;
     }
+
+    @Override
+    public net.minecraft.item.ItemStack getPickStack(net.minecraft.world.BlockView world,
+            net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state) {
+        // Return the lit JoL item so wthit shows the correct icon
+        return new net.minecraft.item.ItemStack(JackOLanternRegistry.LIT_ITEM);
+    }
 }

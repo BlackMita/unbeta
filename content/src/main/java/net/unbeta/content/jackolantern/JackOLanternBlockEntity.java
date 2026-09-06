@@ -1,6 +1,9 @@
 package net.unbeta.content.jackolantern;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
@@ -41,6 +44,22 @@ public class JackOLanternBlockEntity extends BlockEntity {
         this.full = itemFull > 0 ? itemFull : JackOLanternLogic.FULL_BURN_TICKS;
         this.burnoutAt = (lit && itemBurnoutAt >= 0) ? itemBurnoutAt : -1L;
         markDirty();
+    }
+
+    private void sync() {
+        if (world != null && !world.isClient) {
+            world.updateListeners(pos, getCachedState(), getCachedState(), 3);
+        }
+    }
+
+    @Override
+    public NbtCompound toInitialChunkDataNbt() {
+        return createNbt();
+    }
+
+    @Override
+    public Packet<ClientPlayPacketListener> toUpdatePacket() {
+        return BlockEntityUpdateS2CPacket.create(this);
     }
 
     @Override
