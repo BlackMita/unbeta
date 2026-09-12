@@ -33,7 +33,8 @@
     "GoldSwordLootingMixin",
     "FurnaceBurnoutMixin",
     "JolPassiveFleeMixin",
-    "EndermanTeleportParticleMixin"
+    "EndermanTeleportParticleMixin",
+    "SkeletonBehaviorMixin"
   ],
   "injectors": {
     "defaultRequire": 1
