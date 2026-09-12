@@ -1,5 +1,9 @@
 base { archivesName = "${project.archives_base_name}-content" }
 
+loom {
+    accessWidenerPath = file('src/main/resources/unbeta-content.accesswidener')
+}
+
 dependencies {
     // The `namedElements` configuration is REQUIRED. A plain project(':core')
     // dependency will not be remapped by Loom and will fail at runtime.

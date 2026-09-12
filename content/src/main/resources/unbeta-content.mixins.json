@@ -31,7 +31,8 @@
     "JolOverlayMixin",
     "GoldToolSilkTouchMixin",
     "GoldSwordLootingMixin",
-    "FurnaceBurnoutMixin"
+    "FurnaceBurnoutMixin",
+    "JolPassiveFleeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
