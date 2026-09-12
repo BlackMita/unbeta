@@ -64,6 +64,17 @@ public abstract class EndermanMixin {
         if (self.getWorld().isClient) return;
 
         // Light protection: if aggroed and mob/target in light, flee
+        // Held glow berries count as deterrent — treat player as lit
+        if (self.getTarget() instanceof net.minecraft.entity.player.PlayerEntity tp) {
+            boolean holdingGlowBerries =
+                tp.getMainHandStack().isOf(net.minecraft.item.Items.GLOW_BERRIES)
+                || tp.getOffHandStack().isOf(net.minecraft.item.Items.GLOW_BERRIES);
+            if (holdingGlowBerries) {
+                self.setTarget(null);
+                teleportRandomly();
+                return;
+            }
+        }
         if (self.getTarget() != null && MobLightAwareness.mobOrTargetInLight(self)) {
             self.setTarget(null);
             teleportRandomly();
