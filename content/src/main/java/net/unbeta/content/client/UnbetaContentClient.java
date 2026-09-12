@@ -14,6 +14,9 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.unbeta.content.unmason.UnmasonRegistry.UNMASON,
+                net.unbeta.content.client.unmason.UnmasonRenderer::new);
         net.unbeta.content.torch.TorchClient.register();
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(
                 net.unbeta.content.unlikelike.UnlikeLikeRenderer.LAYER,
