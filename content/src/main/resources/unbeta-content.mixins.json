@@ -32,7 +32,8 @@
     "GoldToolSilkTouchMixin",
     "GoldSwordLootingMixin",
     "FurnaceBurnoutMixin",
-    "JolPassiveFleeMixin"
+    "JolPassiveFleeMixin",
+    "EndermanTeleportParticleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
