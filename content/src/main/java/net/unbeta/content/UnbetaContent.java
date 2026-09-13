@@ -252,7 +252,7 @@ public final class UnbetaContent implements ModInitializer {
                     // Unlocked chest: only an unbound Lockey can claim it.
                     if (net.unbeta.content.lockey.LockeyItem.isBound(held))
                         return net.minecraft.util.ActionResult.PASS;
-                    net.unbeta.content.lockey.LockeyState.lock(sw, pos, myId);
+                    net.unbeta.content.lockey.LockeyState.lockChest(sw, pos, myId);
                     net.unbeta.content.lockey.LockeyItem.bind(held, pos);
                     world.playSound(null, pos,
                         net.unbeta.content.lockey.LockeyRegistry.CHEST_LOCKED,
@@ -262,7 +262,7 @@ public final class UnbetaContent implements ModInitializer {
 
                 if (owner.equals(myId)) {
                     // Our own chest: unlock and return the key to keylock form.
-                    net.unbeta.content.lockey.LockeyState.unlock(sw, pos);
+                    net.unbeta.content.lockey.LockeyState.unlockChest(sw, pos);
                     net.unbeta.content.lockey.LockeyItem.unbind(held);
                     world.playSound(null, pos,
                         net.unbeta.content.lockey.LockeyRegistry.CHEST_UNLOCKED,

@@ -48,6 +48,38 @@ public final class LockeyState {
         UnbetaWorldState.edit(world, SECTION, s -> s.remove(key(pos)));
     }
 
+    /**
+     * The other half of a double chest, or null for a single chest.
+     *
+     * <p>Uses vanilla's own ChestBlock.getFacing, which returns the direction pointing
+     * at the partner half (LEFT rotates clockwise, RIGHT counter-clockwise). Deriving
+     * this by hand would break on some orientations.
+     */
+    public static BlockPos otherHalf(ServerWorld world, BlockPos pos) {
+        net.minecraft.block.BlockState state = world.getBlockState(pos);
+        if (!(state.getBlock() instanceof net.minecraft.block.ChestBlock)) return null;
+        if (state.get(net.minecraft.block.ChestBlock.CHEST_TYPE)
+                == net.minecraft.block.enums.ChestType.SINGLE) return null;
+        return pos.offset(net.minecraft.block.ChestBlock.getFacing(state));
+    }
+
+    /**
+     * Lock a chest, covering both halves if it is a double chest. Downstream checks
+     * (deny, hoppers, pistons, explosions) then only ever need a per-position lookup.
+     */
+    public static void lockChest(ServerWorld world, BlockPos pos, UUID lockeyId) {
+        lock(world, pos, lockeyId);
+        BlockPos other = otherHalf(world, pos);
+        if (other != null) lock(world, other, lockeyId);
+    }
+
+    /** Unlock a chest and its partner half, if any. */
+    public static void unlockChest(ServerWorld world, BlockPos pos) {
+        BlockPos other = otherHalf(world, pos);
+        unlock(world, pos);
+        if (other != null) unlock(world, other);
+    }
+
     /** True if this specific Lockey is the one holding this chest. */
     public static boolean matches(ServerWorld world, BlockPos pos, UUID lockeyId) {
         UUID owner = lockedBy(world, pos);
