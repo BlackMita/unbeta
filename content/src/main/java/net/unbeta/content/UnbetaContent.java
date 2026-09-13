@@ -273,6 +273,51 @@ public final class UnbetaContent implements ModInitializer {
                 // Someone else's chest - fall through to the deny handler.
                 return net.minecraft.util.ActionResult.PASS;
             });
+
+        // Lockey: deny opening a locked chest, and report where its key is.
+        // Registered after the lock handler so the key-holder's unlock wins first.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
+            (player, world, hand, hit) -> {
+                if (world.isClient) return net.minecraft.util.ActionResult.PASS;
+                net.minecraft.util.math.BlockPos pos = hit.getBlockPos();
+                if (!(world.getBlockState(pos).getBlock() instanceof net.minecraft.block.ChestBlock))
+                    return net.minecraft.util.ActionResult.PASS;
+
+                net.minecraft.server.world.ServerWorld sw =
+                    (net.minecraft.server.world.ServerWorld) world;
+                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.lockedBy(sw, pos);
+                if (owner == null) return net.minecraft.util.ActionResult.PASS;
+
+                // If the player is holding the matching key, the earlier handler
+                // already unlocked it; nothing to deny.
+                net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+                if (net.unbeta.content.lockey.LockeyItem.isLockey(held)) {
+                    java.util.UUID heldId = net.unbeta.content.lockey.LockeyItem.getId(held);
+                    if (heldId != null && heldId.equals(owner))
+                        return net.minecraft.util.ActionResult.PASS;
+                }
+
+                world.playSound(null, pos,
+                    net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,
+                    net.minecraft.sound.SoundCategory.BLOCKS, 0.8F, 1.0F);
+
+                net.minecraft.util.math.BlockPos keyPos =
+                    net.unbeta.content.lockey.LockeyLocator.find(sw, owner);
+                net.minecraft.text.Text msg;
+                if (keyPos != null) {
+                    msg = net.minecraft.text.Text.literal(
+                            "Key is at " + keyPos.getX() + ", " + keyPos.getY()
+                                    + ", " + keyPos.getZ())
+                        .formatted(net.minecraft.util.Formatting.GOLD);
+                } else {
+                    msg = net.minecraft.text.Text.literal("Key is not nearby.")
+                        .formatted(net.minecraft.util.Formatting.GOLD);
+                }
+                player.sendMessage(msg, false);
+
+                return net.minecraft.util.ActionResult.SUCCESS; // consume: chest stays shut
+            });
+
         LOG.info("Lockey registered.");
 
         // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
