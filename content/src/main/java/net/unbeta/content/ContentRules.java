@@ -64,6 +64,11 @@ public final class ContentRules implements RuleProvider {
 
         // Netherite cloud boots removed via ItemGroupEvents in UnbetaContent.java
 
+        // Re-enable iron/gold nuggets (needed for Lockey, and restores the
+        // vanilla ingot <-> 9 nuggets recipes in both directions)
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("iron_nugget")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("gold_nugget")), false);
+
         // Re-enable all bed colors
         for (String color : new String[]{
                 "white", "orange", "magenta", "light_blue", "yellow", "lime",
