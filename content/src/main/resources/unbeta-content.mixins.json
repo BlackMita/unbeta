@@ -34,7 +34,11 @@
     "FurnaceBurnoutMixin",
     "JolPassiveFleeMixin",
     "EndermanTeleportParticleMixin",
-    "SkeletonBehaviorMixin"
+    "SkeletonBehaviorMixin",
+    "LockedChestHopperMixin",
+    "LockedChestPistonMixin",
+    "LockedChestExplosionMixin",
+    "LockedChestNoMergeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

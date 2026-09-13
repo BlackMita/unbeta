@@ -246,7 +246,7 @@ public final class UnbetaContent implements ModInitializer {
                 net.minecraft.server.world.ServerWorld sw =
                     (net.minecraft.server.world.ServerWorld) world;
                 java.util.UUID myId = net.unbeta.content.lockey.LockeyItem.getOrCreateId(held);
-                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.lockedBy(sw, pos);
+                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.chestLockedBy(sw, pos);
 
                 if (owner == null) {
                     // Unlocked chest: only an unbound Lockey can claim it.
@@ -285,7 +285,7 @@ public final class UnbetaContent implements ModInitializer {
 
                 net.minecraft.server.world.ServerWorld sw =
                     (net.minecraft.server.world.ServerWorld) world;
-                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.lockedBy(sw, pos);
+                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.chestLockedBy(sw, pos);
                 if (owner == null) return net.minecraft.util.ActionResult.PASS;
 
                 // If the player is holding the matching key, the earlier handler

@@ -80,6 +80,27 @@ public final class LockeyState {
         if (other != null) unlock(world, other);
     }
 
+    /**
+     * Is this chest locked, counting its partner half?
+     *
+     * <p>Guards against a locked single chest being merged into a double chest by a
+     * newly placed neighbour: the new half has no lock of its own, so testing only the
+     * clicked position would let it be opened.
+     */
+    public static boolean isChestLocked(ServerWorld world, BlockPos pos) {
+        if (isLocked(world, pos)) return true;
+        BlockPos other = otherHalf(world, pos);
+        return other != null && isLocked(world, other);
+    }
+
+    /** The Lockey holding this chest or its partner half, or null if neither is locked. */
+    public static UUID chestLockedBy(ServerWorld world, BlockPos pos) {
+        UUID owner = lockedBy(world, pos);
+        if (owner != null) return owner;
+        BlockPos other = otherHalf(world, pos);
+        return other != null ? lockedBy(world, other) : null;
+    }
+
     /** True if this specific Lockey is the one holding this chest. */
     public static boolean matches(ServerWorld world, BlockPos pos, UUID lockeyId) {
         UUID owner = lockedBy(world, pos);
