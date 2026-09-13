@@ -38,7 +38,8 @@
     "LockedChestHopperMixin",
     "LockedChestPistonMixin",
     "LockedChestExplosionMixin",
-    "LockedChestNoMergeMixin"
+    "LockedChestNoMergeMixin",
+    "LockeyItemEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
