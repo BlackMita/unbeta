@@ -1,32 +1,14 @@
 {
-  "mob.unlike_like.crawl": {
-    "sounds": [
-      "unbeta-content:mob/unlike_like/crawl"
-    ]
+  "chest_locked": {
+    "category": "block",
+    "sounds": [{ "name": "unbeta-content:chest_locked", "stream": false }]
   },
-  "mob.unlike_like.growl": {
-    "sounds": [
-      "unbeta-content:mob/unlike_like/growl"
-    ]
+  "chest_unlocked": {
+    "category": "block",
+    "sounds": [{ "name": "unbeta-content:chest_unlocked", "stream": false }]
   },
-  "mob.unlike_like.chew": {
-    "sounds": [
-      "unbeta-content:mob/unlike_like/chew"
-    ]
-  },
-  "mob.unlike_like.hurt": {
-    "sounds": [
-      "unbeta-content:mob/unlike_like/hurt"
-    ]
-  },
-  "mob.unlike_like.scream": {
-    "sounds": [
-      "unbeta-content:mob/unlike_like/scream"
-    ]
-  },
-  "mob.unlike_like.spew": {
-    "sounds": [
-      "unbeta-content:mob/unlike_like/spew"
-    ]
+  "chest_deny": {
+    "category": "block",
+    "sounds": [{ "name": "unbeta-content:chest_deny", "stream": false }]
   }
 }

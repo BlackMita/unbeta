@@ -14,6 +14,11 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.minecraft.client.item.ModelPredicateProviderRegistry.register(
+            net.unbeta.content.lockey.LockeyRegistry.LOCKEY,
+            new net.minecraft.util.Identifier("unbeta-content", "bound"),
+            (stack, world, entity, seed) ->
+                net.unbeta.content.lockey.LockeyItem.isBound(stack) ? 1.0F : 0.0F);
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 net.unbeta.content.unmason.UnmasonRegistry.UNMASON,
                 net.unbeta.content.client.unmason.UnmasonRenderer::new);

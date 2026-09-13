@@ -24786,6 +24786,11 @@
       "action": "keep",
       "kind": "entity",
       "id": "unbeta-content:unmason"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:lockey"
     }
   ]
 }
