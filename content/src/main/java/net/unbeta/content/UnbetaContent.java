@@ -231,6 +231,48 @@ public final class UnbetaContent implements ModInitializer {
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
             .modifyEntriesEvent(net.minecraft.item.ItemGroups.TOOLS)
             .register(entries -> entries.add(net.unbeta.content.lockey.LockeyRegistry.LOCKEY));
+        // Lockey: right-click a chest to lock/unlock it
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
+            (player, world, hand, hit) -> {
+                if (world.isClient) return net.minecraft.util.ActionResult.PASS;
+                net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+                if (!net.unbeta.content.lockey.LockeyItem.isLockey(held))
+                    return net.minecraft.util.ActionResult.PASS;
+
+                net.minecraft.util.math.BlockPos pos = hit.getBlockPos();
+                if (!(world.getBlockState(pos).getBlock() instanceof net.minecraft.block.ChestBlock))
+                    return net.minecraft.util.ActionResult.PASS;
+
+                net.minecraft.server.world.ServerWorld sw =
+                    (net.minecraft.server.world.ServerWorld) world;
+                java.util.UUID myId = net.unbeta.content.lockey.LockeyItem.getOrCreateId(held);
+                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.lockedBy(sw, pos);
+
+                if (owner == null) {
+                    // Unlocked chest: only an unbound Lockey can claim it.
+                    if (net.unbeta.content.lockey.LockeyItem.isBound(held))
+                        return net.minecraft.util.ActionResult.PASS;
+                    net.unbeta.content.lockey.LockeyState.lock(sw, pos, myId);
+                    net.unbeta.content.lockey.LockeyItem.bind(held, pos);
+                    world.playSound(null, pos,
+                        net.unbeta.content.lockey.LockeyRegistry.CHEST_LOCKED,
+                        net.minecraft.sound.SoundCategory.BLOCKS, 0.8F, 1.0F);
+                    return net.minecraft.util.ActionResult.SUCCESS;
+                }
+
+                if (owner.equals(myId)) {
+                    // Our own chest: unlock and return the key to keylock form.
+                    net.unbeta.content.lockey.LockeyState.unlock(sw, pos);
+                    net.unbeta.content.lockey.LockeyItem.unbind(held);
+                    world.playSound(null, pos,
+                        net.unbeta.content.lockey.LockeyRegistry.CHEST_UNLOCKED,
+                        net.minecraft.sound.SoundCategory.BLOCKS, 0.8F, 1.0F);
+                    return net.minecraft.util.ActionResult.SUCCESS;
+                }
+
+                // Someone else's chest - fall through to the deny handler.
+                return net.minecraft.util.ActionResult.PASS;
+            });
         LOG.info("Lockey registered.");
 
         // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
