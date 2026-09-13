@@ -24,8 +24,17 @@ public final class LockeyLocator {
 
     private LockeyLocator() {}
 
-    /** Where this Lockey is, or null if it isn't in anything currently loaded. */
+    /**
+     * Where this Lockey is, or null if it isn't in anything currently loaded.
+     * A successful find is recorded so a later failed search can still answer.
+     */
     public static BlockPos find(ServerWorld world, UUID lockeyId) {
+        BlockPos hit = search(world, lockeyId);
+        if (hit != null) LockeyState.recordSeen(world, lockeyId, hit);
+        return hit;
+    }
+
+    private static BlockPos search(ServerWorld world, UUID lockeyId) {
         if (lockeyId == null) return null;
 
         // 1. Player inventories (includes offhand and armor slots)

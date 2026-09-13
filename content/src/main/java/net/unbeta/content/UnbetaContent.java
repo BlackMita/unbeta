@@ -274,6 +274,43 @@ public final class UnbetaContent implements ModInitializer {
                 return net.minecraft.util.ActionResult.PASS;
             });
 
+        // Lockey: right-click away from its own chest to ask where that chest is.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
+            (player, world, hand, hit) -> {
+                if (world.isClient) return net.minecraft.util.ActionResult.PASS;
+                net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+                if (!net.unbeta.content.lockey.LockeyItem.isLockey(held))
+                    return net.minecraft.util.ActionResult.PASS;
+                if (!net.unbeta.content.lockey.LockeyItem.isBound(held))
+                    return net.minecraft.util.ActionResult.PASS;
+
+                net.minecraft.server.world.ServerWorld sw =
+                    (net.minecraft.server.world.ServerWorld) world;
+                java.util.UUID myId = net.unbeta.content.lockey.LockeyItem.getId(held);
+
+                // Clicking the key's own chest is handled by the lock/unlock handler.
+                net.minecraft.util.math.BlockPos chest =
+                    net.unbeta.content.lockey.LockeyItem.getBoundChest(held);
+                if (chest != null && chest.equals(hit.getBlockPos()))
+                    return net.minecraft.util.ActionResult.PASS;
+
+                net.minecraft.text.Text msg;
+                if (net.unbeta.content.lockey.LockeyState.isRevoked(sw, myId)) {
+                    msg = net.minecraft.text.Text.literal("This key's chest was destroyed.")
+                        .formatted(net.minecraft.util.Formatting.RED);
+                } else if (chest != null) {
+                    msg = net.minecraft.text.Text.literal(
+                            "Chest at " + chest.getX() + ", " + chest.getY()
+                                    + ", " + chest.getZ())
+                        .formatted(net.minecraft.util.Formatting.YELLOW);
+                } else {
+                    return net.minecraft.util.ActionResult.PASS;
+                }
+                player.sendMessage(msg, false);
+                return net.minecraft.util.ActionResult.SUCCESS;
+            });
+
+
         // Lockey: deny opening a locked chest, and report where its key is.
         // Registered after the lock handler so the key-holder's unlock wins first.
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
@@ -310,14 +347,53 @@ public final class UnbetaContent implements ModInitializer {
                                     + ", " + keyPos.getZ())
                         .formatted(net.minecraft.util.Formatting.GOLD);
                 } else {
-                    msg = net.minecraft.text.Text.literal("Key is not nearby.")
-                        .formatted(net.minecraft.util.Formatting.GOLD);
+                    net.minecraft.util.math.BlockPos seen =
+                        net.unbeta.content.lockey.LockeyState.lastSeen(sw, owner);
+                    if (net.unbeta.content.lockey.LockeyState.isRevoked(sw, owner)) {
+                        msg = net.minecraft.text.Text.literal("Will never unlock.")
+                            .formatted(net.minecraft.util.Formatting.RED);
+                    } else if (seen != null) {
+                        msg = net.minecraft.text.Text.literal(
+                                "Key last seen at " + seen.getX() + ", " + seen.getY()
+                                        + ", " + seen.getZ())
+                            .formatted(net.minecraft.util.Formatting.GOLD);
+                    } else {
+                        msg = net.minecraft.text.Text.literal("Key location unknown.")
+                            .formatted(net.minecraft.util.Formatting.GOLD);
+                    }
                 }
                 player.sendMessage(msg, false);
 
                 return net.minecraft.util.ActionResult.SUCCESS; // consume: chest stays shut
             });
 
+        // Lockey: a destroyed chest must release its lock, or the POSITION stays
+        // marked and any chest later placed there is born locked.
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register(
+            (world, player, pos, state, blockEntity) -> {
+                if (!(world instanceof net.minecraft.server.world.ServerWorld sw)) return;
+                if (!(state.getBlock() instanceof net.minecraft.block.ChestBlock)) return;
+                // Clear this position and, if it was a double chest, its partner too.
+                // otherHalf() reads the block state, which is already gone by AFTER, so
+                // clear all four horizontal neighbours that still hold THIS key's id.
+                java.util.UUID owner = net.unbeta.content.lockey.LockeyState.lockedBy(sw, pos);
+                net.unbeta.content.lockey.LockeyState.unlock(sw, pos);
+                // The key outlives its chest; retire it so it reports honestly.
+                if (owner != null) net.unbeta.content.lockey.LockeyState.revoke(sw, owner);
+                if (owner != null) {
+                    for (net.minecraft.util.math.Direction d
+                            : net.minecraft.util.math.Direction.Type.HORIZONTAL) {
+                        net.minecraft.util.math.BlockPos n = pos.offset(d);
+                        if (owner.equals(net.unbeta.content.lockey.LockeyState.lockedBy(sw, n))
+                                && !(sw.getBlockState(n).getBlock()
+                                        instanceof net.minecraft.block.ChestBlock)) {
+                            net.unbeta.content.lockey.LockeyState.unlock(sw, n);
+                        }
+                    }
+                }
+            });
+
+        net.unbeta.content.lockey.LockeySweep.register();
         LOG.info("Lockey registered.");
 
         // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
@@ -422,6 +498,14 @@ public final class UnbetaContent implements ModInitializer {
         // so the block never becomes air — true "indestructible" illusion.
         net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register(
             (world, player, pos, state, blockEntity) -> {
+                // Locked chests: siege rules apply before anything else, and are NOT
+                // bypassed by creative - forcing a lock is meant to cost time.
+                if (world instanceof net.minecraft.server.world.ServerWorld lsw
+                        && state.getBlock() instanceof net.minecraft.block.ChestBlock) {
+                    if (!net.unbeta.content.lockey.LockeySiege.onBreak(lsw, player, pos))
+                        return false;
+                }
+
                 // Creative mode bypasses all reform rules (same as bedrock)
                 if (player.getAbilities().creativeMode) return true;
                 net.minecraft.item.ItemStack tool = player.getMainHandStack();

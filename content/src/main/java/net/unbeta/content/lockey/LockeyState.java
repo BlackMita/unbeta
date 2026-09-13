@@ -101,6 +101,36 @@ public final class LockeyState {
         return other != null ? lockedBy(world, other) : null;
     }
 
+    // ---- last-known key positions, and revoked keys ----
+
+    private static final String SEEN = "lockey_seen";
+    private static final String DEAD = "lockey_dead";
+
+    /** Remember where this key was seen, so a later failed search still has an answer. */
+    public static void recordSeen(ServerWorld world, UUID lockeyId, BlockPos pos) {
+        if (lockeyId == null || pos == null) return;
+        UnbetaWorldState.edit(world, SEEN, s -> s.putLong(lockeyId.toString(), pos.asLong()));
+    }
+
+    /** Where this key was last seen, or null if we have never found it. */
+    public static BlockPos lastSeen(ServerWorld world, UUID lockeyId) {
+        if (lockeyId == null) return null;
+        NbtCompound s = UnbetaWorldState.read(world, SEEN);
+        String k = lockeyId.toString();
+        return s.contains(k) ? BlockPos.fromLong(s.getLong(k)) : null;
+    }
+
+    /** Mark a key as gone for good - chest destroyed, or key lost to lava. */
+    public static void revoke(ServerWorld world, UUID lockeyId) {
+        if (lockeyId == null) return;
+        UnbetaWorldState.edit(world, DEAD, s -> s.putBoolean(lockeyId.toString(), true));
+    }
+
+    public static boolean isRevoked(ServerWorld world, UUID lockeyId) {
+        if (lockeyId == null) return false;
+        return UnbetaWorldState.read(world, DEAD).getBoolean(lockeyId.toString());
+    }
+
     /** True if this specific Lockey is the one holding this chest. */
     public static boolean matches(ServerWorld world, BlockPos pos, UUID lockeyId) {
         UUID owner = lockedBy(world, pos);
