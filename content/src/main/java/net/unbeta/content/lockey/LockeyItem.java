@@ -23,6 +23,15 @@ public class LockeyItem extends Item {
     public static final String NBT_CHEST_Y = "LockeyChestY";
     public static final String NBT_CHEST_Z = "LockeyChestZ";
     public static final String NBT_ID = "LockeyId";
+    /**
+     * Set once this key's chest is gone for good.
+     *
+     * <p>Duplicates what LockeyState.isRevoked knows, deliberately: recipe matching runs
+     * client-side, and the client cannot read world state. Without this on the item, the
+     * salvage recipe would show an empty output slot on the client while the server
+     * considered it valid.
+     */
+    public static final String NBT_DEAD = "LockeyDead";
 
     public LockeyItem(Settings settings) {
         super(settings);
@@ -68,6 +77,15 @@ public class LockeyItem extends Item {
         n.remove(NBT_CHEST_X);
         n.remove(NBT_CHEST_Y);
         n.remove(NBT_CHEST_Z);
+    }
+
+    public static boolean isDead(ItemStack stack) {
+        NbtCompound n = stack.getNbt();
+        return n != null && n.getBoolean(NBT_DEAD);
+    }
+
+    public static void markDead(ItemStack stack) {
+        stack.getOrCreateNbt().putBoolean(NBT_DEAD, true);
     }
 
     public static BlockPos getBoundChest(ItemStack stack) {

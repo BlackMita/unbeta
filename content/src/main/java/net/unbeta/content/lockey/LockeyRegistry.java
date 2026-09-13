@@ -12,6 +12,7 @@ public final class LockeyRegistry {
     public static SoundEvent CHEST_LOCKED;
     public static SoundEvent CHEST_UNLOCKED;
     public static SoundEvent CHEST_DENY;
+    public static net.minecraft.recipe.RecipeSerializer<LockeySalvageRecipe> SALVAGE_SERIALIZER;
 
     private LockeyRegistry() {}
 
@@ -31,5 +32,9 @@ public final class LockeyRegistry {
         CHEST_LOCKED   = sound("chest_locked");
         CHEST_UNLOCKED = sound("chest_unlocked");
         CHEST_DENY     = sound("chest_deny");
+
+        SALVAGE_SERIALIZER = Registry.register(
+                Registries.RECIPE_SERIALIZER, id("lockey_salvage"),
+                new net.minecraft.recipe.SpecialRecipeSerializer<>(LockeySalvageRecipe::new));
     }
 }

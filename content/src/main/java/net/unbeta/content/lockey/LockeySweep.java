@@ -62,6 +62,14 @@ public final class LockeySweep {
         if (!LockeyItem.isLockey(stack)) return;
         if (!LockeyItem.isBound(stack)) return;
         java.util.UUID id = LockeyItem.getId(stack);
-        if (id != null) LockeyState.recordSeen(world, id, pos);
+        if (id == null) return;
+
+        // Stamp the dead flag onto the item so the client knows too - the salvage
+        // recipe matches client-side and cannot consult world state.
+        if (!LockeyItem.isDead(stack) && LockeyState.isRevoked(world, id)) {
+            LockeyItem.markDead(stack);
+        }
+
+        LockeyState.recordSeen(world, id, pos);
     }
 }
