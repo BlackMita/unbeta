@@ -69,6 +69,17 @@ public class ClamboxBlock extends FallingBlock implements BlockEntityProvider {
     }
 
     @Override
+    public <T extends BlockEntity> net.minecraft.block.entity.BlockEntityTicker<T> getTicker(
+            World world, BlockState state, net.minecraft.block.entity.BlockEntityType<T> type) {
+        if (world.isClient) return null;
+        return (w, p, st, be) -> {
+            if (be instanceof ClamboxBlockEntity clam) {
+                ClamboxBlockEntity.serverTick(w, p, st, clam);
+            }
+        };
+    }
+
+    @Override
     public void onStateReplaced(BlockState state, World world, BlockPos pos,
                                 BlockState newState, boolean moved) {
         if (!state.isOf(newState.getBlock())) {

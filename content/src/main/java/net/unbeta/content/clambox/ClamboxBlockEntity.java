@@ -24,6 +24,11 @@ public class ClamboxBlockEntity extends BlockEntity
 
     private final DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
 
+    /** Ticks of pearling done on the current input. Resets if conditions break. */
+    private int progress = 0;
+    /** Ticks required to finish one pearl. */
+    public static final int PEARL_TIME = 200;
+
     public ClamboxBlockEntity(BlockPos pos, BlockState state) {
         super(ClamboxRegistry.CLAMBOX_BLOCK_ENTITY, pos, state);
     }
@@ -66,6 +71,53 @@ public class ClamboxBlockEntity extends BlockEntity
 
     @Override public void clear() { items.clear(); }
 
+    public int getProgress() { return progress; }
+
+    /**
+     * Pearling condition: any full block directly below, and a water SOURCE block
+     * directly above. Sides no longer matter. Flowing water above does not count.
+     *
+     * <p>Uses isFullCube rather than isSolidBlock so gravity blocks (sand, gravel) and
+     * the clambox's own kin count as valid floor - isSolidBlock rejects FallingBlocks.
+     */
+    private static boolean isSubmerged(net.minecraft.world.World world, BlockPos pos) {
+        BlockPos below = pos.down();
+        boolean solidFloor = world.getBlockState(below)
+                .isFullCube(world, below);
+        if (!solidFloor) return false;
+
+        net.minecraft.fluid.FluidState above = world.getFluidState(pos.up());
+        return above.isOf(net.minecraft.fluid.Fluids.WATER) && above.isStill();
+    }
+
+    public static void serverTick(net.minecraft.world.World world, BlockPos pos,
+                                  BlockState state, ClamboxBlockEntity be) {
+        if (world.isClient) return;
+
+        ItemStack input = be.items.get(SLOT_INPUT);
+        ItemStack output = be.items.get(SLOT_OUTPUT);
+
+        boolean canRun = isSubmerged(world, pos)
+                && !input.isEmpty()
+                && output.isEmpty()
+                && PearlItem.canPearl(input);
+
+        if (!canRun) {
+            if (be.progress != 0) { be.progress = 0; be.markDirty(); }
+            return;
+        }
+
+        be.progress++;
+        if (be.progress >= PEARL_TIME) {
+            // Consume one from the input, put a pearl wrapping it in the output.
+            ItemStack pearl = PearlItem.wrap(input);
+            input.decrement(1);
+            be.items.set(SLOT_OUTPUT, pearl);
+            be.progress = 0;
+        }
+        be.markDirty();
+    }
+
     /** Drop all slot contents into the world - called on destruction. */
     public void scatterItems(net.minecraft.world.World world) {
         net.minecraft.util.ItemScatterer.spawn(world, pos, this);
@@ -87,6 +139,7 @@ public class ClamboxBlockEntity extends BlockEntity
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
         Inventories.writeNbt(nbt, items);
+        nbt.putInt("Progress", progress);
     }
 
     @Override
@@ -94,5 +147,6 @@ public class ClamboxBlockEntity extends BlockEntity
         super.readNbt(nbt);
         items.clear();
         Inventories.readNbt(nbt, items);
+        progress = nbt.getInt("Progress");
     }
 }

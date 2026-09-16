@@ -1,6 +1,7 @@
 package net.unbeta.content.mixin;
 
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -12,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Lockey durability as a dropped item.
+ * Durability for special dropped items (Lockey and Pearl).
  *
  * <p>Never despawns, survives fire and explosions, dies to lava. Lava is the one way a
  * key can be lost, which is what makes "Will never unlock" reachable at all.
@@ -28,9 +29,11 @@ public abstract class LockeyItemEntityMixin {
     /** Vanilla discards a dropped item once itemAge reaches this. */
     private static final int DESPAWN_AGE = 6000;
 
-    private boolean unbeta_isLockey() {
+    private boolean unbeta_isProtected() {
         ItemEntity self = (ItemEntity)(Object)this;
-        return net.unbeta.content.lockey.LockeyItem.isLockey(self.getStack());
+        ItemStack s = self.getStack();
+        return net.unbeta.content.lockey.LockeyItem.isLockey(s)
+                || net.unbeta.content.clambox.PearlItem.isPearl(s);
     }
 
     /**
@@ -43,7 +46,7 @@ public abstract class LockeyItemEntityMixin {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void unbeta_neverDespawn(CallbackInfo ci) {
-        if (!unbeta_isLockey()) return;
+        if (!unbeta_isProtected()) return;
         if (this.itemAge >= DESPAWN_AGE - 100) {
             this.itemAge = 0;
         }
@@ -53,14 +56,14 @@ public abstract class LockeyItemEntityMixin {
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void unbeta_durability(DamageSource source, float amount,
                                    CallbackInfoReturnable<Boolean> cir) {
-        if (!unbeta_isLockey()) return;
+        if (!unbeta_isProtected()) return;
         ItemEntity self = (ItemEntity)(Object)this;
 
         boolean lava = source.isOf(DamageTypes.LAVA);
         if (lava) {
-            // Retire the key BEFORE the entity goes away, or we lose the id and the
-            // chest is left reporting "unknown" instead of the honest terminal message.
-            if (self.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+            // A Lockey lost to lava must retire its chest binding first; a Pearl just dies.
+            if (net.unbeta.content.lockey.LockeyItem.isLockey(self.getStack())
+                    && self.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
                 java.util.UUID id =
                     net.unbeta.content.lockey.LockeyItem.getId(self.getStack());
                 if (id != null) net.unbeta.content.lockey.LockeyState.revoke(sw, id);

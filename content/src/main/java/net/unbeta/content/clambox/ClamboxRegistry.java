@@ -14,6 +14,7 @@ public final class ClamboxRegistry {
 
     public static Block CLAMBOX_BLOCK;
     public static Item CLAMBOX_ITEM;
+    public static Item PEARL_ITEM;
     public static BlockEntityType<ClamboxBlockEntity> CLAMBOX_BLOCK_ENTITY;
     public static net.minecraft.screen.ScreenHandlerType<ClamboxScreenHandler> CLAMBOX_SCREEN_HANDLER;
 
@@ -32,6 +33,9 @@ public final class ClamboxRegistry {
 
         CLAMBOX_ITEM = Registry.register(Registries.ITEM, id("clambox"),
                 new BlockItem(CLAMBOX_BLOCK, new Item.Settings()));
+
+        PEARL_ITEM = Registry.register(Registries.ITEM, id("unbeta_pearl"),
+                new PearlItem(new Item.Settings().maxCount(1)));
 
         CLAMBOX_BLOCK_ENTITY = Registry.register(Registries.BLOCK_ENTITY_TYPE,
                 id("clambox"),
