@@ -21,6 +21,26 @@ public class PearlItem extends Item {
         super(settings);
     }
 
+    @Override
+    public net.minecraft.util.TypedActionResult<ItemStack> use(
+            net.minecraft.world.World world,
+            net.minecraft.entity.player.PlayerEntity user,
+            net.minecraft.util.Hand hand) {
+        ItemStack held = user.getStackInHand(hand);
+        world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                net.minecraft.sound.SoundEvents.ENTITY_SNOWBALL_THROW,
+                net.minecraft.sound.SoundCategory.NEUTRAL, 0.5F,
+                0.4F / (world.getRandom().nextFloat() * 0.4F + 0.8F));
+        if (!world.isClient) {
+            PearlEntity pearl = new PearlEntity(world, user);
+            pearl.setItem(held);
+            pearl.setVelocity(user, user.getPitch(), user.getYaw(), 0.0F, 1.5F, 1.0F);
+            world.spawnEntity(pearl);
+        }
+        if (!user.getAbilities().creativeMode) held.decrement(1);
+        return net.minecraft.util.TypedActionResult.success(held, world.isClient());
+    }
+
     public static boolean isPearl(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() instanceof PearlItem;
     }

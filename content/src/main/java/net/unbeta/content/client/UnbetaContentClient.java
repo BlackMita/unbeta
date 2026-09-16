@@ -14,6 +14,9 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.unbeta.content.clambox.ClamboxRegistry.PEARL_ENTITY,
+                ctx -> new net.minecraft.client.render.entity.FlyingItemEntityRenderer<>(ctx));
         net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry.register(
                 net.unbeta.content.clambox.ClamboxRegistry.CLAMBOX_SCREEN_HANDLER,
                 net.unbeta.content.client.clambox.ClamboxScreen::new);
