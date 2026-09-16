@@ -24791,6 +24791,16 @@
       "action": "keep",
       "kind": "item",
       "id": "unbeta-content:lockey"
+    },
+    {
+      "action": "keep",
+      "kind": "block",
+      "id": "unbeta-content:clambox"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:clambox"
     }
   ]
 }

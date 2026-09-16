@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "unbeta-content:block/clambox_top",
+    "bottom": "unbeta-content:block/clambox_bottom",
+    "side": "unbeta-content:block/clambox_side"
+  }
+}

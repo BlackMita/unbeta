@@ -396,6 +396,12 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.lockey.LockeySweep.register();
         LOG.info("Lockey registered.");
 
+        net.unbeta.content.clambox.ClamboxRegistry.register();
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
+            .modifyEntriesEvent(net.minecraft.item.ItemGroups.FUNCTIONAL)
+            .register(entries -> entries.add(net.unbeta.content.clambox.ClamboxRegistry.CLAMBOX_ITEM));
+        LOG.info("Clambox registered.");
+
         // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register(
             (entity, world) -> {

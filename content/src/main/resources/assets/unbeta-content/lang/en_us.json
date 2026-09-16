@@ -22,5 +22,7 @@
   "block.unbeta-content.bone_pile": "Bone Pile",
   "entity.unbeta-content.unlike_like": "Unlike Like",
   "entity.unbeta-content.unmason": "Unmason",
-  "item.unbeta-content.lockey": "Lockey"
+  "item.unbeta-content.lockey": "Lockey",
+  "block.unbeta-content.clambox": "Clambox",
+  "item.unbeta-content.clambox": "Clambox"
 }
