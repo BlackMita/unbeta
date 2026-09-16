@@ -14,6 +14,9 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry.register(
+                net.unbeta.content.clambox.ClamboxRegistry.CLAMBOX_SCREEN_HANDLER,
+                net.unbeta.content.client.clambox.ClamboxScreen::new);
         net.minecraft.client.item.ModelPredicateProviderRegistry.register(
             net.unbeta.content.lockey.LockeyRegistry.LOCKEY,
             new net.minecraft.util.Identifier("unbeta-content", "bound"),

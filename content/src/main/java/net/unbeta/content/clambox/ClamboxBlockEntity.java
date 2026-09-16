@@ -16,7 +16,8 @@ import net.minecraft.util.math.BlockPos;
  * custom container in this mod. The screen handler arrives in phase 2; for now this is
  * storage only.
  */
-public class ClamboxBlockEntity extends BlockEntity implements Inventory {
+public class ClamboxBlockEntity extends BlockEntity
+        implements Inventory, net.minecraft.screen.NamedScreenHandlerFactory {
 
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT = 1;
@@ -64,6 +65,23 @@ public class ClamboxBlockEntity extends BlockEntity implements Inventory {
     }
 
     @Override public void clear() { items.clear(); }
+
+    /** Drop all slot contents into the world - called on destruction. */
+    public void scatterItems(net.minecraft.world.World world) {
+        net.minecraft.util.ItemScatterer.spawn(world, pos, this);
+    }
+
+    @Override
+    public net.minecraft.text.Text getDisplayName() {
+        return net.minecraft.text.Text.translatable("block.unbeta-content.clambox");
+    }
+
+    @Override
+    public net.minecraft.screen.ScreenHandler createMenu(int syncId,
+            net.minecraft.entity.player.PlayerInventory inv,
+            net.minecraft.entity.player.PlayerEntity player) {
+        return new ClamboxScreenHandler(syncId, inv, this);
+    }
 
     @Override
     protected void writeNbt(NbtCompound nbt) {

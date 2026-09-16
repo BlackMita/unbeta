@@ -15,6 +15,7 @@ public final class ClamboxRegistry {
     public static Block CLAMBOX_BLOCK;
     public static Item CLAMBOX_ITEM;
     public static BlockEntityType<ClamboxBlockEntity> CLAMBOX_BLOCK_ENTITY;
+    public static net.minecraft.screen.ScreenHandlerType<ClamboxScreenHandler> CLAMBOX_SCREEN_HANDLER;
 
     private ClamboxRegistry() {}
 
@@ -37,5 +38,9 @@ public final class ClamboxRegistry {
                 net.fabricmc.fabric.api.object.builder.v1.block.entity
                         .FabricBlockEntityTypeBuilder
                         .create(ClamboxBlockEntity::new, CLAMBOX_BLOCK).build());
+
+        CLAMBOX_SCREEN_HANDLER =
+                net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry.registerSimple(
+                        id("clambox"), ClamboxScreenHandler::new);
     }
 }
