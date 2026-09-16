@@ -46,6 +46,9 @@ public class PearlEntity extends ThrownItemEntity {
             this.getWorld().spawnEntity(drop);
         }
 
+        this.getWorld().playSound(null, this.getX(), this.getY(), this.getZ(),
+                ClamboxRegistry.PEARL_CRACK,
+                net.minecraft.sound.SoundCategory.NEUTRAL, 0.8F, 1.0F);
         // A little pop, then remove the projectile.
         this.getWorld().sendEntityStatus(this, (byte) 3); // vanilla "item break" particles
         this.discard();

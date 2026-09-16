@@ -73,6 +73,19 @@ public class ClamboxBlockEntity extends BlockEntity
 
     public int getProgress() { return progress; }
 
+    /** Two-slot delegate: index 0 = progress, index 1 = max. Synced to client. */
+    public net.minecraft.screen.PropertyDelegate createPropertyDelegate() {
+        return new net.minecraft.screen.PropertyDelegate() {
+            @Override public int get(int index) {
+                return index == 0 ? progress : PEARL_TIME;
+            }
+            @Override public void set(int index, int value) {
+                if (index == 0) progress = value;
+            }
+            @Override public int size() { return 2; }
+        };
+    }
+
     /**
      * Pearling condition: any full block directly below, and a water SOURCE block
      * directly above. Sides no longer matter. Flowing water above does not count.
@@ -132,7 +145,7 @@ public class ClamboxBlockEntity extends BlockEntity
     public net.minecraft.screen.ScreenHandler createMenu(int syncId,
             net.minecraft.entity.player.PlayerInventory inv,
             net.minecraft.entity.player.PlayerEntity player) {
-        return new ClamboxScreenHandler(syncId, inv, this);
+        return new ClamboxScreenHandler(syncId, inv, this, createPropertyDelegate());
     }
 
     @Override

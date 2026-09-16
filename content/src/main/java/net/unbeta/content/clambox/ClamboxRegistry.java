@@ -15,6 +15,7 @@ public final class ClamboxRegistry {
     public static Block CLAMBOX_BLOCK;
     public static Item CLAMBOX_ITEM;
     public static Item PEARL_ITEM;
+    public static net.minecraft.sound.SoundEvent PEARL_CRACK;
     public static net.minecraft.entity.EntityType<PearlEntity> PEARL_ENTITY;
     public static BlockEntityType<ClamboxBlockEntity> CLAMBOX_BLOCK_ENTITY;
     public static net.minecraft.screen.ScreenHandlerType<ClamboxScreenHandler> CLAMBOX_SCREEN_HANDLER;
@@ -37,6 +38,10 @@ public final class ClamboxRegistry {
 
         PEARL_ITEM = Registry.register(Registries.ITEM, id("unbeta_pearl"),
                 new PearlItem(new Item.Settings().maxCount(1)));
+
+        Identifier crackId = id("unbeta_pearl_crack");
+        PEARL_CRACK = Registry.register(Registries.SOUND_EVENT, crackId,
+                net.minecraft.sound.SoundEvent.of(crackId));
 
         PEARL_ENTITY = Registry.register(Registries.ENTITY_TYPE, id("unbeta_pearl"),
                 net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder

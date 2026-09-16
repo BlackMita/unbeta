@@ -18,18 +18,23 @@ import net.minecraft.screen.slot.Slot;
 public class ClamboxScreenHandler extends ScreenHandler {
 
     private final Inventory inventory;
+    private final net.minecraft.screen.PropertyDelegate properties;
 
     /** Client constructor: Fabric passes a fresh 2-slot inventory. */
     public ClamboxScreenHandler(int syncId, PlayerInventory playerInv) {
-        this(syncId, playerInv, new SimpleInventory(2));
+        this(syncId, playerInv, new SimpleInventory(2),
+                new net.minecraft.screen.ArrayPropertyDelegate(2));
     }
 
     /** Server constructor: the real clambox block entity is the inventory. */
-    public ClamboxScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory) {
+    public ClamboxScreenHandler(int syncId, PlayerInventory playerInv,
+            Inventory inventory, net.minecraft.screen.PropertyDelegate properties) {
         super(ClamboxRegistry.CLAMBOX_SCREEN_HANDLER, syncId);
         checkSize(inventory, 2);
         this.inventory = inventory;
+        this.properties = properties;
         inventory.onOpen(playerInv.player);
+        this.addProperties(properties);
 
         // Input slot
         this.addSlot(new Slot(inventory, ClamboxBlockEntity.SLOT_INPUT, 56, 17));
@@ -48,6 +53,9 @@ public class ClamboxScreenHandler extends ScreenHandler {
         for (int col = 0; col < 9; col++)
             this.addSlot(new Slot(playerInv, col, 8 + col * 18, 142));
     }
+
+    public int getProgress() { return properties.get(0); }
+    public int getMaxProgress() { return properties.get(1); }
 
     @Override
     public boolean canUse(PlayerEntity player) {

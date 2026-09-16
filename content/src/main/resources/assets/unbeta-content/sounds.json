@@ -1,14 +1,38 @@
 {
   "chest_locked": {
     "category": "block",
-    "sounds": [{ "name": "unbeta-content:chest_locked", "stream": false }]
+    "sounds": [
+      {
+        "name": "unbeta-content:chest_locked",
+        "stream": false
+      }
+    ]
   },
   "chest_unlocked": {
     "category": "block",
-    "sounds": [{ "name": "unbeta-content:chest_unlocked", "stream": false }]
+    "sounds": [
+      {
+        "name": "unbeta-content:chest_unlocked",
+        "stream": false
+      }
+    ]
   },
   "chest_deny": {
     "category": "block",
-    "sounds": [{ "name": "unbeta-content:chest_deny", "stream": false }]
+    "sounds": [
+      {
+        "name": "unbeta-content:chest_deny",
+        "stream": false
+      }
+    ]
+  },
+  "unbeta_pearl_crack": {
+    "category": "neutral",
+    "sounds": [
+      {
+        "name": "unbeta-content:unbeta_pearl_crack",
+        "stream": false
+      }
+    ]
   }
 }
