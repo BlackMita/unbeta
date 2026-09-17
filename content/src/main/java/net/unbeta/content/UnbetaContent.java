@@ -402,6 +402,23 @@ public final class UnbetaContent implements ModInitializer {
             .register(entries -> entries.add(net.unbeta.content.clambox.ClamboxRegistry.CLAMBOX_ITEM));
         LOG.info("Clambox registered.");
 
+        // Brewing stands generate in villages but potions are removed from Unbeta.
+        // Block the GUI from opening so right-clicking does nothing.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
+            (player, world, hand, hit) -> {
+                var block = world.getBlockState(hit.getBlockPos()).getBlock();
+                if (block instanceof net.minecraft.block.BrewingStandBlock
+                        || block instanceof net.minecraft.block.BlastFurnaceBlock
+                        || block instanceof net.minecraft.block.LecternBlock
+                        || block instanceof net.minecraft.block.LoomBlock
+                        || block instanceof net.minecraft.block.CartographyTableBlock
+                        || block instanceof net.minecraft.block.GrindstoneBlock
+                        || block instanceof net.minecraft.block.BarrelBlock) {
+                    return net.minecraft.util.ActionResult.FAIL;
+                }
+                return net.minecraft.util.ActionResult.PASS;
+            });
+
         // Squid swap: 1 in 4 squids becomes an Unlike Like on spawn
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register(
             (entity, world) -> {

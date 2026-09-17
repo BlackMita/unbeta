@@ -17,6 +17,8 @@ public abstract class ZombieSulliedMixin {
     @Inject(method = "onDeath", at = @At("TAIL"))
     private void unbeta_sullyChunk(DamageSource source, CallbackInfo ci) {
         if (!((Object)this instanceof ZombieEntity zombie)) return;
+        // Unmasons are passive stone-masonry mobs, not true zombies - they never sully.
+        if (zombie instanceof net.unbeta.content.unmason.UnmasonEntity) return;
         if (zombie.getWorld().isClient) return;
         ServerWorld world = (ServerWorld) zombie.getWorld();
         ChunkPos chunkPos = new ChunkPos(zombie.getBlockPos());

@@ -69,7 +69,7 @@ public final class TorchLogic {
         if (TorchItems.isUnlitTorch(held)) {
             if (placedLit) {
                 if (!world.isClient) {
-                    player.setStackInHand(hand, TorchItems.createLit(held, now));
+                    TorchItems.lightOneFromStack(player, hand, now);
                 }
                 world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE,
                         SoundCategory.BLOCKS, 0.6F, 1.3F);

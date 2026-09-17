@@ -67,6 +67,9 @@ public final class TorchLightingHooks {
                         // Lit with no deadline (edge case): give it one
                         inv.setStack(i, TorchItems.createLit(stack, now));
                     } else if (now >= burnoutAt) {
+                        world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                                net.minecraft.sound.SoundEvents.BLOCK_FIRE_EXTINGUISH,
+                                net.minecraft.sound.SoundCategory.BLOCKS, 0.5F, 2.0F);
                         inv.setStack(i, TorchItems.createUnlit());
                     }
                 }
@@ -81,6 +84,9 @@ public final class TorchLightingHooks {
                         e -> TorchItems.isLitTorch(e.getStack())).forEach(e -> {
                     long burnoutAt = TorchItems.getBurnoutAt(e.getStack());
                     if (burnoutAt >= 0 && now >= burnoutAt) {
+                        world.playSound(null, e.getX(), e.getY(), e.getZ(),
+                                net.minecraft.sound.SoundEvents.BLOCK_FIRE_EXTINGUISH,
+                                net.minecraft.sound.SoundCategory.BLOCKS, 0.5F, 2.0F);
                         net.minecraft.entity.ItemEntity fresh = new net.minecraft.entity.ItemEntity(
                                 world, e.getX(), e.getY(), e.getZ(),
                                 TorchItems.createUnlit(),
@@ -105,15 +111,6 @@ public final class TorchLightingHooks {
                     if (!world.getFluidState(pos).isEmpty()) {
                         TorchLogic.extinguishPlaced(world, pos, state);
                     }
-                }
-
-                                // Dual-wield: unlit in one hand + lit in the other → light the unlit
-                ItemStack main = player.getMainHandStack();
-                ItemStack off = player.getOffHandStack();
-                if (TorchItems.isUnlitTorch(main) && TorchItems.isLitTorch(off)) {
-                    TorchItems.lightOneFromStack(player, Hand.MAIN_HAND, now);
-                } else if (TorchItems.isUnlitTorch(off) && TorchItems.isLitTorch(main)) {
-                    TorchItems.lightOneFromStack(player, Hand.OFF_HAND, now);
                 }
             }
         });
