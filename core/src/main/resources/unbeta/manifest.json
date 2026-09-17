@@ -10891,17 +10891,6 @@
       "verified": false
     },
     {
-      "id": "minecraft:glow_squid",
-      "kind": "entity",
-      "action": "remove",
-      "introducedIn": "1.17",
-      "mechanisms": [
-        "spawn_gate",
-        "creative_hide"
-      ],
-      "verified": false
-    },
-    {
       "id": "minecraft:goat",
       "kind": "entity",
       "action": "remove",
@@ -16414,17 +16403,6 @@
     },
     {
       "id": "minecraft:glow_berries",
-      "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
-    },
-    {
-      "id": "minecraft:glow_ink_sac",
       "kind": "item",
       "action": "remove",
       "mechanisms": [

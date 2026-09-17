@@ -44,7 +44,8 @@ public final class ClamboxLoot {
             Items.IRON_PICKAXE, Items.IRON_SWORD,
             Items.GOLDEN_PICKAXE, Items.GOLDEN_SWORD);
 
-    /** Roll a single loot result for a found clambox's output slot. */
+    /** Roll a single loot result for a found clambox's output slot.
+     * Always returns a pearl - the item is always at least 1 layer deep. */
     public static ItemStack roll(Random random) {
         int r = random.nextInt(100);
         // 55 common / 30 uncommon / 12 rare / 3 ultra-rare
@@ -71,12 +72,15 @@ public final class ClamboxLoot {
         }
     }
 
-    /** With a 1-in-WRAP_CHANCE roll, wrap the stack in a pearl instead of giving it raw. */
+    /** Always wraps in a pearl. With a 1-in-WRAP_CHANCE roll, wraps an extra layer. */
     private static ItemStack maybeWrap(ItemStack stack, Random random, int depth) {
-        if (random.nextInt(WRAP_CHANCE) == 0 && PearlItem.canPearl(stack)) {
-            return PearlItem.wrap(stack);
+        // Always at least 1-deep pearl
+        ItemStack pearl = PearlItem.isPearl(stack) ? stack : PearlItem.wrap(stack);
+        // Chance of an extra layer
+        if (random.nextInt(WRAP_CHANCE) == 0 && PearlItem.canPearl(pearl)) {
+            pearl = PearlItem.wrap(pearl);
         }
-        return stack;
+        return pearl;
     }
 
     private static ItemStack damaged(Item tool, Random random) {
