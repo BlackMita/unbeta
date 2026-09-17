@@ -401,6 +401,7 @@ public final class UnbetaContent implements ModInitializer {
             .modifyEntriesEvent(net.minecraft.item.ItemGroups.FUNCTIONAL)
             .register(entries -> entries.add(net.unbeta.content.clambox.ClamboxRegistry.CLAMBOX_ITEM));
         LOG.info("Clambox registered.");
+        net.unbeta.content.clambox.ClamboxSpawner.register();
 
         // Brewing stands generate in villages but potions are removed from Unbeta.
         // Block the GUI from opening so right-clicking does nothing.
