@@ -401,6 +401,13 @@ public final class UnbetaContent implements ModInitializer {
             .modifyEntriesEvent(net.minecraft.item.ItemGroups.FUNCTIONAL)
             .register(entries -> entries.add(net.unbeta.content.clambox.ClamboxRegistry.CLAMBOX_ITEM));
         LOG.info("Clambox registered.");
+
+        net.unbeta.content.obsidiandoor.ObsidianDoorRegistry.register();
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
+            .modifyEntriesEvent(net.minecraft.item.ItemGroups.FUNCTIONAL)
+            .register(entries -> entries.add(
+                net.unbeta.content.obsidiandoor.ObsidianDoorRegistry.OBSIDIAN_DOOR_ITEM));
+        LOG.info("Obsidian Door registered.");
         net.unbeta.content.clambox.ClamboxSpawner.register();
 
         // Brewing stands generate in villages but potions are removed from Unbeta.

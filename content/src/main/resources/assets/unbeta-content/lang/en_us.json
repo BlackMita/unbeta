@@ -25,5 +25,7 @@
   "item.unbeta-content.lockey": "Lockey",
   "block.unbeta-content.clambox": "Clambox",
   "item.unbeta-content.clambox": "Clambox",
-  "item.unbeta-content.unbeta_pearl": "Pearl"
+  "item.unbeta-content.unbeta_pearl": "Pearl",
+  "block.unbeta-content.obsidian_door": "Obsidian Door",
+  "item.unbeta-content.obsidian_door": "Obsidian Door"
 }

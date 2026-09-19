@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "unbeta-content:obsidian_door" }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "unbeta-content:obsidian_door",
+          "properties": { "half": "lower" }
+        }
+      ]
+    }
+  ]
+}

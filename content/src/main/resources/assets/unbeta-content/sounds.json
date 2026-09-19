@@ -34,5 +34,23 @@
         "stream": false
       }
     ]
+  },
+  "obsidian_door_open": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "unbeta-content:obsidian_door_open",
+        "stream": false
+      }
+    ]
+  },
+  "obsidian_door_close": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "unbeta-content:obsidian_door_close",
+        "stream": false
+      }
+    ]
   }
 }

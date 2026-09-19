@@ -14,6 +14,9 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
+                net.unbeta.content.obsidiandoor.ObsidianDoorRegistry.OBSIDIAN_DOOR,
+                net.minecraft.client.render.RenderLayer.getCutout());
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 net.unbeta.content.clambox.ClamboxRegistry.PEARL_ENTITY,
                 ctx -> new net.minecraft.client.render.entity.FlyingItemEntityRenderer<>(ctx));
