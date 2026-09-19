@@ -39,7 +39,8 @@
     "LockedChestPistonMixin",
     "LockedChestExplosionMixin",
     "LockedChestNoMergeMixin",
-    "LockeyItemEntityMixin"
+    "LockeyItemEntityMixin",
+    "ObsidianDoorGateMixin"
   ],
   "injectors": {
     "defaultRequire": 1
