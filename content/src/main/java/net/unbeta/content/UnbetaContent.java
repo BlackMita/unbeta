@@ -313,6 +313,34 @@ public final class UnbetaContent implements ModInitializer {
 
         // Lockey: deny opening a locked chest, and report where its key is.
         // Registered after the lock handler so the key-holder's unlock wins first.
+        // Lockey keyonly: right-click AIR (or anything) shows the bound chest's coords.
+        // UseBlockCallback only fires on blocks; this covers clicking empty space.
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register(
+            (player, world, hand) -> {
+                net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+                if (world.isClient || !net.unbeta.content.lockey.LockeyItem.isLockey(held)
+                        || !net.unbeta.content.lockey.LockeyItem.isBound(held)) {
+                    return net.minecraft.util.TypedActionResult.pass(held);
+                }
+                net.minecraft.server.world.ServerWorld sw = (net.minecraft.server.world.ServerWorld) world;
+                java.util.UUID myId = net.unbeta.content.lockey.LockeyItem.getId(held);
+                net.minecraft.util.math.BlockPos chest =
+                        net.unbeta.content.lockey.LockeyItem.getBoundChest(held);
+                net.minecraft.text.Text msg;
+                if (net.unbeta.content.lockey.LockeyState.isRevoked(sw, myId)) {
+                    msg = net.minecraft.text.Text.literal("This key's chest was destroyed.")
+                            .formatted(net.minecraft.util.Formatting.RED);
+                } else if (chest != null) {
+                    msg = net.minecraft.text.Text.literal(
+                            "Chest at " + chest.getX() + ", " + chest.getY() + ", " + chest.getZ())
+                            .formatted(net.minecraft.util.Formatting.YELLOW);
+                } else {
+                    return net.minecraft.util.TypedActionResult.pass(held);
+                }
+                player.sendMessage(msg, false);
+                return net.minecraft.util.TypedActionResult.success(held, false);
+            });
+
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
             (player, world, hand, hit) -> {
                 if (world.isClient) return net.minecraft.util.ActionResult.PASS;

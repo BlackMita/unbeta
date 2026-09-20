@@ -52,5 +52,59 @@
         "stream": false
       }
     ]
+  },
+  "mob.unlike_like.crawl": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "unbeta-content:mob/unlike_like/crawl",
+        "stream": false
+      }
+    ]
+  },
+  "mob.unlike_like.growl": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "unbeta-content:mob/unlike_like/growl",
+        "stream": false
+      }
+    ]
+  },
+  "mob.unlike_like.chew": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "unbeta-content:mob/unlike_like/chew",
+        "stream": false
+      }
+    ]
+  },
+  "mob.unlike_like.hurt": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "unbeta-content:mob/unlike_like/hurt",
+        "stream": false
+      }
+    ]
+  },
+  "mob.unlike_like.scream": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "unbeta-content:mob/unlike_like/scream",
+        "stream": false
+      }
+    ]
+  },
+  "mob.unlike_like.spew": {
+    "category": "hostile",
+    "sounds": [
+      {
+        "name": "unbeta-content:mob/unlike_like/spew",
+        "stream": false
+      }
+    ]
   }
 }

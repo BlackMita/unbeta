@@ -90,25 +90,26 @@ public class UnlikeLikeEntity extends HostileEntity {
                 grabbedPlayer = null;
             }
         }
-        // Crawl/chew — client-side only so Sound Physics Remastered hooks in
+        // Sounds: run server-side (needs getTarget), broadcast via world.playSound(null,...)
         if (!this.getWorld().isClient) {
             long now = this.getWorld().getTime();
             if (grabbedPlayer == null && getTarget() != null && now - lastCrawlSound >= 20) {
-                this.playSound(UnlikeLikeSounds.CRAWL, 0.8F, 1.0F);
+                this.getWorld().playSound(null, this.getBlockPos(),
+                        UnlikeLikeSounds.CRAWL, net.minecraft.sound.SoundCategory.HOSTILE, 0.8F, 1.0F);
                 lastCrawlSound = now;
             } else if (grabbedPlayer != null && now - lastCrawlSound >= 10) {
-                this.playSound(UnlikeLikeSounds.CHEW, 0.8F, 1.0F);
+                this.getWorld().playSound(null, this.getBlockPos(),
+                        UnlikeLikeSounds.CHEW, net.minecraft.sound.SoundCategory.HOSTILE, 0.8F, 1.0F);
                 lastCrawlSound = now;
             }
-        }
 
-        // Growl when close but not grabbing
-        if (!this.getWorld().isClient) {
+            // Growl when close but not grabbing
             if (growlCooldown > 0) growlCooldown--;
             if (growlCooldown == 0 && grabCooldown == 0 && grabbedPlayer == null && getTarget() != null) {
                 double dist = squaredDistanceTo(getTarget());
                 if (dist <= 25.0 && dist > 9.0) {
-                    this.playSound(UnlikeLikeSounds.GROWL, 1.0F, 1.0F);
+                    this.getWorld().playSound(null, this.getBlockPos(),
+                            UnlikeLikeSounds.GROWL, net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F);
                     growlCooldown = 200;
                 }
             }
@@ -145,25 +146,26 @@ public class UnlikeLikeEntity extends HostileEntity {
 
     @Override
     protected void jump() {
-        // Crawl/chew — client-side only so Sound Physics Remastered hooks in
+        // Sounds: run server-side (needs getTarget), broadcast via world.playSound(null,...)
         if (!this.getWorld().isClient) {
             long now = this.getWorld().getTime();
             if (grabbedPlayer == null && getTarget() != null && now - lastCrawlSound >= 20) {
-                this.playSound(UnlikeLikeSounds.CRAWL, 0.8F, 1.0F);
+                this.getWorld().playSound(null, this.getBlockPos(),
+                        UnlikeLikeSounds.CRAWL, net.minecraft.sound.SoundCategory.HOSTILE, 0.8F, 1.0F);
                 lastCrawlSound = now;
             } else if (grabbedPlayer != null && now - lastCrawlSound >= 10) {
-                this.playSound(UnlikeLikeSounds.CHEW, 0.8F, 1.0F);
+                this.getWorld().playSound(null, this.getBlockPos(),
+                        UnlikeLikeSounds.CHEW, net.minecraft.sound.SoundCategory.HOSTILE, 0.8F, 1.0F);
                 lastCrawlSound = now;
             }
-        }
 
-        // Growl when close but not grabbing
-        if (!this.getWorld().isClient) {
+            // Growl when close but not grabbing
             if (growlCooldown > 0) growlCooldown--;
             if (growlCooldown == 0 && grabCooldown == 0 && grabbedPlayer == null && getTarget() != null) {
                 double dist = squaredDistanceTo(getTarget());
                 if (dist <= 25.0 && dist > 9.0) {
-                    this.playSound(UnlikeLikeSounds.GROWL, 1.0F, 1.0F);
+                    this.getWorld().playSound(null, this.getBlockPos(),
+                            UnlikeLikeSounds.GROWL, net.minecraft.sound.SoundCategory.HOSTILE, 1.0F, 1.0F);
                     growlCooldown = 200;
                 }
             }
