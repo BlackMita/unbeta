@@ -39,19 +39,41 @@ public final class LockeySiege {
                 chest, world.getBlockState(pos), world, pos, true);
     }
 
-    /** Pull exactly one unit out of the first non-empty slot and drop it at the chest. */
+    /**
+     * Pull exactly one unit out of a randomly chosen slot and drop it at the chest.
+     *
+     * <p>Weighted by unit count, not by slot: a stack of 63 dirt sitting beside 1 diamond
+     * means the diamond has a 1-in-64 chance per swing, not a 1-in-2 chance. This is what
+     * makes "bury the valuable slot under full junk stacks" an actual defence - every
+     * extra unit of filler dilutes the odds of any single swing hitting the good slot,
+     * rather than the old (broken) behaviour of draining slots strictly in order.
+     *
+     * <p>Re-rolled fresh every single swing against the inventory's CURRENT contents -
+     * no memory of "which slot we're draining." Whichever slot the roll lands on this
+     * time is independent of every previous swing.
+     */
     private static boolean ejectOneUnit(ServerWorld world, BlockPos pos, Inventory inv) {
+        int total = countUnits(inv);
+        if (total <= 0) return false;
+
+        int roll = world.getRandom().nextInt(total); // 0..total-1
+        int cursor = 0;
         for (int i = 0; i < inv.size(); i++) {
             ItemStack slot = inv.getStack(i);
-            if (slot.isEmpty()) continue;
-            ItemStack one = inv.removeStack(i, 1);
-            if (one.isEmpty()) continue;
-            inv.markDirty();
-            ItemScatterer.spawn(world, pos.getX() + 0.5, pos.getY() + 1.0,
-                    pos.getZ() + 0.5, one);
-            return true;
+            int count = slot.getCount();
+            if (count <= 0) continue;
+            cursor += count;
+            if (roll < cursor) {
+                // This slot owns the rolled unit.
+                ItemStack one = inv.removeStack(i, 1);
+                if (one.isEmpty()) return false; // shouldn't happen, but stay safe
+                inv.markDirty();
+                ItemScatterer.spawn(world, pos.getX() + 0.5, pos.getY() + 1.0,
+                        pos.getZ() + 0.5, one);
+                return true;
+            }
         }
-        return false;
+        return false; // shouldn't be reachable if total > 0, but stay safe
     }
 
     /**
