@@ -44,5 +44,9 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "EndermanDreadMixin",
+    "PortalOverlaySuppressMixin"
+  ]
 }
