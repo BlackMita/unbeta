@@ -27,21 +27,23 @@ import org.jetbrains.annotations.Nullable;
 public class BonePileBlock extends FallingBlock implements BlockEntityProvider, Waterloggable {
 
     public static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
+    /** True for the ~1s after a skeleton dies: invisible, untargetable, won't fall. */
+    public static final BooleanProperty HIDDEN = BooleanProperty.of("hidden");
     private static final VoxelShape SHAPE = Block.createCuboidShape(0, 0, 0, 16, 9, 16);
 
     public BonePileBlock(Settings settings) {
         super(settings);
-        setDefaultState(getStateManager().getDefaultState().with(WATERLOGGED, false));
+        setDefaultState(getStateManager().getDefaultState().with(WATERLOGGED, false).with(HIDDEN, false));
     }
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        builder.add(WATERLOGGED);
+        builder.add(WATERLOGGED, HIDDEN);
     }
 
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext ctx) {
-        return SHAPE;
+        return state.get(HIDDEN) ? VoxelShapes.empty() : SHAPE;
     }
 
     @Override
@@ -67,6 +69,7 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if (state.get(HIDDEN)) return ActionResult.PASS;
         if (!world.isClient) {
             var be = world.getBlockEntity(pos);
             if (be instanceof BonePileBlockEntity bonePile) {
@@ -104,11 +107,37 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
         return state.get(WATERLOGGED) ? Fluids.WATER.getStill(false) : super.getFluidState(state);
     }
 
+    // --- Delayed reveal ---
+
+    /**
+     * While HIDDEN, this tick is the reveal timer rather than the falling check.
+     * FallingBlock also schedules ticks (every placement/neighbour change), so an early
+     * tick just re-schedules for the remaining wait. Once revealed, we hand back to
+     * FallingBlock's normal behaviour and schedule a fall check in case it's floating.
+     */
+    @Override
+    public void scheduledTick(BlockState state, net.minecraft.server.world.ServerWorld world,
+                              BlockPos pos, net.minecraft.util.math.random.Random random) {
+        if (state.get(HIDDEN)) {
+            if (world.getBlockEntity(pos) instanceof BonePileBlockEntity be) {
+                long wait = be.getRevealAt() - world.getTime();
+                if (wait > 0) {
+                    world.scheduleBlockTick(pos, this, (int) wait);
+                    return;
+                }
+            }
+            world.setBlockState(pos, state.with(HIDDEN, false), Block.NOTIFY_ALL);
+            world.scheduleBlockTick(pos, this, this.getFallDelay());
+            return;
+        }
+        super.scheduledTick(state, world, pos, random);
+    }
+
     // --- Render type ---
 
     @Override
     public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
+        return state.get(HIDDEN) ? BlockRenderType.INVISIBLE : BlockRenderType.MODEL;
     }
 
     @Override
@@ -124,7 +153,7 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
                 bonePile.scatterItems(world);
                 bonePile.clear();
             }
-            world.removeBlock(pos, false);
+            world.breakBlock(pos, true); // runs the loot table (1-2 bones), same as breaking by hand
         }
     }
 

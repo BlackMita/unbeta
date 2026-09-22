@@ -26,6 +26,10 @@ public class BonePileBlockEntity extends BlockEntity implements Inventory, Named
     private final DefaultedList<ItemStack> items = DefaultedList.ofSize(9, ItemStack.EMPTY);
     private long respawnAt = -1L;
 
+    /** Matches vanilla's death animation: LivingEntity removes the corpse at deathTime >= 20. */
+    public static final int REVEAL_DELAY = 20;
+    private long revealAt = -1L;
+
     public BonePileBlockEntity(BlockPos pos, BlockState state) {
         super(BonePileRegistry.BONE_PILE_BLOCK_ENTITY, pos, state);
     }
@@ -37,6 +41,18 @@ public class BonePileBlockEntity extends BlockEntity implements Inventory, Named
 
     public long getRespawnAt() {
         return respawnAt;
+    }
+
+    public long getRevealAt() {
+        return revealAt;
+    }
+
+    /** Called right after placement: reveal once the skeleton's death animation ends. */
+    public void scheduleReveal(long now) {
+        this.revealAt = now + REVEAL_DELAY;
+        if (this.world != null) {
+            this.world.scheduleBlockTick(this.pos, BonePileRegistry.BONE_PILE_BLOCK, REVEAL_DELAY);
+        }
     }
 
     // --- Inventory ---

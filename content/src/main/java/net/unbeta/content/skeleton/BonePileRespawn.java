@@ -50,8 +50,9 @@ public final class BonePileRespawn {
         // Force-close any player viewing this inventory
         for (var player : world.getPlayers()) {
             if (player.currentScreenHandler instanceof net.minecraft.screen.Generic3x3ContainerScreenHandler) {
-                // Check if they're viewing THIS bone pile's inventory
-                if (player.squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64.0) {
+                // Close only if the screen is backed by THIS pile. The old distance check
+                // also closed other piles (and dispensers) that happened to be within 8 blocks.
+                if (player.currentScreenHandler.slots.get(0).inventory == bonePile) {
                     player.closeHandledScreen();
                 }
             }
