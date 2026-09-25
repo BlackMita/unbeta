@@ -46,29 +46,42 @@ public final class SulliedChunkTick {
                 continue;
             }
 
-            // Spawn the zombie
-            ZombieEntity zombie = EntityType.ZOMBIE.create(world);
-            if (zombie == null) {
+            // Decide zombie-vs-Unmason BEFORE constructing anything. The global swap
+            // listener works by discarding a zombie and spawning an Unmason in its place,
+            // which would strand our rise controller holding a discarded entity - and
+            // would show a zombie turning into an Unmason mid-rise. Deciding up front
+            // means whichever mob rises looks like itself the whole way up.
+            net.minecraft.entity.mob.MobEntity riser;
+            if (net.unbeta.content.unmason.UnmasonOdds.rollUnmason(world, spawnPos)) {
+                riser = net.unbeta.content.unmason.UnmasonRegistry.UNMASON.create(world);
+            } else {
+                ZombieEntity zombie = EntityType.ZOMBIE.create(world);
+                // Tell the global swap listener this one has already been rolled for.
+                if (zombie != null) zombie.addCommandTag("unbeta_presorted");
+                riser = zombie;
+            }
+            if (riser == null) {
                 state.clear(chunkPos);
                 continue;
             }
 
-            zombie.refreshPositionAndAngles(
+            riser.refreshPositionAndAngles(
                     spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
                     world.random.nextFloat() * 360.0F, 0.0F);
-            zombie.initialize(world,
+            riser.initialize(world,
                     world.getLocalDifficulty(spawnPos),
                     SpawnReason.MOB_SUMMONED, null, null);
-            zombie.setPersistent();
-            world.spawnEntity(zombie);
+            riser.setPersistent();
+            // Bury BEFORE spawning, so the client never sees a frame of it above ground.
+            net.unbeta.content.zombie.RisingMob.prePosition(riser, spawnPos);
+            world.spawnEntity(riser);
 
-            // Dirt particle burst + sound — "rising from the ground" feel
-            world.spawnParticles(ParticleTypes.POOF,
-                    spawnPos.getX() + 0.5, spawnPos.getY() + 0.5, spawnPos.getZ() + 0.5,
-                    20, 0.3, 0.3, 0.3, 0.05);
+            // Climb up out of the earth over 2 seconds, kicking up dirt as it goes.
+            net.unbeta.content.zombie.RisingMob.begin(riser, world, spawnPos);
+
             world.playSound(null, spawnPos,
-                    SoundEvents.ENTITY_ZOMBIE_AMBIENT,
-                    SoundCategory.HOSTILE, 1.0F, 0.7F);
+                    SoundEvents.BLOCK_ROOTED_DIRT_BREAK,
+                    SoundCategory.HOSTILE, 1.0F, 0.6F);
 
             // Clear this chunk — one spawn per sully event
             state.clear(chunkPos);

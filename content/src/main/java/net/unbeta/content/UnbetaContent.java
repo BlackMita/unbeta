@@ -179,42 +179,18 @@ public final class UnbetaContent implements ModInitializer {
 
         // Unmason: register entity + distance-scaled zombie swap
         net.unbeta.content.unmason.UnmasonRegistry.register();
-        // Cache stronghold position per world to avoid calling locateStructure every spawn
-        final java.util.Map<net.minecraft.util.math.ChunkPos, net.minecraft.util.math.BlockPos>
-            strongholdCache = new java.util.concurrent.ConcurrentHashMap<>();
-        final long[] lastCacheTime = {0};
 
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register(
             (entity, world) -> {
                 if (!(entity instanceof net.minecraft.entity.mob.ZombieEntity zombie)) return;
                 if (entity instanceof net.unbeta.content.unmason.UnmasonEntity) return;
+                // SulliedChunkTick already decided zombie-vs-Unmason before spawning either
+                // one; it tags its own zombie so this listener doesn't re-roll on top of it.
+                if (zombie.getCommandTags().contains("unbeta_presorted")) return;
                 if (!(world instanceof net.minecraft.server.world.ServerWorld)) return;
                 net.minecraft.server.world.ServerWorld sw = (net.minecraft.server.world.ServerWorld) world;
 
-                // Find or refresh cached stronghold position (refresh every 5 minutes)
-                long now = sw.getTime();
-                net.minecraft.util.math.BlockPos zombiePos = zombie.getBlockPos();
-                net.minecraft.util.math.ChunkPos cacheKey = new net.minecraft.util.math.ChunkPos(0, 0);
-                if (!strongholdCache.containsKey(cacheKey) || now - lastCacheTime[0] > 6000) {
-                    net.minecraft.util.math.BlockPos found = sw.locateStructure(
-                            net.minecraft.registry.tag.StructureTags.EYE_OF_ENDER_LOCATED,
-                            zombiePos, 100, false);
-                    if (found != null) strongholdCache.put(cacheKey, found);
-                    lastCacheTime[0] = now;
-                }
-
-                net.minecraft.util.math.BlockPos stronghold = strongholdCache.get(cacheKey);
-                double dist = stronghold != null
-                        ? Math.sqrt(zombiePos.getSquaredDistance(stronghold))
-                        : Double.MAX_VALUE;
-
-                // Distance-scaled spawn chance
-                int chance;
-                if (dist > 900) chance = 30;
-                else if (dist > 450) chance = 10;
-                else chance = 4;
-
-                if (zombie.getRandom().nextInt(chance) != 0) return;
+                if (!net.unbeta.content.unmason.UnmasonOdds.rollUnmason(sw, zombie.getBlockPos())) return;
 
                 net.unbeta.content.unmason.UnmasonEntity unmason =
                     net.unbeta.content.unmason.UnmasonRegistry.UNMASON.create(sw);
@@ -224,6 +200,7 @@ public final class UnbetaContent implements ModInitializer {
                 sw.spawnEntity(unmason);
                 zombie.discard();
             });
+        net.unbeta.content.zombie.RisingMob.register();
         LOG.info("Unmason registered.");
 
         // Lockey

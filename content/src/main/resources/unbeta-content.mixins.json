@@ -40,7 +40,8 @@
     "LockedChestExplosionMixin",
     "LockedChestNoMergeMixin",
     "LockeyItemEntityMixin",
-    "ObsidianDoorGateMixin"
+    "ObsidianDoorGateMixin",
+    "MobGoalReinitMixin"
   ],
   "injectors": {
     "defaultRequire": 1
