@@ -45,7 +45,10 @@
     "SearedFleshMixin",
     "ZombieTargetMixin",
     "BittenTemptMixin",
-    "GoldenAppleFeedMixin"
+    "GoldenAppleFeedMixin",
+    "ZombificationFreezeMixin",
+    "ZombificationMilkMixin",
+    "GoldenAppleCureMixin"
   ],
   "injectors": {
     "defaultRequire": 1

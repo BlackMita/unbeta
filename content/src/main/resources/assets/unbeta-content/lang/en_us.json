@@ -33,5 +33,7 @@
   "entity.unbeta-content.zombie_pig": "Zombie Pig",
   "entity.unbeta-content.zombie_sheep": "Zombie Sheep",
   "entity.unbeta-content.zombie_chicken": "Zombie Chicken",
-  "item.unbeta-content.seared_flesh": "Seared Flesh"
+  "item.unbeta-content.seared_flesh": "Seared Flesh",
+  "effect.unbeta-content.inevitable_zombification": "Inevitable Zombification",
+  "death.attack.unbeta_zombification": "%1$s succumbed to zombification"
 }

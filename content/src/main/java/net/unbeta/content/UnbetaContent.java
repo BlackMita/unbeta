@@ -205,6 +205,7 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.corruption.CorruptionRegistry.register();
         net.unbeta.content.corruption.SearedFlesh.register();
         net.unbeta.content.corruption.CorruptionSpread.register();
+        net.unbeta.content.corruption.Zombification.register();
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
             .modifyEntriesEvent(net.minecraft.item.ItemGroups.FOOD_AND_DRINK)
             .register(entries -> entries.add(net.unbeta.content.corruption.SearedFlesh.ITEM));
