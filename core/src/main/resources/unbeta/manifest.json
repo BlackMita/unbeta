@@ -24819,6 +24819,11 @@
       "action": "keep",
       "kind": "item",
       "id": "unbeta-content:seared_flesh"
+    },
+    {
+      "action": "keep",
+      "kind": "entity",
+      "id": "unbeta-content:revenant"
     }
   ]
 }

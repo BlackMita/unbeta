@@ -30,6 +30,9 @@ public final class CorruptionRenderers {
         EntityRendererRegistry.register(CorruptionRegistry.ZOMBIE_PIG, Pig::new);
         EntityRendererRegistry.register(CorruptionRegistry.ZOMBIE_SHEEP, Sheep::new);
         EntityRendererRegistry.register(CorruptionRegistry.ZOMBIE_CHICKEN, Chicken::new);
+        // Looks like any zombie - the player recognises it only by their own gear.
+        EntityRendererRegistry.register(CorruptionRegistry.REVENANT,
+                net.minecraft.client.render.entity.ZombieEntityRenderer::new);
     }
 
     public static class Cow extends CowEntityRenderer {

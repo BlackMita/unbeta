@@ -165,7 +165,9 @@ public final class UnbetaContent implements ModInitializer {
                     (net.minecraft.server.world.ServerWorld) entity.getWorld();
                 // Gold kill no longer wipes the chunk: this death simply isn't remembered
                 // (ZombieSulliedMixin), while the chunk's other deaths still rise.
-                if (entity instanceof net.minecraft.entity.mob.ZombieEntity zombie) {
+                if (entity instanceof net.minecraft.entity.mob.ZombieEntity zombie
+                        && !(entity instanceof net.unbeta.content.corruption.RevenantEntity)) {
+                    // (a revenant already drops all its gear - copying it here would duplicate)
                     for (net.minecraft.entity.EquipmentSlot slot :
                             net.minecraft.entity.EquipmentSlot.values()) {
                         net.minecraft.item.ItemStack gear = zombie.getEquippedStack(slot);
@@ -184,6 +186,8 @@ public final class UnbetaContent implements ModInitializer {
             (entity, world) -> {
                 if (!(entity instanceof net.minecraft.entity.mob.ZombieEntity zombie)) return;
                 if (entity instanceof net.unbeta.content.unmason.UnmasonEntity) return;
+                // A revenant carries a player's inventory - never swap it out.
+                if (entity instanceof net.unbeta.content.corruption.RevenantEntity) return;
                 // SulliedChunkTick already decided zombie-vs-Unmason before spawning either
                 // one; it tags its own zombie so this listener doesn't re-roll on top of it.
                 if (zombie.getCommandTags().contains("unbeta_presorted")) return;
@@ -206,6 +210,7 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.corruption.SearedFlesh.register();
         net.unbeta.content.corruption.CorruptionSpread.register();
         net.unbeta.content.corruption.Zombification.register();
+        net.unbeta.content.corruption.RevenantEntity.registerDeathHook();
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
             .modifyEntriesEvent(net.minecraft.item.ItemGroups.FOOD_AND_DRINK)
             .register(entries -> entries.add(net.unbeta.content.corruption.SearedFlesh.ITEM));
