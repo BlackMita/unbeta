@@ -53,7 +53,8 @@
     "RottenFleshZombificationMixin",
     "CaveSpiderHealthMixin",
     "SpiderSpawnSwapMixin",
-    "SpiderGrowUpMixin"
+    "SpiderGrowUpMixin",
+    "TorchWaterMixin"
   ],
   "injectors": {
     "defaultRequire": 1

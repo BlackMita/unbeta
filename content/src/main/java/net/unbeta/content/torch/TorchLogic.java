@@ -51,52 +51,12 @@ public final class TorchLogic {
 
     // ---------------------------------------------------- right-click matrix
 
-    /**
-     * Use matrix (same for floor and wall):
-     *
-     * held=UNLIT torch + placed LIT  → swap held to lit (placed untouched)
-     * held=LIT torch   + placed UNLIT → light the placed torch (held untouched)
-     * held=flint&steel + placed UNLIT → light the placed torch
-     * held=anything    + placed LIT   → extinguish placed
-     */
+    /** Right-click rules: shared with every other placed light - see HeldLight. */
     public static ActionResult onUse(BlockState state, World world, BlockPos pos,
                                      PlayerEntity player, Hand hand) {
-        ItemStack held = player.getStackInHand(hand);
-        boolean placedLit = state.get(LIT);
-        long now = world.getTime();
-
-        // 1. Held UNLIT torch + placed LIT → light the HELD one (item swap)
-        if (TorchItems.isUnlitTorch(held)) {
-            if (placedLit) {
-                if (!world.isClient) {
-                    TorchItems.lightOneFromStack(player, hand, now);
-                }
-                world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE,
-                        SoundCategory.BLOCKS, 0.6F, 1.3F);
-                return ActionResult.SUCCESS;
-            }
-            return ActionResult.PASS;
-        }
-
-        // 2. Igniter + placed UNLIT → light the placed torch
-        boolean igniter = held.isOf(Items.FLINT_AND_STEEL) || TorchItems.isLitTorch(held);
-        if (!placedLit && igniter) {
-            if (!world.isClient) {
-                lightPlaced(world, pos, state);
-                if (held.isOf(Items.FLINT_AND_STEEL) && !player.getAbilities().creativeMode) {
-                    held.damage(1, player, p -> p.sendToolBreakStatus(hand));
-                }
-            }
-            return ActionResult.SUCCESS;
-        }
-
-        // 3. Placed LIT + non-igniter → extinguish
-        if (placedLit && !igniter) {
-            if (!world.isClient) extinguishPlaced(world, pos, state);
-            return ActionResult.SUCCESS;
-        }
-
-        return ActionResult.PASS;
+        return net.unbeta.content.light.HeldLight.onUse(state.get(LIT), world, pos, player, hand,
+                () -> lightPlaced(world, pos, state),
+                () -> extinguishPlaced(world, pos, state));
     }
 
     // ---------------------------------------------------- place / mine

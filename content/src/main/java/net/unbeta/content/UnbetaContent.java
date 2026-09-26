@@ -185,6 +185,9 @@ public final class UnbetaContent implements ModInitializer {
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register(
             (entity, world) -> {
                 if (!(entity instanceof net.minecraft.entity.mob.ZombieEntity zombie)) return;
+                // Plain zombies only. A drowned is a ZombieEntity too, so a zombie converting
+                // underwater (drowned are soft-removed) was being rolled into an Unmason.
+                if (zombie.getType() != net.minecraft.entity.EntityType.ZOMBIE) return;
                 if (entity instanceof net.unbeta.content.unmason.UnmasonEntity) return;
                 // A revenant carries a player's inventory - never swap it out.
                 if (entity instanceof net.unbeta.content.corruption.RevenantEntity) return;
@@ -194,7 +197,12 @@ public final class UnbetaContent implements ModInitializer {
                 if (!(world instanceof net.minecraft.server.world.ServerWorld)) return;
                 net.minecraft.server.world.ServerWorld sw = (net.minecraft.server.world.ServerWorld) world;
 
-                if (!net.unbeta.content.unmason.UnmasonOdds.rollUnmason(sw, zombie.getBlockPos())) return;
+                if (!net.unbeta.content.unmason.UnmasonOdds.rollUnmason(sw, zombie.getBlockPos())) {
+                    // Rolled once and stayed a zombie: never roll again. This fires on every
+                    // load, so without the mark a zombie re-rolled each time its chunk reloaded.
+                    zombie.addCommandTag("unbeta_presorted");
+                    return;
+                }
 
                 net.unbeta.content.unmason.UnmasonEntity unmason =
                     net.unbeta.content.unmason.UnmasonRegistry.UNMASON.create(sw);
