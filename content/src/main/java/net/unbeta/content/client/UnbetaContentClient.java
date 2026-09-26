@@ -14,6 +14,16 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // Right-click with an unnamed name tag: open the naming prompt (no anvil needed).
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) -> {
+            net.minecraft.item.ItemStack held = player.getStackInHand(hand);
+            if (world.isClient && held.isOf(net.minecraft.item.Items.NAME_TAG) && !held.hasCustomName()) {
+                net.minecraft.client.MinecraftClient.getInstance().setScreen(
+                        new net.unbeta.content.client.nametag.NameTagScreen(hand));
+                return net.minecraft.util.TypedActionResult.success(held);
+            }
+            return net.minecraft.util.TypedActionResult.pass(net.minecraft.item.ItemStack.EMPTY);
+        });
         net.unbeta.content.client.corruption.CorruptionRenderers.register();
         // Sullied chunk list from the server -> client, for surface spores.
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(

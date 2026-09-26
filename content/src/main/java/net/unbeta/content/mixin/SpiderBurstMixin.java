@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LivingEntity.class)
 public abstract class SpiderBurstMixin {
 
-    private static final float BURST_CHANCE = 0.1f;
+    private static final float BURST_CHANCE = 1.0f / 8.0f; // 1 in 8
     private static final int BURST_COUNT = 8;
 
     @Inject(method = "onDeath", at = @At("TAIL"))

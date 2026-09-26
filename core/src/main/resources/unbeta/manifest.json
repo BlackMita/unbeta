@@ -19108,7 +19108,7 @@
     {
       "id": "minecraft:name_tag",
       "kind": "item",
-      "action": "remove",
+      "action": "keep",
       "mechanisms": [
         "recipe_gate",
         "loot_filter",

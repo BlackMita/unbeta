@@ -50,7 +50,10 @@
     "ZombificationMilkMixin",
     "GoldenAppleCureMixin",
     "ZombificationBiteMixin",
-    "RottenFleshZombificationMixin"
+    "RottenFleshZombificationMixin",
+    "CaveSpiderHealthMixin",
+    "SpiderSpawnSwapMixin",
+    "SpiderGrowUpMixin"
   ],
   "injectors": {
     "defaultRequire": 1
