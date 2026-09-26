@@ -31,7 +31,7 @@ public interface CorruptedAnimal {
         goals.add(8, new LookAtEntityGoal(mob, PlayerEntity.class, 8.0F));
         goals.add(8, new LookAroundGoal(mob));
         targets.add(1, new RevengeGoal(mob));
-        targets.add(2, new ActiveTargetGoal<>(mob, PlayerEntity.class, true));
+        targets.add(2, new ClosestPreyGoal(mob)); // players and healthy livestock
     }
 
     /**

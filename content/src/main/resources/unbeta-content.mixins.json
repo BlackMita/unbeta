@@ -42,7 +42,8 @@
     "LockeyItemEntityMixin",
     "ObsidianDoorGateMixin",
     "MobGoalReinitMixin",
-    "SearedFleshMixin"
+    "SearedFleshMixin",
+    "ZombieTargetMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -51,6 +52,7 @@
     "EndermanDreadMixin",
     "PortalOverlaySuppressMixin",
     "MyceliumNoParticlesMixin",
-    "SulliedSporesMixin"
+    "SulliedSporesMixin",
+    "SulliedTintMixin"
   ]
 }

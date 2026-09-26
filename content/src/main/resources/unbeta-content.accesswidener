@@ -3,3 +3,4 @@ accessible field net/minecraft/entity/mob/MobEntity goalSelector Lnet/minecraft/
 accessible method net/minecraft/server/world/ThreadedAnvilChunkStorage entryIterator ()Ljava/lang/Iterable;
 accessible field net/minecraft/inventory/DoubleInventory first Lnet/minecraft/inventory/Inventory;
 accessible field net/minecraft/inventory/DoubleInventory second Lnet/minecraft/inventory/Inventory;
+accessible field net/minecraft/entity/mob/MobEntity targetSelector Lnet/minecraft/entity/ai/goal/GoalSelector;

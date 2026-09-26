@@ -30,8 +30,18 @@ public abstract class SulliedSporesMixin {
         ClientWorld world = (ClientWorld)(Object)this;
         int surfaceY = SulliedChunksClient.surfaceY(world, pos.getX(), pos.getZ());
         if (pos.getY() != surfaceY) return;
-        world.addParticle(ParticleTypes.MYCELIUM,
+        // Spawned through the particle manager rather than world.addParticle, so the particle
+        // comes back and can be coloured: vanilla's spore is a dark grey (~0.2-0.3) that's
+        // hard to see; ours are a pale sickly green. Still honours "Particles: Minimal".
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        if (client.options.getParticles().getValue() == net.minecraft.client.option.ParticlesMode.MINIMAL) return;
+        net.minecraft.client.particle.Particle spore = client.particleManager.addParticle(
+                ParticleTypes.MYCELIUM,
                 pos.getX() + random.nextDouble(), surfaceY + 1.1, pos.getZ() + random.nextDouble(),
                 0.0, 0.0, 0.0);
+        if (spore != null) {
+            float shade = 0.9F + random.nextFloat() * 0.2F; // slight per-spore variation
+            spore.setColor(0.32F * shade, 0.46F * shade, 0.28F * shade); // muted, darker than grass
+        }
     }
 }
