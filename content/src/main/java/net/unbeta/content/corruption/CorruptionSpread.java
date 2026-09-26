@@ -15,7 +15,8 @@ public final class CorruptionSpread {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!entity.getWorld().isClient
                     && CorruptionMemory.isHealthyLivestock(entity)
-                    && CorruptionMemory.isCarrier(source.getAttacker())) {
+                    && CorruptionMemory.isCarrier(source.getAttacker())
+                    && entity.getRandom().nextInt(4) == 0) { // 1 in 4, same odds as for players
                 entity.addCommandTag(CorruptionMemory.BITTEN_TAG);
             }
             return true; // never blocks the damage itself

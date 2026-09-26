@@ -48,7 +48,9 @@
     "GoldenAppleFeedMixin",
     "ZombificationFreezeMixin",
     "ZombificationMilkMixin",
-    "GoldenAppleCureMixin"
+    "GoldenAppleCureMixin",
+    "ZombificationBiteMixin",
+    "RottenFleshZombificationMixin"
   ],
   "injectors": {
     "defaultRequire": 1
