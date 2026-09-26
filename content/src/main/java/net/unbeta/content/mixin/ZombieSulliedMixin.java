@@ -22,13 +22,15 @@ public abstract class ZombieSulliedMixin {
         if (zombie.getWorld().isClient) return;
         ServerWorld world = (ServerWorld) zombie.getWorld();
         ChunkPos chunkPos = new ChunkPos(zombie.getBlockPos());
-        // Gold sword kill = clean kill, no sully
+        // Gold sword/axe kill = clean kill: this death isn't remembered. The chunk's
+        // other remembered deaths are unaffected and still rise.
         var attacker = source.getAttacker();
         if (attacker instanceof net.minecraft.entity.player.PlayerEntity player
                 && (player.getMainHandStack().isOf(net.minecraft.item.Items.GOLDEN_SWORD)
                 || player.getMainHandStack().isOf(net.minecraft.item.Items.GOLDEN_AXE))) {
             return;
         }
-        SulliedChunkState.getOrCreate(world).sully(chunkPos, world.getTime());
+        // Every zombie variant is remembered as a plain zombie, as before.
+        SulliedChunkState.getOrCreate(world).remember(chunkPos, SulliedChunkState.ZOMBIE);
     }
 }

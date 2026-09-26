@@ -14,6 +14,18 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // Sullied chunk list from the server -> client, for surface spores.
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
+                net.unbeta.content.zombie.SulliedChunkSync.CHANNEL,
+                (client, handler, buf, responseSender) -> {
+                    int n = buf.readVarInt();
+                    java.util.Set<Long> chunks = new java.util.HashSet<>();
+                    for (int i = 0; i < n; i++) chunks.add(buf.readLong());
+                    client.execute(() ->
+                            net.unbeta.content.client.zombie.SulliedChunksClient.set(chunks));
+                });
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register(
+                (handler, client) -> net.unbeta.content.client.zombie.SulliedChunksClient.clear());
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
                 net.unbeta.content.obsidiandoor.ObsidianDoorRegistry.OBSIDIAN_DOOR,
                 net.minecraft.client.render.RenderLayer.getCutout());

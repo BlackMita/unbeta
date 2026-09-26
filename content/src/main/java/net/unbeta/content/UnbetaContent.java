@@ -163,8 +163,8 @@ public final class UnbetaContent implements ModInitializer {
                 if (entity.getWorld().isClient) return;
                 net.minecraft.server.world.ServerWorld sw =
                     (net.minecraft.server.world.ServerWorld) entity.getWorld();
-                net.unbeta.content.zombie.SulliedChunkState.getOrCreate(sw)
-                    .clear(new net.minecraft.util.math.ChunkPos(entity.getBlockPos()));
+                // Gold kill no longer wipes the chunk: this death simply isn't remembered
+                // (ZombieSulliedMixin), while the chunk's other deaths still rise.
                 if (entity instanceof net.minecraft.entity.mob.ZombieEntity zombie) {
                     for (net.minecraft.entity.EquipmentSlot slot :
                             net.minecraft.entity.EquipmentSlot.values()) {
@@ -201,6 +201,7 @@ public final class UnbetaContent implements ModInitializer {
                 zombie.discard();
             });
         net.unbeta.content.zombie.RisingMob.register();
+        net.unbeta.content.zombie.SulliedChunkSync.register();
         LOG.info("Unmason registered.");
 
         // Lockey

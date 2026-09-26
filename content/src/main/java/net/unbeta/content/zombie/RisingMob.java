@@ -60,7 +60,10 @@ public final class RisingMob {
      * below ground and suppresses its AI until it surfaces.
      */
     public static void begin(MobEntity mob, ServerWorld world, BlockPos destination) {
-        BlockState ground = world.getBlockState(destination.down());
+        // Rising through a snow layer throws up snow, not the dirt beneath it.
+        BlockState cover = world.getBlockState(destination);
+        BlockState ground = cover.isOf(net.minecraft.block.Blocks.SNOW)
+                ? cover : world.getBlockState(destination.down());
 
         mob.setNoGravity(true);
         mob.noClip = true;

@@ -1,17 +1,43 @@
 package net.unbeta.content.zombie;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.ZombieEntity;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Drains sullied chunks back out of the ground.
+ *
+ * <p>When a player stands in a chunk that remembers deaths, a 5-second beat starts. On
+ * each beat one remembered entry, chosen at random, rises out of the ground: always at
+ * night, with a 1-in-DAY_ODDS chance by day. The chunk is clean once its memory is empty.
+ *
+ * <p>Beats are tracked per chunk (several players in one chunk don't speed it up) and are
+ * not persisted: leaving the chunk and coming back restarts the 5-second wait.
+ */
 public final class SulliedChunkTick {
+
+    public static final long BEAT_TICKS = 100L; // 5 seconds
+    public static final int DAY_ODDS = 8;       // 1-in-8 per beat during the day
+
+    /** world -> (chunk -> world time of that chunk's next beat). */
+    private static final Map<RegistryKey<World>, Map<Long, Long>> NEXT_BEAT = new HashMap<>();
 
     private SulliedChunkTick() {}
 
@@ -21,86 +47,121 @@ public final class SulliedChunkTick {
 
     private static void tick(ServerWorld world) {
         long now = world.getTime();
-        // Only check every 20 ticks (once per second) for performance
-        if (now % 20 != 0) return;
+        if (now % 20 != 0) return; // check once per second
+
+        SulliedChunkState state = SulliedChunkState.getOrCreate(world);
+        Map<Long, Long> beats = NEXT_BEAT.computeIfAbsent(world.getRegistryKey(), k -> new HashMap<>());
+        Set<Long> occupied = new HashSet<>();
 
         for (var player : world.getPlayers()) {
+            if (player.isSpectator()) continue;
             ChunkPos chunkPos = new ChunkPos(player.getBlockPos());
-            SulliedChunkState state = SulliedChunkState.getOrCreate(world);
+            long key = chunkPos.toLong();
+            if (!occupied.add(key)) continue; // one beat per chunk, however many players
 
-            if (!state.isReady(chunkPos, now)) continue;
+            if (!state.hasMemory(chunkPos)) {
+                beats.remove(key);
+                continue;
+            }
 
-            // Day/night check: guaranteed at night, 20% chance in day
+            Long next = beats.get(key);
+            if (next == null) {
+                beats.put(key, now + BEAT_TICKS); // just stepped in: first beat in 5s
+                continue;
+            }
+            if (now < next) continue;
+            beats.put(key, now + BEAT_TICKS);
+
             boolean isNight = world.getAmbientDarkness() >= 4;
-            if (!isNight && world.random.nextFloat() >= 0.2f) {
-                // Daytime roll failed — clear the sullied state anyway
-                // so it doesn't keep rolling every second forever
-                // Actually keep it so player can still trigger it later
-                continue;
-            }
+            if (!isNight && world.random.nextInt(DAY_ODDS) != 0) continue;
 
-            // Find a random solid surface block in this chunk to spawn on
-            BlockPos spawnPos = findSpawnPos(world, chunkPos);
-            if (spawnPos == null) {
-                state.clear(chunkPos);
-                continue;
-            }
-
-            // Decide zombie-vs-Unmason BEFORE constructing anything. The global swap
-            // listener works by discarding a zombie and spawning an Unmason in its place,
-            // which would strand our rise controller holding a discarded entity - and
-            // would show a zombie turning into an Unmason mid-rise. Deciding up front
-            // means whichever mob rises looks like itself the whole way up.
-            net.minecraft.entity.mob.MobEntity riser;
-            if (net.unbeta.content.unmason.UnmasonOdds.rollUnmason(world, spawnPos)) {
-                riser = net.unbeta.content.unmason.UnmasonRegistry.UNMASON.create(world);
-            } else {
-                ZombieEntity zombie = EntityType.ZOMBIE.create(world);
-                // Tell the global swap listener this one has already been rolled for.
-                if (zombie != null) zombie.addCommandTag("unbeta_presorted");
-                riser = zombie;
-            }
-            if (riser == null) {
-                state.clear(chunkPos);
-                continue;
-            }
-
-            riser.refreshPositionAndAngles(
-                    spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
-                    world.random.nextFloat() * 360.0F, 0.0F);
-            riser.initialize(world,
-                    world.getLocalDifficulty(spawnPos),
-                    SpawnReason.MOB_SUMMONED, null, null);
-            riser.setPersistent();
-            // Bury BEFORE spawning, so the client never sees a frame of it above ground.
-            net.unbeta.content.zombie.RisingMob.prePosition(riser, spawnPos);
-            world.spawnEntity(riser);
-
-            // Climb up out of the earth over 2 seconds, kicking up dirt as it goes.
-            net.unbeta.content.zombie.RisingMob.begin(riser, world, spawnPos);
-
-            world.playSound(null, spawnPos,
-                    SoundEvents.BLOCK_ROOTED_DIRT_BREAK,
-                    SoundCategory.HOSTILE, 1.0F, 0.6F);
-
-            // Clear this chunk — one spawn per sully event
-            state.clear(chunkPos);
+            riseOne(world, state, chunkPos);
         }
+
+        // Nobody standing in a chunk any more: forget its beat.
+        beats.keySet().retainAll(occupied);
     }
 
+    private static void riseOne(ServerWorld world, SulliedChunkState state, ChunkPos chunkPos) {
+        BlockPos spawnPos = findSpawnPos(world, chunkPos);
+        if (spawnPos == null) return; // no spot this beat; memory kept for the next one
+
+        String id = state.takeRandom(chunkPos, world.random);
+        if (id == null) return;
+
+        MobEntity riser = createRiser(world, id, spawnPos);
+        if (riser == null) return; // unknown / non-mob type: entry consumed and dropped
+
+        riser.refreshPositionAndAngles(
+                spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
+                world.random.nextFloat() * 360.0F, 0.0F);
+        riser.initialize(world, world.getLocalDifficulty(spawnPos),
+                SpawnReason.MOB_SUMMONED, null, null);
+        riser.setPersistent();
+        // Bury BEFORE spawning, so the client never sees a frame of it above ground.
+        RisingMob.prePosition(riser, spawnPos);
+        world.spawnEntity(riser);
+        RisingMob.begin(riser, world, spawnPos);
+
+        world.playSound(null, spawnPos, SoundEvents.BLOCK_ROOTED_DIRT_BREAK,
+                SoundCategory.HOSTILE, 1.0F, 0.6F);
+    }
+
+    /**
+     * Build the mob a remembered entry becomes. A remembered zombie rolls the Unmason odds
+     * here, before anything is constructed, so it never changes type mid-rise. Any other
+     * id is looked up in the entity registry - which is where the corrupted animals will
+     * come from. Unknown ids are checked explicitly, because the entity registry quietly
+     * returns its default entry (a pig) for ids it doesn't know.
+     */
+    private static MobEntity createRiser(ServerWorld world, String id, BlockPos pos) {
+        if (SulliedChunkState.ZOMBIE.equals(id)) {
+            if (net.unbeta.content.unmason.UnmasonOdds.rollUnmason(world, pos)) {
+                return net.unbeta.content.unmason.UnmasonRegistry.UNMASON.create(world);
+            }
+            ZombieEntity zombie = EntityType.ZOMBIE.create(world);
+            if (zombie != null) zombie.addCommandTag("unbeta_presorted");
+            return zombie;
+        }
+        Identifier typeId = Identifier.tryParse(id);
+        if (typeId == null || !Registries.ENTITY_TYPE.containsId(typeId)) return null;
+        Entity entity = Registries.ENTITY_TYPE.get(typeId).create(world);
+        return entity instanceof MobEntity mob ? mob : null;
+    }
+
+    /**
+     * A spot a mob can rise into: nothing to collide with where its feet and head will be
+     * (air, a single snow layer, grass, flowers) and a solid block underneath.
+     *
+     * <p>This used to require plain air, which silently rejected every column covered by
+     * a snow layer, grass or flowers - a snowfield could never produce anything.
+     */
     private static BlockPos findSpawnPos(ServerWorld world, ChunkPos chunkPos) {
         // Try 8 random columns in the chunk
         for (int attempt = 0; attempt < 8; attempt++) {
             int x = chunkPos.getStartX() + world.random.nextInt(16);
             int z = chunkPos.getStartZ() + world.random.nextInt(16);
-            // Find the top solid block
             int y = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
             BlockPos pos = new BlockPos(x, y, z);
-            if (world.getBlockState(pos).isAir() &&
-                world.getBlockState(pos.down()).isSolidBlock(world, pos.down())) {
+            // If the heightmap stopped on top of a passable cover (e.g. a snow layer), step
+            // down into it so the mob rises through the cover, not above it.
+            for (int i = 0; i < 2 && isPassable(world, pos.down()); i++) pos = pos.down();
+            if (isPassable(world, pos) && isPassable(world, pos.up())
+                    && world.getBlockState(pos.down()).isSolidBlock(world, pos.down())) {
                 return pos;
             }
         }
         return null;
+    }
+
+    /**
+     * Nothing to collide with and no fluid. Covers air, a single snow layer, grass and
+     * flowers. Snow of two or more layers has real collision and is rejected, since a mob
+     * would end its rise partly stuck inside it. Water has no collision shape either,
+     * hence the separate fluid check.
+     */
+    private static boolean isPassable(ServerWorld world, BlockPos pos) {
+        net.minecraft.block.BlockState state = world.getBlockState(pos);
+        return state.getCollisionShape(world, pos).isEmpty() && state.getFluidState().isEmpty();
     }
 }

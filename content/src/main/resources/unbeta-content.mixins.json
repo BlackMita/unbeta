@@ -48,6 +48,8 @@
   },
   "client": [
     "EndermanDreadMixin",
-    "PortalOverlaySuppressMixin"
+    "PortalOverlaySuppressMixin",
+    "MyceliumNoParticlesMixin",
+    "SulliedSporesMixin"
   ]
 }
