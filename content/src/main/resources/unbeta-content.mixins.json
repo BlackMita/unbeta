@@ -43,7 +43,9 @@
     "ObsidianDoorGateMixin",
     "MobGoalReinitMixin",
     "SearedFleshMixin",
-    "ZombieTargetMixin"
+    "ZombieTargetMixin",
+    "BittenTemptMixin",
+    "GoldenAppleFeedMixin"
   ],
   "injectors": {
     "defaultRequire": 1

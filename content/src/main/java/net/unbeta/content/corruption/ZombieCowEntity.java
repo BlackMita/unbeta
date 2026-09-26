@@ -38,10 +38,10 @@ public class ZombieCowEntity extends CowEntity implements CorruptedAnimal {
         CorruptedAnimal.addHostileGoals(this, this.goalSelector, this.targetSelector);
     }
 
-    /** No milking, shearing, saddling or feeding. (Phase 4 gives this to the golden apple.) */
+    /** Only a golden apple does anything: it cures. No milking, shearing, saddling or breeding. */
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        return ActionResult.PASS;
+        return CorruptionCure.tryFeed(this, player, hand);
     }
 
     @Override
