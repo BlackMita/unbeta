@@ -1,0 +1,965 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "minecraft:fire",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_fire",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_fence",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_fence_gate",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_log",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:blazing_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:broken_blazing_log",
+      "required": false
+    },
+    {
+      "id": "burnt:broken_blazing_log_2",
+      "required": false
+    },
+    {
+      "id": "burnt:broken_burnt_log",
+      "required": false
+    },
+    {
+      "id": "burnt:burning_cave_vines_plant",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_acacia_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_acacia_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_azalea",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_block",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_button",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_fence",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_fencegate",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_log",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_mosaic_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_mosaic_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_mosaic_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_stalk",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bamboo_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_barrel",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_birch_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_birch_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_bookshelf",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_button",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_cactus",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_campfire",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_carpet",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_carved_pumpkin",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_cave_vines",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_cave_vines_plant",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_cherry_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_cherry_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_crops",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_dark_oak_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_dark_oak_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_dirt",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_farmland",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_farmland_moist",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_fence",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_fencegate",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_fern",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_flesh_block",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_forest",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_forest_block",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_grass",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_grassy_earthen_clay",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_grassy_sandy_d_irt",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_hay",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_high_grass",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_ivy",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_jack_o_lantern",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_jungle_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_jungle_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_ladder",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_log",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_mangrove_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_mangrove_roots",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_mangrove_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_melon",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_moss",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_moss_carpet",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_oak_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_oak_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_path",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_pumpkin",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_scaffolding",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_spruce_door",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_spruce_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_sugar_cane",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_vine",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:burnt_wool",
+      "required": false
+    },
+    {
+      "id": "burnt:charred_mycelium",
+      "required": false
+    },
+    {
+      "id": "burnt:cooked_brown_mushroom_block",
+      "required": false
+    },
+    {
+      "id": "burnt:cooked_mushroom_stem",
+      "required": false
+    },
+    {
+      "id": "burnt:cooked_red_mushroom_block",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire_2",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire_3",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire_4",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire_5",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire_6",
+      "required": false
+    },
+    {
+      "id": "burnt:copper_fire_7",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_black_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_blue_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_brown_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_cyan_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_green_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_grey_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_light_blue_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_light_grey_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_lime_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_orange_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_pink_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_purple_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_red_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_white_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracked_yellow_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:cracket_magenta_terracotta",
+      "required": false
+    },
+    {
+      "id": "burnt:creeking_burnt_log",
+      "required": false
+    },
+    {
+      "id": "burnt:double_fallen_burnt_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:double_tall_grass_fire",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_campfire",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_fence",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_fence_gate",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_log",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:ember_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:fallen_burnt_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:falling_burnt_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:grass_flames",
+      "required": false
+    },
+    {
+      "id": "burnt:recovering_grass",
+      "required": false
+    },
+    {
+      "id": "burnt:semi_burnt_dirt",
+      "required": false
+    },
+    {
+      "id": "burnt:small_burnt_log",
+      "required": false
+    },
+    {
+      "id": "burnt:small_smoldering_log",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_acacia_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_acacia_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_acacia_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_azalea",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_block",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_fence",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_fencegate",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_mosaic_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_mosaic_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_mosaic_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_stalk",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_bamboo_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_beetroot",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_birch_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_birch_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_birch_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cactus",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_campfire",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_carpet",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_carrots",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cave_vines",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cave_vines_plant",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cherry_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cherry_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cherry_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_coal",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_cobweb",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_crops",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_dark_oak_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_dark_oak_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_dark_oak_log",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_dark_oak_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_dark_oak_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_fence",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_fencegate",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_fern",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_grass",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_grass_start",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_hay",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_high_grass",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_jungle_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_jungle_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_jungle_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_leaves_2",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_leaves_3",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_leaves_4",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_leaves_5",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_log",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_log_2",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_log_3",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_mangrove_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_mangrove_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_mangrove_roots",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_mangrove_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_moss",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_moss_carpet",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_oak_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_oak_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_oak_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_planks",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_planks_2",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_planks_3",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_planks_4",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_potatoes",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_slab",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_spruce_door",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_spruce_leaves",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_spruce_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_stairs",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_stripped_log",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_stripped_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_trapdoor",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_wheat",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:smoldering_wool",
+      "required": false
+    },
+    {
+      "id": "burnt:stairs_fire",
+      "required": false
+    },
+    {
+      "id": "burnt:stairs_fire_2",
+      "required": false
+    },
+    {
+      "id": "burnt:stairs_fire_3",
+      "required": false
+    },
+    {
+      "id": "burnt:stairs_fire_4",
+      "required": false
+    },
+    {
+      "id": "burnt:stairs_fire_5",
+      "required": false
+    },
+    {
+      "id": "burnt:stripped_broken_burnt_log",
+      "required": false
+    },
+    {
+      "id": "burnt:stripped_broken_burnt_log_2",
+      "required": false
+    },
+    {
+      "id": "burnt:stripped_burnt_log",
+      "required": false
+    },
+    {
+      "id": "burnt:stripped_burnt_wood",
+      "required": false
+    },
+    {
+      "id": "burnt:stripped_ember_log",
+      "required": false
+    },
+    {
+      "id": "burnt:tall_flames",
+      "required": false
+    },
+    {
+      "id": "burnt:tall_grass_burnt",
+      "required": false
+    },
+    {
+      "id": "burnt:tall_grass_fire",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_2",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_3",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_4",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_5",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_6",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_7",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_8",
+      "required": false
+    },
+    {
+      "id": "burnt:wood_fire_9",
+      "required": false
+    }
+  ]
+}

@@ -14,6 +14,7 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.unbeta.content.client.corruption.CorruptionRenderers.register();
         // Sullied chunk list from the server -> client, for surface spores.
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
                 net.unbeta.content.zombie.SulliedChunkSync.CHANNEL,

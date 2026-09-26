@@ -24794,6 +24794,31 @@
       "action": "keep",
       "kind": "item",
       "id": "unbeta-content:obsidian_door"
+    },
+    {
+      "action": "keep",
+      "kind": "entity",
+      "id": "unbeta-content:zombie_cow"
+    },
+    {
+      "action": "keep",
+      "kind": "entity",
+      "id": "unbeta-content:zombie_pig"
+    },
+    {
+      "action": "keep",
+      "kind": "entity",
+      "id": "unbeta-content:zombie_sheep"
+    },
+    {
+      "action": "keep",
+      "kind": "entity",
+      "id": "unbeta-content:zombie_chicken"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:seared_flesh"
     }
   ]
 }

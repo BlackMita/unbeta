@@ -28,5 +28,10 @@
   "item.unbeta-content.unbeta_pearl": "Pearl",
   "block.unbeta-content.obsidian_door": "Obsidian Door",
   "item.unbeta-content.obsidian_door": "Obsidian Door",
-  "block.unbeta-content.obsidian_fire": "Obsidian Fire"
+  "block.unbeta-content.obsidian_fire": "Obsidian Fire",
+  "entity.unbeta-content.zombie_cow": "Zombie Cow",
+  "entity.unbeta-content.zombie_pig": "Zombie Pig",
+  "entity.unbeta-content.zombie_sheep": "Zombie Sheep",
+  "entity.unbeta-content.zombie_chicken": "Zombie Chicken",
+  "item.unbeta-content.seared_flesh": "Seared Flesh"
 }

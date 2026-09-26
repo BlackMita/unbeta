@@ -21,7 +21,8 @@ public abstract class JolDisguiseMixin {
     @Inject(method = "mobTick", at = @At("HEAD"))
     private void unbeta_jolDisguise(CallbackInfo ci) {
         net.minecraft.entity.mob.MobEntity self = (net.minecraft.entity.mob.MobEntity)(Object)this;
-        if (!(self instanceof HostileEntity)) return;
+        if (!(self instanceof HostileEntity)
+                && !(self instanceof net.unbeta.content.corruption.CorruptedAnimal)) return;
         if (self.getWorld().isClient) return;
         if (self instanceof EndermanEntity) return; // endermen see through JoL
         if (!(self.getTarget() instanceof PlayerEntity player)) return;

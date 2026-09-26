@@ -22,6 +22,8 @@ public abstract class ZombieSulliedMixin {
         if (zombie.getWorld().isClient) return;
         ServerWorld world = (ServerWorld) zombie.getWorld();
         ChunkPos chunkPos = new ChunkPos(zombie.getBlockPos());
+        // Died burning: it burnt up - as clean as a gold kill, so it isn't remembered.
+        if (zombie.isOnFire()) return;
         // Gold sword/axe kill = clean kill: this death isn't remembered. The chunk's
         // other remembered deaths are unaffected and still rise.
         var attacker = source.getAttacker();

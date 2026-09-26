@@ -147,7 +147,8 @@ public final class SulliedChunkTick {
             // down into it so the mob rises through the cover, not above it.
             for (int i = 0; i < 2 && isPassable(world, pos.down()); i++) pos = pos.down();
             if (isPassable(world, pos) && isPassable(world, pos.up())
-                    && world.getBlockState(pos.down()).isSolidBlock(world, pos.down())) {
+                    && world.getBlockState(pos.down()).isSolidBlock(world, pos.down())
+                    && !nearScorched(world, pos)) {
                 return pos;
             }
         }
@@ -160,6 +161,28 @@ public final class SulliedChunkTick {
      * would end its rise partly stuck inside it. Water has no collision shape either,
      * hence the separate fluid check.
      */
+    /** Blocks that count as scorched earth: see data/unbeta-content/tags/blocks/scorched.json. */
+    public static final net.minecraft.registry.tag.TagKey<net.minecraft.block.Block> SCORCHED =
+            net.minecraft.registry.tag.TagKey.of(net.minecraft.registry.RegistryKeys.BLOCK,
+                    new net.minecraft.util.Identifier("unbeta-content", "scorched"));
+    private static final int SCORCH_RADIUS = 4;
+
+    /**
+     * Scorched earth: nothing rises within SCORCH_RADIUS blocks of a burnt, burning or
+     * regrowing block. The chunk still remembers its dead (and still puffs spores) - a
+     * skipped spot just means the next beat tries elsewhere - so scorching suppresses a
+     * chunk rather than cleansing it. Blocks in unloaded neighbouring chunks are skipped,
+     * never force-loaded.
+     */
+    private static boolean nearScorched(ServerWorld world, BlockPos center) {
+        for (BlockPos p : BlockPos.iterate(center.add(-SCORCH_RADIUS, -SCORCH_RADIUS, -SCORCH_RADIUS),
+                                           center.add(SCORCH_RADIUS, SCORCH_RADIUS, SCORCH_RADIUS))) {
+            if (!world.isChunkLoaded(p.getX() >> 4, p.getZ() >> 4)) continue;
+            if (world.getBlockState(p).isIn(SCORCHED)) return true;
+        }
+        return false;
+    }
+
     private static boolean isPassable(ServerWorld world, BlockPos pos) {
         net.minecraft.block.BlockState state = world.getBlockState(pos);
         return state.getCollisionShape(world, pos).isEmpty() && state.getFluidState().isEmpty();

@@ -32,11 +32,13 @@ public final class RisingMob {
     /** 40 ticks = 2 seconds, start to finish. */
     public static final int RISE_TICKS = 40;
     /**
-     * How far below the destination the mob starts. A zombie is ~1.95 blocks tall, so
-     * 2.0 puts the top of its head just under the surface - it emerges head first,
-     * fully hidden at the start rather than waist-deep.
+     * How far below the destination a mob starts: its own height plus a sliver, so the
+     * top of its head is just under the surface and it emerges head first. A zombie
+     * (1.95 tall) starts 2.0 down; a chicken (0.7) only 0.75.
      */
-    public static final double RISE_DEPTH = 2.0;
+    private static double depthFor(MobEntity mob) {
+        return mob.getHeight() + 0.05;
+    }
 
     private static final List<RisingMob> ACTIVE = new ArrayList<>();
 
@@ -85,7 +87,7 @@ public final class RisingMob {
     public static void prePosition(MobEntity mob, BlockPos destination) {
         mob.refreshPositionAndAngles(
                 destination.getX() + 0.5,
-                destination.getY() - RISE_DEPTH,
+                destination.getY() - depthFor(mob),
                 destination.getZ() + 0.5,
                 mob.getYaw(), 0.0F);
     }
@@ -110,7 +112,8 @@ public final class RisingMob {
             return true;
         }
 
-        double y = destination.getY() - RISE_DEPTH + (RISE_DEPTH * progress);
+        double depth = depthFor(mob);
+        double y = destination.getY() - depth + (depth * progress);
         mob.refreshPositionAndAngles(
                 destination.getX() + 0.5, y, destination.getZ() + 0.5,
                 mob.getYaw(), 0.0F);

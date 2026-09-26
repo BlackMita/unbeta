@@ -13,9 +13,15 @@ import org.spongepowered.asm.mixin.Shadow;
 public abstract class MobGoalReinitMixin implements RisingMobAccess.GoalReinit {
 
     @Shadow protected abstract void initGoals();
+    @Shadow @org.spongepowered.asm.mixin.Final
+    protected net.minecraft.entity.ai.goal.GoalSelector targetSelector;
 
     @Override
     public void unbeta_reinitGoals() {
+        // initGoals() fills BOTH selectors. RisingMob only cleared goalSelector, so
+        // re-running it used to stack a second copy of every target goal.
+        ((MobEntity)(Object)this).goalSelector.clear(g -> true);
+        this.targetSelector.clear(g -> true);
         this.initGoals();
     }
 }

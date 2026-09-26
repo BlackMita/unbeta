@@ -23,7 +23,8 @@ public abstract class JolPassiveFleeMixin {
         net.minecraft.entity.mob.MobEntity self = (net.minecraft.entity.mob.MobEntity)(Object)this;
         if (!(self.getWorld() instanceof net.minecraft.server.world.ServerWorld sw)) return;
 
-        boolean isPassive = self instanceof AnimalEntity && !(self instanceof WolfEntity);
+        boolean isPassive = self instanceof AnimalEntity && !(self instanceof WolfEntity)
+                && !(self instanceof net.unbeta.content.corruption.CorruptedAnimal);
         boolean isVillager = self instanceof VillagerEntity;
         if (!isPassive && !isVillager) return;
 
