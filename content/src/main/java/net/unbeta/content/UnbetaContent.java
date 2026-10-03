@@ -222,9 +222,9 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.spider.SpiderBabies.register();
         net.unbeta.content.nametag.NameTagNaming.register();
         net.unbeta.content.stronghold.StrongholdDebugCommand.register();
-        net.unbeta.content.stronghold.StrongholdHudSync.register(); // TEMP: testing readout
         net.unbeta.content.stronghold.BreachHooks.register();
         net.unbeta.content.stronghold.StrongholdRepairs.register();
+        net.unbeta.content.zombie.SulliedDebugCommand.register();
         net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
             .modifyEntriesEvent(net.minecraft.item.ItemGroups.FOOD_AND_DRINK)
             .register(entries -> entries.add(net.unbeta.content.corruption.SearedFlesh.ITEM));

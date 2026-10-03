@@ -71,9 +71,12 @@ public class UnmasonEntity extends ZombieEntity {
                 if (p.squaredDistanceTo(this) > 16.0 * 16.0) continue;
 
                 if (!p.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE)) {
-                    p.sendMessage(net.minecraft.text.Text.literal(
-                            "A nearby Unmason has inflicted Mining Fatigue II upon you!")
-                            .formatted(net.minecraft.util.Formatting.RED), false);
+                    p.sendMessage(net.minecraft.text.Text.literal("A nearby Unmason has inflicted ")
+                            .formatted(net.minecraft.util.Formatting.GRAY)
+                            .append(net.minecraft.text.Text.literal("Mining Fatigue II")
+                                    .formatted(net.minecraft.util.Formatting.RED))
+                            .append(net.minecraft.text.Text.literal(" upon you!")
+                                    .formatted(net.minecraft.util.Formatting.GRAY)), false);
                 }
                 p.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                         net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE,

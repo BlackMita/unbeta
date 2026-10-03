@@ -39,6 +39,31 @@ public final class SulliedChunkTick {
     /** world -> (chunk -> world time of that chunk's next beat). */
     private static final Map<RegistryKey<World>, Map<Long, Long>> NEXT_BEAT = new HashMap<>();
 
+    /** What last happened in a chunk - for /unbeta sullied. Not saved. */
+    public record Note(long time, String text) {}
+    private static final Map<RegistryKey<World>, Map<Long, Note>> LAST_OUTCOME = new HashMap<>();
+    private static final Map<RegistryKey<World>, Map<Long, Note>> LAST_DEATH = new HashMap<>();
+
+    private static void put(Map<RegistryKey<World>, Map<Long, Note>> notes, ServerWorld world,
+                            ChunkPos chunk, String text) {
+        notes.computeIfAbsent(world.getRegistryKey(), k -> new HashMap<>())
+                .put(chunk.toLong(), new Note(world.getTime(), text));
+    }
+    public static void noteDeath(ServerWorld world, ChunkPos chunk, String text) {
+        put(LAST_DEATH, world, chunk, text);
+    }
+    private static void noteOutcome(ServerWorld world, ChunkPos chunk, String text) {
+        put(LAST_OUTCOME, world, chunk, text);
+    }
+    public static Note lastDeath(ServerWorld world, ChunkPos chunk) {
+        Map<Long, Note> m = LAST_DEATH.get(world.getRegistryKey());
+        return m == null ? null : m.get(chunk.toLong());
+    }
+    public static Note lastOutcome(ServerWorld world, ChunkPos chunk) {
+        Map<Long, Note> m = LAST_OUTCOME.get(world.getRegistryKey());
+        return m == null ? null : m.get(chunk.toLong());
+    }
+
     private SulliedChunkTick() {}
 
     public static void register() {
@@ -73,7 +98,11 @@ public final class SulliedChunkTick {
             beats.put(key, now + BEAT_TICKS);
 
             boolean isNight = world.getAmbientDarkness() >= 4;
-            if (!isNight && world.random.nextInt(DAY_ODDS) != 0) continue;
+            if (!isNight && world.random.nextInt(DAY_ODDS) != 0) {
+                noteOutcome(world, chunkPos, "daytime beat: the 1-in-" + DAY_ODDS
+                        + " roll failed (repeats every 5 s)");
+                continue;
+            }
 
             riseOne(world, state, chunkPos);
         }
@@ -84,13 +113,20 @@ public final class SulliedChunkTick {
 
     private static void riseOne(ServerWorld world, SulliedChunkState state, ChunkPos chunkPos) {
         BlockPos spawnPos = findSpawnPos(world, chunkPos);
-        if (spawnPos == null) return; // no spot this beat; memory kept for the next one
+        if (spawnPos == null) {
+            noteOutcome(world, chunkPos, "no valid spot in 8 tries (surface blocked, water, or within "
+                    + "4 blocks of burnt ground) - memory kept");
+            return;
+        }
 
         String id = state.takeRandom(chunkPos, world.random);
         if (id == null) return;
 
         MobEntity riser = createRiser(world, id, spawnPos);
-        if (riser == null) return; // unknown / non-mob type: entry consumed and dropped
+        if (riser == null) {
+            noteOutcome(world, chunkPos, "could not create " + id + " - entry dropped");
+            return;
+        }
 
         riser.refreshPositionAndAngles(
                 spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
@@ -102,6 +138,8 @@ public final class SulliedChunkTick {
         RisingMob.prePosition(riser, spawnPos);
         world.spawnEntity(riser);
         RisingMob.begin(riser, world, spawnPos);
+        noteOutcome(world, chunkPos, "rose " + id + " at " + spawnPos.getX() + ","
+                + spawnPos.getY() + "," + spawnPos.getZ());
 
         world.playSound(null, spawnPos, SoundEvents.BLOCK_ROOTED_DIRT_BREAK,
                 SoundCategory.HOSTILE, 1.0F, 0.6F);

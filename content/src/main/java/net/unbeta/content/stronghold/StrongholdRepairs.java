@@ -96,7 +96,8 @@ public final class StrongholdRepairs {
             int before = b.missing.size();
             b.missing.entrySet().removeIf(e -> {
                 BlockPos pos = e.getKey();
-                if (isTorch(e.getValue())) return true; // never rebuilt (covers older saves)
+                // Never rebuilt: torches, and anything no longer counted as stonework (older saves).
+                if (isTorch(e.getValue()) || !Breach.isStonework(e.getValue())) return true;
                 return loaded(world, pos) && !world.getBlockState(pos).isReplaceable();
             });
             if (b.missing.size() != before) changed = true;

@@ -83,6 +83,12 @@ public class SulliedChunkState extends PersistentState {
         markDirty();
     }
 
+    /** A copy of what this chunk remembers, for diagnostics. */
+    public List<String> peek(ChunkPos pos) {
+        List<String> queue = memory.get(pos.toLong());
+        return queue == null ? List.of() : new ArrayList<>(queue);
+    }
+
     public boolean hasMemory(ChunkPos pos) {
         List<String> queue = memory.get(pos.toLong());
         return queue != null && !queue.isEmpty();

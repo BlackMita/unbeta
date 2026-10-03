@@ -39,7 +39,7 @@ public final class Breach {
     /** Damage within this many blocks of an existing breach joins it, so a mining spree is one job. */
     private static final double MERGE_RADIUS = 8.0;
     /** TEMP, for testing: announce each breach as it's recorded. */
-    public static boolean announce = true;
+    public static boolean announce = false; // flip to true to announce breaches and mason raises in chat (debugging)
 
     /** Where the damage was centred - where the masons head for. */
     public final BlockPos centre;
@@ -72,7 +72,7 @@ public final class Breach {
         for (var entry : states.entrySet()) {
             BlockPos pos = entry.getKey();
             BlockState state = entry.getValue();
-            if (!state.isIn(STONEWORK)) continue;
+            if (!isStonework(state)) continue;
             if (!StrongholdSpace.isInside(world, pos)) continue;
             missing.put(pos.toImmutable(), state);
             // A door is two blocks, and breaking either half removes both - so record the
@@ -117,6 +117,14 @@ public final class Breach {
                       + centre.getX() + "," + centre.getY() + "," + centre.getZ();
             world.getPlayers().forEach(p -> p.sendMessage(Text.literal(msg).formatted(Formatting.GOLD), false));
         }
+    }
+
+    /**
+     * Stronghold stonework: whatever is in the stronghold_stonework tag (the stone brick
+     * family, iron bars), plus ANY door, whoever made it - doors are bricked over, not rebuilt.
+     */
+    public static boolean isStonework(BlockState state) {
+        return state.isIn(STONEWORK) || state.getBlock() instanceof net.minecraft.block.DoorBlock;
     }
 
     private static BlockPos centreOf(Iterable<BlockPos> positions) {
