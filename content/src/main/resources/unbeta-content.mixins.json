@@ -54,7 +54,9 @@
     "CaveSpiderHealthMixin",
     "SpiderSpawnSwapMixin",
     "SpiderGrowUpMixin",
-    "TorchWaterMixin"
+    "TorchWaterMixin",
+    "StrongholdBreachExplosionMixin",
+    "SilverfishBreachMixin"
   ],
   "injectors": {
     "defaultRequire": 1

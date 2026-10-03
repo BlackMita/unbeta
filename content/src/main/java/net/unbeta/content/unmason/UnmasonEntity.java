@@ -32,12 +32,15 @@ public class UnmasonEntity extends ZombieEntity {
 
     @Override
     protected void initGoals() {
-        // Only passive wandering + stronghold seeking — no attack goals
-        this.goalSelector.add(1, new UnmasonSeekStrongholdGoal(this));
-        this.goalSelector.add(2, new WanderAroundFarGoal(this, 0.6));
-        this.goalSelector.add(3, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
-        this.goalSelector.add(4, new LookAroundGoal(this));
-        // No target goals — it never attacks
+        // Never attacks. Highest priority first, one slot each - goals at equal priority
+        // can't interrupt each other, which is why seeking and wandering must not share one.
+        this.goalSelector.add(0, new UnmasonRepairGoal(this));         // a breach outranks everything, even being watched
+        this.goalSelector.add(1, new UnmasonFreezeGoal(this));         // inside: holds still under a player's gaze
+        this.goalSelector.add(2, new UnmasonFollowGoal(this));         // inside: follows whoever last looked at it
+        this.goalSelector.add(3, new UnmasonSeekStrongholdGoal(this)); // outside: heads for the stronghold
+        this.goalSelector.add(4, new WanderAroundFarGoal(this, 0.6));
+        this.goalSelector.add(5, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.add(6, new LookAroundGoal(this));
     }
 
     @Override
@@ -69,13 +72,13 @@ public class UnmasonEntity extends ZombieEntity {
 
                 if (!p.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE)) {
                     p.sendMessage(net.minecraft.text.Text.literal(
-                            "A nearby Unmason has inflicted Mining Fatigue upon you!")
+                            "A nearby Unmason has inflicted Mining Fatigue II upon you!")
                             .formatted(net.minecraft.util.Formatting.RED), false);
                 }
                 p.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                         net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE,
                         100,    // 5 seconds
-                        0,      // Mining Fatigue I
+                        1,      // Mining Fatigue II (9% mining speed)
                         false,  // not ambient
                         true)); // show particles
             }
