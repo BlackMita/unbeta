@@ -10,6 +10,11 @@ import net.minecraft.util.UseAction;
  * to the off hand - placing whatever block was there. After eating or drinking, off-hand
  * use is blocked for at least MIN_TICKS AND until right-click is let go. The main hand is
  * never blocked, so holding right-click to eat several foods in a row still works.
+ *
+ * <p>The server finishes the meal and tells the client BETWEEN ticks, and input handling
+ * (which can place the off-hand block) runs before a tick ends. Checking only at the end of
+ * the tick therefore noticed the finished meal one step too late. So the state is refreshed
+ * at the start of every tick, and again at the exact moment an off-hand use is attempted.
  */
 public final class EatingGuard {
 
@@ -22,10 +27,14 @@ public final class EatingGuard {
     private EatingGuard() {}
 
     public static void register() {
-        ClientTickEvents.END_CLIENT_TICK.register(EatingGuard::tick);
+        ClientTickEvents.START_CLIENT_TICK.register(EatingGuard::refresh);
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            refresh(client);
+            if (lockTicks > 0) lockTicks--;
+        });
     }
 
-    private static void tick(MinecraftClient client) {
+    private static void refresh(MinecraftClient client) {
         ClientPlayerEntity player = client.player;
         if (player == null) {
             wasEating = false;
@@ -43,11 +52,11 @@ public final class EatingGuard {
             waitForRelease = true;
         }
         wasEating = eating;
-        if (lockTicks > 0) lockTicks--;
         if (!held) waitForRelease = false;
     }
 
     public static boolean offhandLocked() {
+        refresh(MinecraftClient.getInstance()); // evaluated at the moment of the attempt
         return lockTicks > 0 || waitForRelease;
     }
 }

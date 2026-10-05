@@ -24,6 +24,9 @@ import java.util.List;
  * lost - killing it returns every item exactly as it was (Curse of Vanishing excepted, as on
  * any death). XP still drops as orbs where the player died, like vanilla.
  *
+ * <p>Raised by ANY death while Inevitable Zombification is on the player - a zombie, a fall,
+ * lava, or the countdown itself. The infection is what turns them.
+ *
  * <p>It's a real zombie to every other system (hunting, bites, chunk memory, seared flesh),
  * and is called "Zombie" everywhere - the player has to recognise their own gear. Guarded so
  * it can't lose the inventory: never despawns (even in Peaceful), never turns drowned, never
@@ -42,7 +45,11 @@ public class RevenantEntity extends ZombieEntity {
     /** Hooked on death itself, so it only fires when the player really dies of zombification. */
     public static void registerDeathHook() {
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
-            if (entity instanceof ServerPlayerEntity player && source.isOf(Zombification.DAMAGE_TYPE)) {
+            // Any death while infected, whatever killed you - the infection is what turns you,
+            // not the blow that finished you off. (The countdown's own kill is one such death.)
+            if (entity instanceof ServerPlayerEntity player
+                    && (player.hasStatusEffect(Zombification.EFFECT)
+                        || source.isOf(Zombification.DAMAGE_TYPE))) {
                 riseFrom(player);
             }
             return true; // never prevents the death
