@@ -45,7 +45,13 @@ public final class Zombification {
 
     /** Full duration; no swirling particles (onlookers can't tell); icon shown to the player. */
     public static void inflict(LivingEntity entity) {
+        boolean fresh = !entity.hasStatusEffect(EFFECT);
         entity.addStatusEffect(new StatusEffectInstance(EFFECT, DURATION, 0, false, false, true));
+        // Only on a fresh infection - not every time rotten flesh resets the timer.
+        if (fresh && entity instanceof net.minecraft.entity.player.PlayerEntity player) {
+            player.sendMessage(net.minecraft.text.Text.literal("You've been infected.")
+                    .formatted(net.minecraft.util.Formatting.RED), false);
+        }
     }
 
     public static boolean isWearingGold(LivingEntity entity) {

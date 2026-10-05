@@ -25,6 +25,22 @@ public final class BonePileRegistry {
 
     private BonePileRegistry() {}
 
+    /**
+     * A skeleton holding something that isn't a weapon can't hurt anyone. Decided from what
+     * it holds at the moment it attacks, not from HARMLESS_SKELETONS alone: that set lives in
+     * memory and is empty again after the world reloads - which is how junk-holding skeletons
+     * were hitting players after a reload. An empty hand still punches, as before.
+     */
+    public static boolean isHarmless(net.minecraft.entity.LivingEntity skeleton) {
+        net.minecraft.item.ItemStack held = skeleton.getMainHandStack();
+        if (held.isEmpty()) return false;
+        net.minecraft.item.Item item = held.getItem();
+        return !(item instanceof net.minecraft.item.RangedWeaponItem   // bows, crossbows
+                || item instanceof net.minecraft.item.SwordItem
+                || item instanceof net.minecraft.item.MiningToolItem   // axes, pickaxes, shovels, hoes
+                || item instanceof net.minecraft.item.TridentItem);
+    }
+
     private static Identifier id(String path) { return new Identifier(MOD_ID, path); }
 
     public static void register() {

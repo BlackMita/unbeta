@@ -33,7 +33,9 @@ public class ZombieSheepEntity extends SheepEntity implements CorruptedAnimal {
     }
 
     public static DefaultAttributeContainer.Builder createAttributes() {
-        return CorruptedAnimal.hostile(SheepEntity.createSheepAttributes(), 2.0);
+        // Starts a little quicker than a zombie (0.23), but gains speed slowly.
+        return CorruptedAnimal.hostile(SheepEntity.createSheepAttributes(), 2.0)
+                .add(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25);
     }
 
     /**

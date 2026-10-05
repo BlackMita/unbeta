@@ -23,7 +23,10 @@ public final class SulliedAtmosphere {
         lastNanos = now;
 
         BlockPos p = camera.getBlockPos();
-        float target = SulliedChunksClient.isSullied(p.getX(), p.getZ()) ? 1.0F : 0.0F;
+        // Also while the player carries Inevitable Zombification: the sickness tints their sight.
+        net.minecraft.client.network.ClientPlayerEntity me = net.minecraft.client.MinecraftClient.getInstance().player;
+        boolean infected = me != null && me.hasStatusEffect(net.unbeta.content.corruption.Zombification.EFFECT);
+        float target = (infected || SulliedChunksClient.isSullied(p.getX(), p.getZ())) ? 1.0F : 0.0F;
         float step = dt / FADE_SECONDS;
         if (strength < target) strength = Math.min(target, strength + step);
         else if (strength > target) strength = Math.max(target, strength - step);

@@ -39,6 +39,18 @@ public interface CorruptedAnimal {
      * animals have none, and melee attacks crash without it) and a zombie's 35-block
      * follow range.
      */
+    /**
+     * How quickly each corrupted animal picks up speed while chasing (bonus per tick; double
+     * speed is reached at 1.0). Cows gain it fastest, sheep slowest, pigs like zombies;
+     * chickens are already the fastest thing out there and don't ramp at all.
+     */
+    static float pursuitAccel(net.minecraft.entity.Entity e) {
+        if (e instanceof ZombieCowEntity) return 0.0008f;   // double speed after ~1 min
+        if (e instanceof ZombiePigEntity) return 0.0004f;   // ~2 min, same as zombies
+        if (e instanceof ZombieSheepEntity) return 0.0002f; // ~4 min
+        return 0.0f;
+    }
+
     static DefaultAttributeContainer.Builder hostile(DefaultAttributeContainer.Builder base,
                                                      double attackDamage) {
         return base.add(EntityAttributes.GENERIC_ATTACK_DAMAGE, attackDamage)

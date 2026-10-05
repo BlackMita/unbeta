@@ -21,7 +21,8 @@ public class ZombieCowEntity extends CowEntity implements CorruptedAnimal {
     }
 
     public static DefaultAttributeContainer.Builder createAttributes() {
-        return CorruptedAnimal.hostile(CowEntity.createCowAttributes(), 6.0);
+        return CorruptedAnimal.hostile(CowEntity.createCowAttributes(), 6.0)
+                .add(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_KNOCKBACK, 0.5); // hits a little harder
     }
 
     /**

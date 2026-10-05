@@ -54,6 +54,8 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.torch.TorchBurnout.register();
         net.unbeta.content.torch.UnbetaTorchItemBurnout.register();
         net.unbeta.content.torch.TorchLightingHooks.register();
+        net.unbeta.content.torch.TorchDousing.register();
+        net.unbeta.content.worldgen.CaveMinecarts.register();
         LOG.info("Registered Unbeta torches.");
 
         // Glowsand: luminous gravity-affected block. Smelts to glowstone.
@@ -278,41 +280,8 @@ public final class UnbetaContent implements ModInitializer {
                 return net.minecraft.util.ActionResult.PASS;
             });
 
-        // Lockey: right-click away from its own chest to ask where that chest is.
-        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
-            (player, world, hand, hit) -> {
-                if (world.isClient) return net.minecraft.util.ActionResult.PASS;
-                net.minecraft.item.ItemStack held = player.getStackInHand(hand);
-                if (!net.unbeta.content.lockey.LockeyItem.isLockey(held))
-                    return net.minecraft.util.ActionResult.PASS;
-                if (!net.unbeta.content.lockey.LockeyItem.isBound(held))
-                    return net.minecraft.util.ActionResult.PASS;
-
-                net.minecraft.server.world.ServerWorld sw =
-                    (net.minecraft.server.world.ServerWorld) world;
-                java.util.UUID myId = net.unbeta.content.lockey.LockeyItem.getId(held);
-
-                // Clicking the key's own chest is handled by the lock/unlock handler.
-                net.minecraft.util.math.BlockPos chest =
-                    net.unbeta.content.lockey.LockeyItem.getBoundChest(held);
-                if (chest != null && chest.equals(hit.getBlockPos()))
-                    return net.minecraft.util.ActionResult.PASS;
-
-                net.minecraft.text.Text msg;
-                if (net.unbeta.content.lockey.LockeyState.isRevoked(sw, myId)) {
-                    msg = net.minecraft.text.Text.literal("This key's chest was destroyed.")
-                        .formatted(net.minecraft.util.Formatting.RED);
-                } else if (chest != null) {
-                    msg = net.minecraft.text.Text.literal(
-                            "Chest at " + chest.getX() + ", " + chest.getY()
-                                    + ", " + chest.getZ())
-                        .formatted(net.minecraft.util.Formatting.YELLOW);
-                } else {
-                    return net.minecraft.util.ActionResult.PASS;
-                }
-                player.sendMessage(msg, false);
-                return net.minecraft.util.ActionResult.SUCCESS;
-            });
+        // Lockey 'where is my chest': shown only by the item-use handler below, which runs
+        // only when nothing else claimed the click - so a furnace (etc.) opens instead.
 
 
         // Lockey: deny opening a locked chest, and report where its key is.
@@ -341,6 +310,9 @@ public final class UnbetaContent implements ModInitializer {
                 } else {
                     return net.minecraft.util.TypedActionResult.pass(held);
                 }
+                // Once per chat fade (~10 s) per player, so holding the key can't flood chat.
+                if (!net.unbeta.content.lockey.LockeyHintCooldown.ready(player, world.getTime()))
+                    return net.minecraft.util.TypedActionResult.pass(held);
                 player.sendMessage(msg, false);
                 return net.minecraft.util.TypedActionResult.success(held, false);
             });

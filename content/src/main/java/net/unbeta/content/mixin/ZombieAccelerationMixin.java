@@ -32,7 +32,7 @@ public abstract class ZombieAccelerationMixin {
     private float unbeta_pursuitBonus = 0.0f;
 
     /** Per-tick acceleration added while pursuing. Tune this value. */
-    private static final float ACCEL_PER_TICK = 0.0003f;
+    private static final float ACCEL_PER_TICK = 0.0004f; // double speed after ~2 min of chasing (was ~2.8)
 
     /** Maximum bonus as a fraction of base speed (1.0 = 100% bonus = 2x speed). */
     private static final float MAX_BONUS = 1.0f;

@@ -23,8 +23,8 @@ public class SkeletonDaylightMixin {
     private void unbeta_harmlessNoAttack(net.minecraft.entity.Entity target,
                                           CallbackInfoReturnable<Boolean> cir) {
         if ((Object)this instanceof net.minecraft.entity.mob.SkeletonEntity skeleton) {
-            if (net.unbeta.content.skeleton.BonePileRegistry.HARMLESS_SKELETONS
-                    .contains(skeleton.getUuid())) {
+            if (net.unbeta.content.skeleton.BonePileRegistry.HARMLESS_SKELETONS.contains(skeleton.getUuid())
+                    || net.unbeta.content.skeleton.BonePileRegistry.isHarmless(skeleton)) {
                 cir.setReturnValue(false);
             }
         }
