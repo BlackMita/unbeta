@@ -60,7 +60,14 @@
     "FireDamageMixin",
     "CorruptedPursuitMixin",
     "CorruptedPursuitDamageMixin",
-    "RemovedItemDropMixin"
+    "RemovedItemDropMixin",
+    "CopperNoOxidationMixin",
+    "TempFluidDrainMixin",
+    "BucketBurnItemEntityMixin",
+    "CowMilkingMixin",
+    "CopperOreHarvestMixin",
+    "StructurePieceInvoker",
+    "StrongholdPortalFillMixin"
   ],
   "injectors": {
     "defaultRequire": 1

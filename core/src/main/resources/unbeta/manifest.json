@@ -2211,24 +2211,12 @@
     {
       "id": "minecraft:copper_block",
       "kind": "block",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:copper_ore",
       "kind": "block",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:cornflower",
@@ -5186,13 +5174,7 @@
     {
       "id": "minecraft:lightning_rod",
       "kind": "block",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:lilac",
@@ -14272,35 +14254,17 @@
     {
       "id": "minecraft:copper_block",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:copper_ingot",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_datagen",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:copper_ore",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:cornflower",
@@ -18049,13 +18013,7 @@
     {
       "id": "minecraft:lightning_rod",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:lilac",
@@ -21036,13 +20994,7 @@
     {
       "id": "minecraft:raw_copper",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:raw_copper_block",
@@ -21058,13 +21010,7 @@
     {
       "id": "minecraft:raw_gold",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:raw_gold_block",
@@ -21080,13 +21026,7 @@
     {
       "id": "minecraft:raw_iron",
       "kind": "item",
-      "action": "remove",
-      "mechanisms": [
-        "recipe_gate",
-        "loot_filter",
-        "creative_hide"
-      ],
-      "verified": false
+      "action": "keep"
     },
     {
       "id": "minecraft:raw_iron_block",
@@ -24824,6 +24764,56 @@
       "action": "keep",
       "kind": "entity",
       "id": "unbeta-content:revenant"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:copper_nugget"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:copper_wire"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:wood_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:wood_water_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:wood_lava_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:wood_milk_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:copper_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:copper_water_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:copper_lava_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:copper_milk_bucket"
     }
   ]
 }

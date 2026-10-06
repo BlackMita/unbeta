@@ -15,6 +15,10 @@ public final class UnbetaContentClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         net.unbeta.content.client.eating.EatingGuard.register();
+        net.unbeta.content.bucket.BucketBurn.clientClock = () -> {
+            net.minecraft.client.world.ClientWorld w = net.minecraft.client.MinecraftClient.getInstance().world;
+            return w == null ? 0L : w.getTime();
+        };
         // Right-click with an unnamed name tag: open the naming prompt (no anvil needed).
         net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) -> {
             net.minecraft.item.ItemStack held = player.getStackInHand(hand);

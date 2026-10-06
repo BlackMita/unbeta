@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "M M",
+    " M "
+  ],
+  "key": {
+    "M": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "result": {
+    "item": "unbeta-content:wood_bucket",
+    "count": 1
+  }
+}

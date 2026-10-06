@@ -76,7 +76,6 @@ public final class UnbetaConfig {
      */
     public java.util.List<String> removedPlacedFeatures = new java.util.ArrayList<>(java.util.List.of(
             // 1.17 Caves & Cliffs
-            "ore_copper", "ore_copper_large",
             "ore_tuff",
             "amethyst_geode",
             "glow_lichen",

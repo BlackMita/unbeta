@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "N  ",
+    " N ",
+    "  N"
+  ],
+  "key": {
+    "N": {
+      "item": "unbeta-content:copper_nugget"
+    }
+  },
+  "result": {
+    "item": "unbeta-content:copper_wire",
+    "count": 1
+  }
+}

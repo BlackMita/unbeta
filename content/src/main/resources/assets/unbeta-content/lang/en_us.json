@@ -36,5 +36,19 @@
   "item.unbeta-content.seared_flesh": "Seared Flesh",
   "effect.unbeta-content.inevitable_zombification": "Inevitable Zombification",
   "death.attack.unbeta_zombification": "%1$s succumbed to zombification",
-  "entity.unbeta-content.revenant": "Zombie"
+  "entity.unbeta-content.revenant": "Zombie",
+  "item.minecraft.bucket": "Iron Bucket",
+  "item.unbeta-content.copper_nugget": "Copper Nugget",
+  "item.unbeta-content.copper_wire": "Copper Wire",
+  "item.unbeta-content.wood_bucket": "Wood Bucket",
+  "item.unbeta-content.wood_water_bucket": "Wood Water Bucket",
+  "item.unbeta-content.wood_lava_bucket": "Wood Lava Bucket",
+  "item.unbeta-content.wood_milk_bucket": "Wood Milk Bucket",
+  "item.unbeta-content.copper_bucket": "Copper Bucket",
+  "item.unbeta-content.copper_water_bucket": "Copper Water Bucket",
+  "item.unbeta-content.copper_lava_bucket": "Copper Lava Bucket",
+  "item.unbeta-content.copper_milk_bucket": "Copper Milk Bucket",
+  "item.minecraft.water_bucket": "Iron Water Bucket",
+  "item.minecraft.lava_bucket": "Iron Lava Bucket",
+  "item.minecraft.milk_bucket": "Iron Milk Bucket"
 }
