@@ -67,7 +67,17 @@
     "CowMilkingMixin",
     "CopperOreHarvestMixin",
     "StructurePieceInvoker",
-    "StrongholdPortalFillMixin"
+    "StrongholdPortalFillMixin",
+    "StructureStartPlaceMixin",
+    "StrongholdKeyChestMixin",
+    "StrongholdLibraryAccessor",
+    "StrongholdSquareRoomAccessor",
+    "ChestInventoryAccessor",
+    "CarryOnPickupMixin",
+    "ChestBlockEntityLockCarryMixin",
+    "BlockEntityCarriedLockMixin",
+    "CarryOnDoubleChestMixin",
+    "CarryOnPlacementMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -78,6 +88,7 @@
     "MyceliumNoParticlesMixin",
     "SulliedSporesMixin",
     "SulliedTintMixin",
-    "OffhandAfterEatingMixin"
+    "OffhandAfterEatingMixin",
+    "BurntChestTextureMixin"
   ]
 }

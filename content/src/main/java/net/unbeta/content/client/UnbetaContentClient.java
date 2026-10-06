@@ -15,6 +15,7 @@ public final class UnbetaContentClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         net.unbeta.content.client.eating.EatingGuard.register();
+        net.unbeta.content.client.burntchest.BurntChestsClient.register();
         net.unbeta.content.bucket.BucketBurn.clientClock = () -> {
             net.minecraft.client.world.ClientWorld w = net.minecraft.client.MinecraftClient.getInstance().world;
             return w == null ? 0L : w.getTime();

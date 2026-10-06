@@ -59,6 +59,8 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.copper.CopperItems.register();
         net.unbeta.content.bucket.BucketItems.register();
         net.unbeta.content.creative.CreativeTrims.register();
+        net.unbeta.content.burntchest.BurntChests.register();
+        net.unbeta.content.lockey.CarryOnCompat.register();
         LOG.info("Registered Unbeta torches.");
 
         // Glowsand: luminous gravity-affected block. Smelts to glowstone.
@@ -300,15 +302,17 @@ public final class UnbetaContent implements ModInitializer {
                 }
                 net.minecraft.server.world.ServerWorld sw = (net.minecraft.server.world.ServerWorld) world;
                 java.util.UUID myId = net.unbeta.content.lockey.LockeyItem.getId(held);
-                net.minecraft.util.math.BlockPos chest =
-                        net.unbeta.content.lockey.LockeyItem.getBoundChest(held);
+                net.unbeta.content.lockey.LockeyChestFinder.Where where =
+                        net.unbeta.content.lockey.LockeyChestFinder.find(sw, myId, held);
+                net.minecraft.util.math.BlockPos chest = where == null ? null : where.pos();
                 net.minecraft.text.Text msg;
                 if (net.unbeta.content.lockey.LockeyState.isRevoked(sw, myId)) {
                     msg = net.minecraft.text.Text.literal("This key's chest was destroyed.")
                             .formatted(net.minecraft.util.Formatting.RED);
                 } else if (chest != null) {
                     msg = net.minecraft.text.Text.literal(
-                            "Chest at " + chest.getX() + ", " + chest.getY() + ", " + chest.getZ())
+                            "Chest at " + chest.getX() + ", " + chest.getY() + ", " + chest.getZ()
+                            + (where.carried() ? " (being carried)" : ""))
                             .formatted(net.minecraft.util.Formatting.YELLOW);
                 } else {
                     return net.minecraft.util.TypedActionResult.pass(held);
@@ -340,6 +344,10 @@ public final class UnbetaContent implements ModInitializer {
                     if (heldId != null && heldId.equals(owner))
                         return net.minecraft.util.ActionResult.PASS;
                 }
+
+                // Carry On's pick-up gesture: carrying a locked chest away is allowed - the lock goes with it.
+                if (net.unbeta.content.lockey.CarryOnCompat.tryCarry(player, sw, pos))
+                    return net.minecraft.util.ActionResult.SUCCESS;
 
                 world.playSound(null, pos,
                     net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,

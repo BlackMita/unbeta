@@ -82,6 +82,8 @@ public final class LockeySiege {
      * @return true to allow the break, false to cancel it (one unit having been ejected)
      */
     public static boolean onBreak(ServerWorld world, PlayerEntity player, BlockPos pos) {
+        // Carry On asking whether a pickup is allowed is not a swing - let it through.
+        if (CarryOnCompat.isPickingUp()) return true;
         if (!LockeyState.isChestLocked(world, pos)) return true; // not ours
 
         Inventory inv = inventoryAt(world, pos);

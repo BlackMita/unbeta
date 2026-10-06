@@ -24814,6 +24814,16 @@
       "action": "keep",
       "kind": "item",
       "id": "unbeta-content:copper_milk_bucket"
+    },
+    {
+      "action": "keep",
+      "kind": "block",
+      "id": "unbeta-content:burnt_chest"
+    },
+    {
+      "action": "keep",
+      "kind": "item",
+      "id": "unbeta-content:burnt_chest"
     }
   ]
 }
