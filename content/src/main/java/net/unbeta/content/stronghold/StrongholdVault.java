@@ -102,14 +102,21 @@ public final class StrongholdVault {
         sw.getServer().execute(() -> LockeyState.lock(sw, vault, id));
     }
 
-    /** Called right after any structure piece places a loot chest. */
-    public static void onChestPlaced(ServerWorldAccess world, BlockPos pos, Random random) {
+        /** The vault's key if this position is the stronghold's chosen key chest, else empty. */
+    public static ItemStack keyFor(BlockPos pos) {
         Plan plan = currentPlan();
-        if (plan == null || plan.keyChest() == null || !plan.keyChest().equals(pos)) return;
-        if (!(world.getBlockEntity(pos) instanceof ChestBlockEntity chest)) return;
+        if (plan == null || plan.keyChest() == null || !plan.keyChest().equals(pos)) return ItemStack.EMPTY;
         ItemStack key = new ItemStack(LockeyRegistry.LOCKEY);
         key.getOrCreateNbt().putUuid(LockeyItem.NBT_ID, plan.keyId());
         LockeyItem.bind(key, plan.vault());
+        return key;
+    }
+
+    /** Called right after a structure piece places a loot chest (that didn't become a mimic). */
+    public static void onChestPlaced(ServerWorldAccess world, BlockPos pos, Random random) {
+        if (!(world.getBlockEntity(pos) instanceof ChestBlockEntity chest)) return;
+        ItemStack key = keyFor(pos);
+        if (key.isEmpty()) return;
         // Straight into the slot list: setStack would try to roll the chest's loot table
         // now, and there's no world attached yet. The loot rolls into the free slots later.
         DefaultedList<ItemStack> inv = ((ChestInventoryAccessor) chest).unbeta_getInventory();

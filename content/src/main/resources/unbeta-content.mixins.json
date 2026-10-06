@@ -77,7 +77,11 @@
     "ChestBlockEntityLockCarryMixin",
     "BlockEntityCarriedLockMixin",
     "CarryOnDoubleChestMixin",
-    "CarryOnPlacementMixin"
+    "CarryOnPlacementMixin",
+    "MimicEntityMixin",
+    "LootChestMimicMixin",
+    "MimicPeacefulMixin",
+    "MimicPeacefulDamageMixin"
   ],
   "injectors": {
     "defaultRequire": 1

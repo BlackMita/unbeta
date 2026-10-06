@@ -61,6 +61,7 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.creative.CreativeTrims.register();
         net.unbeta.content.burntchest.BurntChests.register();
         net.unbeta.content.lockey.CarryOnCompat.register();
+        net.unbeta.content.mimic.MimicChests.register();
         LOG.info("Registered Unbeta torches.");
 
         // Glowsand: luminous gravity-affected block. Smelts to glowstone.
