@@ -8,4 +8,8 @@ dependencies {
     // The `namedElements` configuration is REQUIRED. A plain project(':core')
     // dependency will not be remapped by Loom and will fail at runtime.
     implementation project(path: ':core', configuration: 'namedElements')
+
+    // WTHIT plugin (mimic disguise). Compile-only: players supply WTHIT themselves.
+    // The jar is a local copy from the mods folder, kept out of git (content/libs/).
+    modCompileOnly files('libs/wthit-fabric-8.16.0.jar')
 }

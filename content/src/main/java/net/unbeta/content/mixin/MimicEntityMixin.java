@@ -118,4 +118,16 @@ public abstract class MimicEntityMixin implements MimicAccess {
     private void unbeta_lootAlreadyInside(CallbackInfo ci) {
         if (((Entity) (Object) this).getCommandTags().contains(MimicLocks.ROLLED) && !MimicLocks.capturing()) ci.cancel();
     }
+
+    /**
+     * A disguised mimic now and then breaks character with one of two idle tricks, picked by a
+     * coin flip: ACTION1 lifts the lid (Chest_Top) and shows the tongue; ACTION2 only shivers
+     * the body. A LOCKED mimic can't open, so for it the coin always picks the shiver.
+     */
+    @org.spongepowered.asm.mixin.injection.Redirect(method = "tickDisguised",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/class_5819;method_43056()Z"), remap = false)
+    private boolean unbeta_lockedNeverPeeks(net.minecraft.util.math.random.Random random) {
+        if (MimicLocks.lockOf((Entity) (Object) this) != null) return false; // false = ACTION2, the shiver
+        return random.nextBoolean();
+    }
 }

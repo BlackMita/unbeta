@@ -1,0 +1,12 @@
+{
+  "unbeta-content:mimic_disguise": {
+    "entrypoints": {
+      "common": "net.unbeta.content.compat.wthit.MimicWthitCommon",
+      "client": "net.unbeta.content.compat.wthit.MimicWthitClient"
+    },
+    "side": "*",
+    "required": [
+      "bettermimic"
+    ]
+  }
+}

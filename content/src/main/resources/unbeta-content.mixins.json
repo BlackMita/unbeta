@@ -97,6 +97,7 @@
     "SulliedSporesMixin",
     "SulliedTintMixin",
     "OffhandAfterEatingMixin",
-    "BurntChestTextureMixin"
+    "BurntChestTextureMixin",
+    "WthitMimicAttributesMixin"
   ]
 }
