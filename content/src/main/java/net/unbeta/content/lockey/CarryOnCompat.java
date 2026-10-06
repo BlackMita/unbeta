@@ -29,7 +29,7 @@ public final class CarryOnCompat {
     public static final String LOCK_KEY = "UnbetaLockey";
 
     private static final boolean LOADED = FabricLoader.getInstance().isModLoaded("carryon");
-    private static Method getCarryData, getNbt, isKeyPressed, tryPickUpBlock;
+    private static Method getCarryData, getNbt, isKeyPressed, tryPickUpBlock, tryPickupEntity;
     private static boolean broken;
 
         /** True while Carry On is deciding whether a pickup is allowed (it asks via the block-break event). */
@@ -78,6 +78,8 @@ public final class CarryOnCompat {
             isKeyPressed = data.getMethod("isKeyPressed");
             tryPickUpBlock = pickup.getMethod("tryPickUpBlock",
                     ServerPlayerEntity.class, BlockPos.class, World.class, BiFunction.class);
+            tryPickupEntity = pickup.getMethod("tryPickupEntity",
+                    ServerPlayerEntity.class, net.minecraft.entity.Entity.class, java.util.function.Function.class);
             return true;
         } catch (Throwable t) {
             broken = true;
@@ -104,6 +106,20 @@ public final class CarryOnCompat {
         }
     }
 
+        /** Carry On's pick-up gesture on a locked mimic: hand it to Carry On directly. True if picked up. */
+    public static boolean tryCarryEntity(PlayerEntity player, net.minecraft.entity.Entity entity) {
+        if (!(player instanceof ServerPlayerEntity sp) || !ready()) return false;
+        if (!sp.getMainHandStack().isEmpty() || !sp.getOffHandStack().isEmpty()) return false;
+        try {
+            Object data = getCarryData.invoke(null, sp);
+            if (!(Boolean) isKeyPressed.invoke(data)) return false;
+            java.util.function.Function<net.minecraft.entity.Entity, Boolean> allow = e -> Boolean.TRUE;
+            return (Boolean) tryPickupEntity.invoke(null, sp, entity, allow);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** The online player currently carrying the chest locked by this key, or null. */
     public static PlayerEntity carrierOf(MinecraftServer server, UUID lockId) {
         if (server == null || lockId == null || !ready()) return null;
@@ -112,6 +128,7 @@ public final class CarryOnCompat {
                 NbtCompound nbt = (NbtCompound) getNbt.invoke(getCarryData.invoke(null, p));
                 NbtCompound tile = nbt.getCompound("tile");
                 if (tile.containsUuid(LOCK_KEY) && lockId.equals(tile.getUuid(LOCK_KEY))) return p;
+                if (net.unbeta.content.mimic.MimicLocks.tagsContain(nbt.getCompound("entity"), lockId)) return p;
             } catch (Throwable ignored) {
             }
         }

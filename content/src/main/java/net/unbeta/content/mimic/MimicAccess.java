@@ -8,4 +8,6 @@ import java.util.List;
 public interface MimicAccess {
     /** The mimic's own contents - what it has swallowed, and drops when it dies. */
     List<ItemStack> unbeta_contents();
+
+    boolean unbeta_isDisguised();
 }

@@ -47,6 +47,9 @@ public final class LockeyLocator {
             if (e instanceof ItemEntity ie) {
                 if (matches(ie.getStack(), lockeyId)) return ie.getBlockPos();
             } else if (e instanceof LivingEntity le) {
+                if (e instanceof net.unbeta.content.mimic.MimicAccess mimic) {
+                    for (ItemStack s : mimic.unbeta_contents()) if (matches(s, lockeyId)) return e.getBlockPos();
+                }
                 for (net.minecraft.entity.EquipmentSlot slot
                         : net.minecraft.entity.EquipmentSlot.values()) {
                     if (matches(le.getEquippedStack(slot), lockeyId)) return le.getBlockPos();

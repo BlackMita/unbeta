@@ -124,4 +124,15 @@ public class UnmasonEntity extends ZombieEntity {
                                     net.minecraft.util.math.random.Random random) {
         return true;
     }
+
+    /**
+     * Unmasons are the stronghold's caretakers, not monsters: Peaceful doesn't delete them.
+     * (Otherwise a breach in Peaceful raises a mason, Peaceful removes it a tick later, and the
+     * repair system raises another every second, forever.) Harmless there anyway - Peaceful
+     * zeroes monster damage to players. Their ordinary despawning is unchanged.
+     */
+    @Override
+    protected boolean isDisallowedInPeaceful() {
+        return false;
+    }
 }

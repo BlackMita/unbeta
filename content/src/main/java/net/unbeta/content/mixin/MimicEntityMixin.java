@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
 import net.unbeta.content.mimic.MimicAccess;
 import net.unbeta.content.mimic.MimicChests;
+import net.unbeta.content.mimic.MimicLocks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -68,5 +69,53 @@ public abstract class MimicEntityMixin implements MimicAccess {
         World world = self.getWorld();
         if (world.isClient || self.age % 20 != 0 || !this.isDisguised()) return;
         this.setMimicType(MimicChests.isDark(world, self.getBlockPos()) ? (byte) 0 : (byte) 1); // 0 aggressive, 1 passive
+    }
+
+    @Override
+    public boolean unbeta_isDisguised() {
+        return this.isDisguised();
+    }
+
+    // ---- locked: it is a chest. It never wakes, sneaks, hops or eats.
+
+    @Inject(method = "activate", at = @At("HEAD"), cancellable = true, remap = false)
+    private void unbeta_lockedStaysShut(net.minecraft.entity.player.PlayerEntity player, CallbackInfo ci) {
+        if (MimicLocks.lockOf((Entity) (Object) this) != null) ci.cancel();
+    }
+
+    @Inject(method = "tickSneak", at = @At("HEAD"), cancellable = true, remap = false)
+    private void unbeta_lockedNoSneak(CallbackInfo ci) {
+        if (MimicLocks.lockOf((Entity) (Object) this) != null) ci.cancel();
+    }
+
+    @Inject(method = "tryJumpToChest", at = @At("HEAD"), cancellable = true, remap = false)
+    private void unbeta_lockedNoHop(CallbackInfo ci) {
+        if (MimicLocks.lockOf((Entity) (Object) this) != null) ci.cancel();
+    }
+
+    @Inject(method = "tickCollectNearbyItems", at = @At("HEAD"), cancellable = true, remap = false)
+    private void unbeta_lockedNoEating(CallbackInfo ci) {
+        if (MimicLocks.lockOf((Entity) (Object) this) != null) ci.cancel();
+    }
+
+    /** Unkillable while locked (only /kill and the void get through); a player's strike forces out one unit. */
+    @Inject(method = "method_5643", at = @At("HEAD"), cancellable = true, remap = false)
+    private void unbeta_lockedIsAChest(net.minecraft.entity.damage.DamageSource source, float amount,
+                                       org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
+        Entity self = (Entity) (Object) this;
+        if (self.getWorld().isClient || MimicLocks.lockOf(self) == null) return;
+        if (source.isOf(net.minecraft.entity.damage.DamageTypes.OUT_OF_WORLD)
+                || source.isOf(net.minecraft.entity.damage.DamageTypes.GENERIC_KILL)) return;
+        cir.setReturnValue(false);
+        if (source.getAttacker() instanceof net.minecraft.entity.player.PlayerEntity) {
+            MimicLocks.strike((net.minecraft.server.world.ServerWorld) self.getWorld(),
+                    (net.minecraft.entity.LivingEntity) self, this);
+        }
+    }
+
+    /** Its loot already went inside when it was locked - don't roll it again on death. */
+    @Inject(method = "dropMimicLoot", at = @At("HEAD"), cancellable = true, remap = false)
+    private void unbeta_lootAlreadyInside(CallbackInfo ci) {
+        if (((Entity) (Object) this).getCommandTags().contains(MimicLocks.ROLLED) && !MimicLocks.capturing()) ci.cancel();
     }
 }

@@ -81,7 +81,11 @@
     "MimicEntityMixin",
     "LootChestMimicMixin",
     "MimicPeacefulMixin",
-    "MimicPeacefulDamageMixin"
+    "MimicPeacefulDamageMixin",
+    "LivingEntityLootInvoker",
+    "MimicDropCaptureMixin",
+    "MimicRolledLootMixin",
+    "CarryOnLockedMimicMixin"
   ],
   "injectors": {
     "defaultRequire": 1

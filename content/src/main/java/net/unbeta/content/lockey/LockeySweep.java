@@ -40,6 +40,9 @@ public final class LockeySweep {
             if (e instanceof ItemEntity ie) {
                 record(world, ie.getStack(), ie.getBlockPos());
             } else if (e instanceof LivingEntity le && !(le instanceof PlayerEntity)) {
+                if (e instanceof net.unbeta.content.mimic.MimicAccess mimic) {
+                    for (ItemStack s : mimic.unbeta_contents()) record(world, s, e.getBlockPos());
+                }
                 for (net.minecraft.entity.EquipmentSlot slot
                         : net.minecraft.entity.EquipmentSlot.values()) {
                     record(world, le.getEquippedStack(slot), le.getBlockPos());

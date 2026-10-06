@@ -40,6 +40,14 @@ public final class LockeyChestFinder {
             }
         }
 
+        // A locked mimic, wherever it has wandered (or been carried and set down).
+        net.minecraft.entity.Entity mimic = net.unbeta.content.mimic.MimicLocks.findLoaded(world, lockId);
+        if (mimic != null) {
+            BlockPos pos = mimic.getBlockPos();
+            if (!pos.equals(LockeyItem.getBoundChest(key))) LockeyItem.bind(key, pos);
+            return new Where(pos, false);
+        }
+
         PlayerEntity carrier = CarryOnCompat.carrierOf(world.getServer(), lockId);
         if (carrier != null) return new Where(carrier.getBlockPos(), true);
 
