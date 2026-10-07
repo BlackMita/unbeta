@@ -6,7 +6,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/hub",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     }

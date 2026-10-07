@@ -6,7 +6,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/workhouse",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     },
@@ -15,7 +15,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/watchtower",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     },
@@ -24,7 +24,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/chimney",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     }

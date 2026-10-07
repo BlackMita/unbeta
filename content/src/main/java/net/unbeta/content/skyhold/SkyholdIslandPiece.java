@@ -2,6 +2,9 @@ package net.unbeta.content.skyhold;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.VineBlock;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.util.math.Direction;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructurePiece;
@@ -113,6 +116,102 @@ public final class SkyholdIslandPiece extends StructurePiece {
                 }
             }
         }
+        hangVines(world, chunkBox);
+        addRuins(world, chunkBox);
+    }
+
+    /** The grass height of this island at (x, z), or MIN_VALUE if (x, z) is off the island. Same maths as generate. */
+    private int topAt(int x, int z) {
+        double dx = x - cx, dz = z - cz;
+        double dist = Math.sqrt(dx * dx + dz * dz);
+        double edge = radius * (0.75 + 0.5 * noise(x, z, 9, seed));
+        if (dist > edge) return Integer.MIN_VALUE;
+        double t = dist / edge;
+        return topY + (int) Math.round((noise(x, z, 12, seed + 1) - 0.5) * 3.0) - (t > 0.85 ? 1 : 0);
+    }
+
+    private static boolean isRock(BlockState s) {
+        return s.isOf(Blocks.STONE) || s.isOf(Blocks.COBBLESTONE) || s.isOf(Blocks.MOSSY_COBBLESTONE)
+                || s.isOf(Blocks.COAL_ORE) || s.isOf(Blocks.IRON_ORE) || s.isOf(Blocks.DIRT);
+    }
+
+    /** Vines on the island's rock sides and underside, hanging 2-7 blocks. */
+    private void hangVines(StructureWorldAccess world, BlockBox chunkBox) {
+        int minX = Math.max(boundingBox.getMinX(), chunkBox.getMinX()), maxX = Math.min(boundingBox.getMaxX(), chunkBox.getMaxX());
+        int minZ = Math.max(boundingBox.getMinZ(), chunkBox.getMinZ()), maxZ = Math.min(boundingBox.getMaxZ(), chunkBox.getMaxZ());
+        int minY = Math.max(boundingBox.getMinY(), chunkBox.getMinY()), maxY = Math.min(topY - 4, chunkBox.getMaxY());
+        BlockPos.Mutable p = new BlockPos.Mutable(), n = new BlockPos.Mutable();
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int y = minY; y <= maxY; y++) {
+                    if (hash(x, y, z, seed + 5) >= 0.04) continue;
+                    if (!world.getBlockState(p.set(x, y, z)).isAir()) continue;
+                    for (Direction d : Direction.Type.HORIZONTAL) {
+                        n.set(x + d.getOffsetX(), y, z + d.getOffsetZ());
+                        if (!chunkBox.contains(n) || !isRock(world.getBlockState(n))) continue;
+                        BooleanProperty face = VineBlock.getFacingProperty(d);
+                        int len = 2 + (int) (hash(x, y, z, seed + 6) * 6);
+                        for (int k = 0; k < len; k++) {
+                            p.set(x, y - k, z);
+                            if (!chunkBox.contains(p) || !world.getBlockState(p).isAir()) break;
+                            world.setBlockState(p, Blocks.VINE.getDefaultState().with(face, true), 2);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /** Brick-and-copper ruins on the island top: walls, banded pillars, fallen chimneys, rubble. */
+    private void addRuins(StructureWorldAccess world, BlockBox box) {
+        int count = Math.max(1, radius / 6);
+        for (int i = 0; i < count; i++) {
+            double a = hash(i, 1, 0, seed + 7) * Math.PI * 2;
+            double d = Math.sqrt(hash(i, 2, 0, seed + 7)) * radius * 0.85;
+            int rx = cx + (int) Math.round(Math.cos(a) * d), rz = cz + (int) Math.round(Math.sin(a) * d);
+            boolean alongX = hash(i, 4, 0, seed + 7) < 0.5;
+            int ax = alongX ? 1 : 0, az = alongX ? 0 : 1;
+            switch ((int) (hash(i, 3, 0, seed + 7) * 4)) {
+                case 0 -> {   // broken wall
+                    int len = 3 + (int) (hash(i, 5, 0, seed + 7) * 4);
+                    for (int j = 0; j < len; j++) {
+                        int h = 1 + (int) (hash(i, j, 6, seed + 7) * ((j == 0 || j == len - 1) ? 2 : 4));
+                        for (int k = 0; k < h; k++) ruin(world, box, rx + j * ax, k, rz + j * az, mix(i, j, k));
+                    }
+                }
+                case 1 -> {   // pillar with a copper band
+                    int h = 3 + (int) (hash(i, 5, 0, seed + 7) * 4);
+                    for (int k = 0; k < h; k++)
+                        ruin(world, box, rx, k, rz, k == 2 ? Blocks.COPPER_BLOCK.getDefaultState() : Blocks.BRICKS.getDefaultState());
+                }
+                case 2 -> {   // fallen chimney
+                    int len = 4 + (int) (hash(i, 5, 0, seed + 7) * 3);
+                    for (int j = 0; j < len; j++)
+                        ruin(world, box, rx + j * ax, 0, rz + j * az,
+                             j == len - 1 ? Blocks.COPPER_BLOCK.getDefaultState() : Blocks.BRICKS.getDefaultState());
+                }
+                default -> {  // rubble
+                    for (int j = 0; j < 5; j++) {
+                        int ox = (int) (hash(i, j, 7, seed + 7) * 7) - 3, oz = (int) (hash(i, j, 8, seed + 7) * 7) - 3;
+                        ruin(world, box, rx + ox, 0, rz + oz, mix(i, j, 9));
+                    }
+                }
+            }
+        }
+    }
+
+    private BlockState mix(int i, int j, int k) {
+        double h = hash(i, j, k, seed + 8);
+        return h < 0.6 ? Blocks.BRICKS.getDefaultState() : h < 0.85 ? COBBLE : MOSSY;
+    }
+
+    /** A ruin block h above the grass at (x, z), if (x, z) is on the island and in this chunk. */
+    private void ruin(StructureWorldAccess world, BlockBox box, int x, int h, int z, BlockState state) {
+        int top = topAt(x, z);
+        if (top == Integer.MIN_VALUE) return;
+        BlockPos p = new BlockPos(x, top + 1 + h, z);
+        if (box.contains(p)) world.setBlockState(p, state, 2);
     }
 
     /** Smooth 0..1 value noise on a grid of the given cell size. */

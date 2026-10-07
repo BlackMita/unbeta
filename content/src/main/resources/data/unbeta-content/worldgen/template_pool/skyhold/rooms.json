@@ -6,7 +6,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/workshop",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     },
@@ -15,7 +15,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/library",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     },
@@ -24,7 +24,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/storeroom",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     },
@@ -33,7 +33,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "location": "unbeta-content:skyhold/junction",
-        "processors": "minecraft:empty",
+        "processors": "unbeta-content:skyhold_rooms",
         "projection": "rigid"
       }
     }
