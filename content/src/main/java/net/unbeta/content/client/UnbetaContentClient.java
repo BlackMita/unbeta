@@ -14,6 +14,16 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.unbeta.content.client.TooltipTrims.register();
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(
+                net.unbeta.content.client.goldreath.GoldreathModel.LAYER,
+                net.unbeta.content.client.goldreath.GoldreathModel::getTexturedModelData);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.unbeta.content.goldreath.GoldreathRegistry.GOLDREATH,
+                net.unbeta.content.client.goldreath.GoldreathRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.unbeta.content.goldreath.GoldreathRegistry.BULLET,
+                net.unbeta.content.client.goldreath.GoldreathBulletRenderer::new);
         net.unbeta.content.client.skyhold.SkyholdFogClient.register();
         net.unbeta.content.client.eating.EatingGuard.register();
         net.unbeta.content.client.burntchest.BurntChestsClient.register();

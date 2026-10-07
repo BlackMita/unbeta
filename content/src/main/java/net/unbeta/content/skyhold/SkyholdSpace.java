@@ -24,4 +24,13 @@ public final class SkyholdSpace {
         WorldChunk chunk = world.getChunkManager().getWorldChunk(pos.getX() >> 4, pos.getZ() >> 4);
         return chunk != null && !chunk.getStructureReferences(skyhold).isEmpty();
     }
+
+    /** Within a Skyhold's footprint at any height (where its fog begins). Loaded chunks only. */
+    public static boolean inFootprint(ServerWorld world, BlockPos pos) {
+        if (world.getRegistryKey() != World.OVERWORLD) return false;
+        Structure skyhold = world.getRegistryManager().get(RegistryKeys.STRUCTURE).get(Skyhold.ID);
+        if (skyhold == null) return false;
+        WorldChunk chunk = world.getChunkManager().getWorldChunk(pos.getX() >> 4, pos.getZ() >> 4);
+        return chunk != null && !chunk.getStructureReferences(skyhold).isEmpty();
+    }
 }

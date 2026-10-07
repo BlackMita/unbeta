@@ -87,7 +87,9 @@
     "MimicRolledLootMixin",
     "CarryOnLockedMimicMixin",
     "CyanHookshotRangeMixin",
-    "CyanHookshotNameMixin"
+    "CyanHookshotNameMixin",
+    "ShulkerBulletAccessor",
+    "GoldreathShotMixin"
   ],
   "injectors": {
     "defaultRequire": 1

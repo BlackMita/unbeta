@@ -53,5 +53,7 @@
   "item.minecraft.milk_bucket": "Iron Milk Bucket",
   "block.unbeta-content.burnt_chest": "Burnt Chest",
   "container.unbeta-content.burnt_chest": "Burnt Chest",
-  "item.unbeta-content.hookshot": "Hookshot"
+  "item.unbeta-content.hookshot": "Hookshot",
+  "entity.unbeta-content.goldreath": "Goldreath",
+  "entity.unbeta-content.goldreath_bullet": "Goldreath Bolt"
 }
