@@ -10,7 +10,8 @@ import net.minecraft.sound.SoundEvents;
 
 /**
  * A player whose head is fully underwater has every lit Unbeta torch they carry put out -
- * hands, hotbar and inventory alike - with a single hiss.
+ * hands, hotbar and inventory alike - with a single hiss. Dropped lit torches touching
+ * any water go out too.
  */
 public final class TorchDousing {
 
@@ -22,6 +23,17 @@ public final class TorchDousing {
 
     private static void tick(ServerWorld world) {
         if (world.getTime() % 5 != 0) return;
+
+        // Dropped lit torches touching any water go out (same count), with a hiss.
+        for (net.minecraft.entity.ItemEntity item : world.getEntitiesByType(
+                net.minecraft.entity.EntityType.ITEM,
+                e -> e.isTouchingWater() && TorchItems.isLitTorch(e.getStack()))) {
+            ItemStack unlit = TorchItems.createUnlit();
+            unlit.setCount(item.getStack().getCount());
+            item.setStack(unlit);
+            world.playSound(null, item.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH,
+                    SoundCategory.BLOCKS, 0.6F, 1.4F);
+        }
         for (ServerPlayerEntity player : world.getPlayers()) {
             if (!player.isSubmergedInWater()) continue;
             PlayerInventory inv = player.getInventory();
