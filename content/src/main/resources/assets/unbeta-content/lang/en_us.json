@@ -52,5 +52,6 @@
   "item.minecraft.lava_bucket": "Iron Lava Bucket",
   "item.minecraft.milk_bucket": "Iron Milk Bucket",
   "block.unbeta-content.burnt_chest": "Burnt Chest",
-  "container.unbeta-content.burnt_chest": "Burnt Chest"
+  "container.unbeta-content.burnt_chest": "Burnt Chest",
+  "item.unbeta-content.hookshot": "Hookshot"
 }

@@ -122,6 +122,8 @@ public class UnmasonEntity extends ZombieEntity {
     public static boolean canSpawn(EntityType<UnmasonEntity> type, ServerWorldAccess world,
                                     SpawnReason reason, BlockPos pos,
                                     net.minecraft.util.math.random.Random random) {
+        // Never an Unmason inside a Skyhold - a zombie there stays a zombie.
+        if (net.unbeta.content.skyhold.SkyholdSpace.isInside(world.toServerWorld(), pos)) return false;
         return true;
     }
 

@@ -85,7 +85,9 @@
     "LivingEntityLootInvoker",
     "MimicDropCaptureMixin",
     "MimicRolledLootMixin",
-    "CarryOnLockedMimicMixin"
+    "CarryOnLockedMimicMixin",
+    "CyanHookshotRangeMixin",
+    "CyanHookshotNameMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -98,6 +100,7 @@
     "SulliedTintMixin",
     "OffhandAfterEatingMixin",
     "BurntChestTextureMixin",
-    "WthitMimicAttributesMixin"
+    "WthitMimicAttributesMixin",
+    "SkyholdFogMixin"
   ]
 }

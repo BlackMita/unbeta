@@ -14,6 +14,7 @@ public final class UnbetaContentClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        net.unbeta.content.client.skyhold.SkyholdFogClient.register();
         net.unbeta.content.client.eating.EatingGuard.register();
         net.unbeta.content.client.burntchest.BurntChestsClient.register();
         net.unbeta.content.bucket.BucketBurn.clientClock = () -> {

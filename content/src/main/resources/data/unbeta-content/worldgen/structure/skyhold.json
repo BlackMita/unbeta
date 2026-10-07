@@ -1,0 +1,7 @@
+{
+  "type": "unbeta-content:skyhold",
+  "biomes": "#unbeta-content:has_structure/skyhold",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none"
+}

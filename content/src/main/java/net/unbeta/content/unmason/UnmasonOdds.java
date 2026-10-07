@@ -27,6 +27,8 @@ public final class UnmasonOdds {
 
     /** True if a mob spawning at this position should be an Unmason rather than a zombie. */
     public static boolean rollUnmason(ServerWorld world, BlockPos pos) {
+        // Never an Unmason inside a Skyhold - a zombie there stays a zombie.
+        if (net.unbeta.content.skyhold.SkyholdSpace.isInside(world, pos)) return false;
         long now = world.getTime();
         if (!STRONGHOLD_CACHE.containsKey(CACHE_KEY) || now - LAST_CACHE_TIME[0] > 6000) {
             BlockPos found = world.locateStructure(StructureTags.EYE_OF_ENDER_LOCATED, pos, 100, false);
