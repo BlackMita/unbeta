@@ -4,7 +4,13 @@ import com.mojang.serialization.Codec;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.loot.LootTables;
+import net.minecraft.structure.PoolStructurePiece;
 import net.minecraft.structure.StructurePiece;
+import net.minecraft.structure.StructurePlacementData;
+import net.minecraft.structure.StructureTemplate;
+import net.minecraft.util.BlockRotation;
+import net.minecraft.util.math.Direction;
 import net.minecraft.structure.StructurePiecesCollector;
 import net.minecraft.structure.pool.StructurePool;
 import net.minecraft.structure.pool.StructurePoolBasedGenerator;
@@ -67,6 +73,7 @@ public final class SkyholdStructure extends Structure {
         int floor = mainTop - HUB_BELOW_GRASS;
         List<StructurePiece> rooms = new ArrayList<>(
                 jigsaw(context, START_POOL, new BlockPos(cx - 10, floor, cz - 10), WORKSHOP_DEPTH, WORKSHOP_REACH));
+        StructurePiece hub = rooms.isEmpty() ? null : rooms.get(0);
 
         // The annex: on the far side from wherever the main workshop ended up, same floor level.
         double sx = 0, sz = 0;
@@ -85,12 +92,45 @@ public final class SkyholdStructure extends Structure {
             for (StructurePiece p : annex) if (!overlaps(p, main)) rooms.add(p);
         }
 
+        // Loot chests where the rooms landed, and the End Gate room under the hub.
+        List<StructurePiece> extras = new ArrayList<>();
+        addChests(rooms, extras);
+        if (hub != null) {
+            BlockBox hb = hub.getBoundingBox();
+            extras.add(new SkyholdVaultPiece(hb.getCenter().getX(), hb.getCenter().getZ(), hb.getMinY()));
+        }
+
         // The biome check reads this position; the islands themselves float far above it.
         BlockPos at = new BlockPos(cx, context.chunkGenerator().getSeaLevel(), cz);
         return Optional.of(new Structure.StructurePosition(at, collector -> {
             islands.forEach(collector::addPiece);   // rock first...
             rooms.forEach(collector::addPiece);     // ...then hollow the rooms
+            extras.forEach(collector::addPiece);    // ...then chests and the vault room
         }));
+    }
+
+    /** Chest spots in each room template (template coordinates), turned to wherever the room landed. */
+    private static void addChests(List<StructurePiece> rooms, List<StructurePiece> out) {
+        for (StructurePiece p : rooms) {
+            if (!(p instanceof PoolStructurePiece pool)) continue;
+            String name = pool.getPoolElement().toString();
+            if (name.contains("skyhold/storeroom")) {
+                chest(out, pool, 2, 1, 7, Direction.NORTH, LootTables.STRONGHOLD_CROSSING_CHEST);
+                chest(out, pool, 6, 1, 7, Direction.NORTH, LootTables.STRONGHOLD_CROSSING_CHEST);
+            } else if (name.contains("skyhold/workshop")) {
+                chest(out, pool, 11, 1, 10, Direction.WEST, LootTables.STRONGHOLD_CORRIDOR_CHEST);
+            } else if (name.contains("skyhold/library")) {
+                chest(out, pool, 3, 1, 9, Direction.NORTH, LootTables.STRONGHOLD_LIBRARY_CHEST);
+            }
+        }
+    }
+
+    private static void chest(List<StructurePiece> out, PoolStructurePiece piece, int x, int y, int z,
+                              Direction facing, net.minecraft.util.Identifier loot) {
+        BlockRotation rotation = piece.getRotation();
+        BlockPos at = piece.getPos().add(StructureTemplate.transform(
+                new StructurePlacementData().setRotation(rotation), new BlockPos(x, y, z)));
+        out.add(new SkyholdChestPiece(at, rotation.rotate(facing), loot));
     }
 
     private static boolean overlaps(StructurePiece piece, List<StructurePiece> others) {

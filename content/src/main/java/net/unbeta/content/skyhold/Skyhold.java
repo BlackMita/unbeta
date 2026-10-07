@@ -17,6 +17,8 @@ public final class Skyhold {
 
     public static StructureType<SkyholdStructure> TYPE;
     public static StructurePieceType ISLAND;
+    public static StructurePieceType CHEST;
+    public static StructurePieceType VAULT;
 
     private Skyhold() {}
 
@@ -25,5 +27,9 @@ public final class Skyhold {
         TYPE = Registry.register(Registries.STRUCTURE_TYPE, ID, type);
         StructurePieceType.Simple island = SkyholdIslandPiece::new;
         ISLAND = Registry.register(Registries.STRUCTURE_PIECE, new Identifier("unbeta-content", "skyhold_island"), island);
+        StructurePieceType.Simple chest = SkyholdChestPiece::new;
+        CHEST = Registry.register(Registries.STRUCTURE_PIECE, new Identifier("unbeta-content", "skyhold_chest"), chest);
+        StructurePieceType.Simple vault = SkyholdVaultPiece::new;
+        VAULT = Registry.register(Registries.STRUCTURE_PIECE, new Identifier("unbeta-content", "skyhold_vault"), vault);
     }
 }

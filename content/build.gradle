@@ -1,3 +1,7 @@
+repositories {
+    maven { name = 'WTHIT'; url = 'https://maven4.bai.lol' }
+}
+
 base { archivesName = "${project.archives_base_name}-content" }
 
 loom {
@@ -10,6 +14,6 @@ dependencies {
     implementation project(path: ':core', configuration: 'namedElements')
 
     // WTHIT plugin (mimic disguise). Compile-only: players supply WTHIT themselves.
-    // The jar is a local copy from the mods folder, kept out of git (content/libs/).
-    modCompileOnly files('libs/wthit-fabric-8.16.0.jar')
+    // Downloaded from WTHIT's official maven, so GitHub's build can get it too.
+    modCompileOnly "mcp.mobius.waila:wthit-api:fabric-8.16.0"
 }
