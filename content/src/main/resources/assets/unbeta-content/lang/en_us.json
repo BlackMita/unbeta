@@ -55,5 +55,10 @@
   "container.unbeta-content.burnt_chest": "Burnt Chest",
   "item.unbeta-content.hookshot": "Hookshot",
   "entity.unbeta-content.goldreath": "Goldreath",
-  "entity.unbeta-content.goldreath_bullet": "Goldreath Bolt"
+  "entity.unbeta-content.goldreath_bullet": "Goldreath Bolt",
+  "item.unbeta-content.ice_bucket": "Ice Bucket",
+  "item.unbeta-content.ice_water_bucket": "Ice Water Bucket",
+  "item.unbeta-content.ice_lava_bucket": "Ice Lava Bucket",
+  "item.unbeta-content.ice_milk_bucket": "Ice Milk Bucket",
+  "item.unbeta-content.ice_cream": "Ice Cream"
 }

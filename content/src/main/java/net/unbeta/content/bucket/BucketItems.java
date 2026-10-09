@@ -62,5 +62,7 @@ public final class BucketItems {
         // Wood milk sits with the drinks as well, like vanilla milk.
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FOOD_AND_DRINK).register(entries -> entries.add(WOOD_MILK_BUCKET));
         TempFluids.register();
+        IceBuckets.register();
+        BucketExpiry.register();
     }
 }

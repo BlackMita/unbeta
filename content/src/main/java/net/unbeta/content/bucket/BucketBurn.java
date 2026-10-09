@@ -19,7 +19,7 @@ import java.util.function.LongSupplier;
  * Lava eats through wood and copper buckets. A lava-filled one stores the game time it
  * burns out at; the bar reads that against the clock, so it drains smoothly with no
  * per-second item updates. Checked every tick in an inventory and on the ground; in a
- * container the timer is frozen, and the bucket burns out the moment it's taken out.
+ * container (see BucketExpiry) an expired bucket simply vanishes.
  *
  * <p>Burning out destroys the bucket and spills its lava where it was - at the holder's
  * feet. Wood spills temporary lava, copper spills a real source.
@@ -63,6 +63,7 @@ public final class BucketBurn {
         boolean wood = stack.isOf(BucketItems.WOOD_LAVA_BUCKET);
         stack.setCount(0); // the bucket is gone, wherever it was
         world.playSound(null, at, SoundEvents.ENTITY_GENERIC_BURN, SoundCategory.PLAYERS, 1.0f, 0.8f);
+        world.playSound(null, at, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.7f, 1.0f);
         BlockPos spot = TempFluids.canHold(world.getBlockState(at)) ? at
                 : TempFluids.canHold(world.getBlockState(at.up())) ? at.up() : null;
         if (spot == null) return;

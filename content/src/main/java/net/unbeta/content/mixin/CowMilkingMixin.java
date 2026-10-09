@@ -24,10 +24,13 @@ public abstract class CowMilkingMixin {
         if (self instanceof net.unbeta.content.corruption.CorruptedAnimal || self.isBaby()) return;
         ItemStack held = player.getStackInHand(hand);
         Item milk = held.isOf(BucketItems.WOOD_BUCKET) ? BucketItems.WOOD_MILK_BUCKET
-                : held.isOf(BucketItems.COPPER_BUCKET) ? BucketItems.COPPER_MILK_BUCKET : null;
+                : held.isOf(BucketItems.COPPER_BUCKET) ? BucketItems.COPPER_MILK_BUCKET
+                : held.isOf(net.unbeta.content.bucket.IceBuckets.ICE_BUCKET) ? net.unbeta.content.bucket.IceBuckets.ICE_MILK_BUCKET : null;
         if (milk == null) return;
         player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0f, 1.0f);
-        player.setStackInHand(hand, ItemUsage.exchangeStack(held, player, new ItemStack(milk)));
+        ItemStack filled = new ItemStack(milk);
+        if (milk == net.unbeta.content.bucket.IceBuckets.ICE_MILK_BUCKET) net.unbeta.content.bucket.IceFreeze.start(filled, self.getWorld());
+        player.setStackInHand(hand, ItemUsage.exchangeStack(held, player, filled));
         cir.setReturnValue(ActionResult.success(self.getWorld().isClient));
     }
 }

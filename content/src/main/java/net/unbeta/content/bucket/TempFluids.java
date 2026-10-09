@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Temporary source blocks from wood buckets. A temporary source lives just long enough for
- * its flow to reach one block beyond it, then vanishes and the flow recedes. No bucket can
+ * Wood and ice bucket pours: puddles of flowing fluid that drain by themselves (never a source).
+ * The old timed-source bookkeeping below only cleans up sources left by older versions. No bucket can
  * ever pick one up (TempFluidDrainMixin). All are removed when the world closes, so none
  * can be saved as a permanent source.
  */
@@ -61,13 +61,25 @@ public final class TempFluids {
         return s.isReplaceable();
     }
 
+    /**
+     * A wood or ice bucket pour: a small puddle of FLOWING fluid - full height where it lands,
+     * lower on each open side. With no source behind it, it drains away by itself, and since it
+     * is never a source, no number of pours can ever stack into a permanent one.
+     */
     public static void place(ServerWorld world, BlockPos pos, Fluid fluid) {
+        net.minecraft.fluid.FlowableFluid flowing = fluid == Fluids.LAVA ? Fluids.FLOWING_LAVA : Fluids.FLOWING_WATER;
+        splash(world, pos, flowing.getFlowing(7, false).getBlockState());
+        for (net.minecraft.util.math.Direction d : net.minecraft.util.math.Direction.Type.HORIZONTAL) {
+            BlockPos n = pos.offset(d);
+            BlockState at = world.getBlockState(n);
+            if (canHold(at) && at.getFluidState().isEmpty()) splash(world, n, flowing.getFlowing(6, false).getBlockState());
+        }
+    }
+
+    private static void splash(ServerWorld world, BlockPos pos, BlockState state) {
         BlockState at = world.getBlockState(pos);
         if (!at.isAir() && at.getFluidState().isEmpty()) world.breakBlock(pos, true);
-        BlockState source = fluid == Fluids.LAVA ? Blocks.LAVA.getDefaultState() : Blocks.WATER.getDefaultState();
-        world.setBlockState(pos, source, Block.NOTIFY_ALL);
-        TEMP.computeIfAbsent(world.getRegistryKey(), k -> new ConcurrentHashMap<>())
-                .put(pos.toImmutable(), world.getTime() + (fluid == Fluids.LAVA ? LAVA_TICKS : WATER_TICKS));
+        world.setBlockState(pos, state, Block.NOTIFY_ALL);
     }
 
     public static boolean isTemporary(WorldAccess world, BlockPos pos) {

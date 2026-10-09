@@ -16,10 +16,10 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
-/** Empty wood bucket: fills only from water or lava SOURCE blocks, and never takes them. */
-public class WoodBucketItem extends Item {
+/** Empty Ice Bucket: fills only from water or lava SOURCE blocks, and never takes them. */
+public class IceBucketItem extends Item {
 
-    public WoodBucketItem(Settings settings) {
+    public IceBucketItem(Settings settings) {
         super(settings);
     }
 
@@ -33,15 +33,15 @@ public class WoodBucketItem extends Item {
         ItemStack filled;
         SoundEvent sound;
         if (fluid.isIn(FluidTags.WATER)) {
-            filled = new ItemStack(BucketItems.WOOD_WATER_BUCKET);
+            filled = new ItemStack(IceBuckets.ICE_WATER_BUCKET);
             sound = SoundEvents.ITEM_BUCKET_FILL;
         } else if (fluid.isIn(FluidTags.LAVA)) {
-            filled = new ItemStack(BucketItems.WOOD_LAVA_BUCKET);
-            BucketBurn.start(filled, world, BucketItems.WOOD_LAVA_TICKS);
+            filled = new ItemStack(IceBuckets.ICE_LAVA_BUCKET);
             sound = SoundEvents.ITEM_BUCKET_FILL_LAVA;
         } else {
             return TypedActionResult.pass(stack);
         }
+        IceFreeze.start(filled, world);
         user.playSound(sound, 1.0f, 1.0f);
         user.incrementStat(Stats.USED.getOrCreateStat(this));
         return TypedActionResult.success(ItemUsage.exchangeStack(stack, user, filled), world.isClient());

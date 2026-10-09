@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["I I", " I "],
+  "key": { "I": { "item": "minecraft:ice" } },
+  "result": { "item": "unbeta-content:ice_bucket", "count": 1 }
+}
