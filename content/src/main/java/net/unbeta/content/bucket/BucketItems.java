@@ -37,6 +37,8 @@ public final class BucketItems {
 
     public static void register() {
         WOOD_BUCKET = reg("wood_bucket", new WoodBucketItem(new Item.Settings().maxCount(16)));
+        // An empty wood bucket burns like a wooden tool: 200 ticks, one item smelted (lit furnace only).
+        net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE.add(WOOD_BUCKET, 200);
         WOOD_WATER_BUCKET = reg("wood_water_bucket", new WoodWaterBucketItem(one()));
         WOOD_LAVA_BUCKET = reg("wood_lava_bucket", new WoodLavaBucketItem(one()));
         WOOD_MILK_BUCKET = reg("wood_milk_bucket", new MilkVariantItem(one(), () -> WOOD_BUCKET, false));
