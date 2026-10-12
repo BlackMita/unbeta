@@ -44,6 +44,7 @@ public final class SkyholdStructure extends Structure {
     private static final int ANNEX_REACH = 22;
     private static final int ANNEX_OFFSET = 20;        // blocks from the island centre, away from the main workshop
     private static final int HUB_BELOW_GRASS = 16;
+    private static final int MAIN_ATTEMPTS = 4;        // main workshop growths tried; the fullest, best-surrounded one is kept
 
     public SkyholdStructure(Structure.Config config) {
         super(config);
@@ -69,10 +70,10 @@ public final class SkyholdStructure extends Structure {
         islands.add(new SkyholdIslandPiece(cx, cz, mainTop, mainR, mainDepth, rng.nextLong()));
         addSatellites(islands, rng, cx, cz, mainR, mainTop, mainDepth);
 
-        // The main workshop, grown from the hub.
+        // The main workshop, grown from the hub - which (with the End Gate room under it) is
+        // always moved to the dead centre of the island.
         int floor = mainTop - HUB_BELOW_GRASS;
-        List<StructurePiece> rooms = new ArrayList<>(
-                jigsaw(context, START_POOL, new BlockPos(cx - 10, floor, cz - 10), WORKSHOP_DEPTH, WORKSHOP_REACH));
+        List<StructurePiece> rooms = growMain(context, cx, floor, cz);
         StructurePiece hub = rooms.isEmpty() ? null : rooms.get(0);
 
         // The annex: on the far side from wherever the main workshop ended up, same floor level.
@@ -98,6 +99,8 @@ public final class SkyholdStructure extends Structure {
         if (hub != null) {
             BlockBox hb = hub.getBoundingBox();
             extras.add(new SkyholdVaultPiece(hb.getCenter().getX(), hb.getCenter().getZ(), hb.getMinY()));
+            SkyholdUndercroftPiece undercroft = SkyholdUndercroftPiece.plan(rooms, hub, seed);
+            if (undercroft != null) extras.add(undercroft);   // after the vault room: it opens doorways in it
         }
 
         // The biome check reads this position; the islands themselves float far above it.
@@ -107,6 +110,43 @@ public final class SkyholdStructure extends Structure {
             rooms.forEach(collector::addPiece);     // ...then hollow the rooms
             extras.forEach(collector::addPiece);    // ...then chests and the vault room
         }));
+    }
+
+    /**
+     * Grows the main workshop a few times and keeps the best one. Each try is slid sideways so
+     * the hub sits exactly on the island centre (the hub turns around its corner when it is
+     * rotated, which used to throw it - and the End Gate room - up to ~28 blocks off-centre).
+     * "Best" = the most rooms, with a big bonus for every side of the hub that has rooms on it,
+     * so the End Gate room ends up surrounded rather than at one end of the workshop.
+     */
+    private static List<StructurePiece> growMain(Structure.Context context, int cx, int floor, int cz) {
+        List<StructurePiece> best = new ArrayList<>();
+        int bestScore = -1;
+        for (int attempt = 0; attempt < MAIN_ATTEMPTS; attempt++) {
+            List<StructurePiece> grown = jigsaw(context, START_POOL, new BlockPos(cx - 10, floor, cz - 10),
+                                                WORKSHOP_DEPTH, WORKSHOP_REACH);
+            if (grown.isEmpty()) continue;
+            BlockPos hc = grown.get(0).getBoundingBox().getCenter();
+            int dx = cx - hc.getX(), dz = cz - hc.getZ();
+            if (dx != 0 || dz != 0) for (StructurePiece p : grown) p.translate(dx, 0, dz);
+
+            boolean east = false, west = false, south = false, north = false;
+            for (int i = 1; i < grown.size(); i++) {
+                BlockPos c = grown.get(i).getBoundingBox().getCenter();
+                int ox = c.getX() - cx, oz = c.getZ() - cz;
+                if (ox > 12) east = true;
+                if (ox < -12) west = true;
+                if (oz > 12) south = true;
+                if (oz < -12) north = true;
+            }
+            int sides = (east ? 1 : 0) + (west ? 1 : 0) + (south ? 1 : 0) + (north ? 1 : 0);
+            int score = grown.size() + sides * 8;
+            if (score > bestScore) {
+                bestScore = score;
+                best = grown;
+            }
+        }
+        return best;
     }
 
     /** Chest spots in each room template (template coordinates), turned to wherever the room landed. */

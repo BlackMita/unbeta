@@ -89,7 +89,8 @@
     "CyanHookshotRangeMixin",
     "CyanHookshotNameMixin",
     "ShulkerBulletAccessor",
-    "GoldreathShotMixin"
+    "GoldreathShotMixin",
+    "LadderSupportMixin"
   ],
   "injectors": {
     "defaultRequire": 1
