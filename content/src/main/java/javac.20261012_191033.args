@@ -1,0 +1,17 @@
+-d
+/tmp/jc
+-proc:none
+net/unbeta/content/arrow/FireArrowAccess.java
+net/unbeta/content/arrow/FireArrows.java
+net/unbeta/content/lockey/LockeyDoors.java
+net/unbeta/content/ladder/LadderStacking.java
+net/unbeta/content/mixin/FireArrowMixin.java
+net/unbeta/content/mixin/CharredArrowTextureMixin.java
+net/unbeta/content/mixin/LadderBackClimbMixin.java
+net/unbeta/content/mixin/LadderSupportMixin.java
+net/unbeta/content/mixin/LockedDoorWorldMixin.java
+net/unbeta/content/mixin/LockedDoorDropsMixin.java
+net/unbeta/content/mixin/LockedDoorTntMixin.java
+net/unbeta/content/mixin/LockedDoorEndermanMixin.java
+net/unbeta/content/mixin/LockedChestExplosionMixin.java
+net/unbeta/content/mixin/LockedChestPistonMixin.java

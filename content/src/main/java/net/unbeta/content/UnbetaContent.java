@@ -313,11 +313,12 @@ public final class UnbetaContent implements ModInitializer {
                 net.minecraft.util.math.BlockPos chest = where == null ? null : where.pos();
                 net.minecraft.text.Text msg;
                 if (net.unbeta.content.lockey.LockeyState.isRevoked(sw, myId)) {
-                    msg = net.minecraft.text.Text.literal("This key's chest was destroyed.")
+                    msg = net.minecraft.text.Text.literal("This key's lock was destroyed.")
                             .formatted(net.minecraft.util.Formatting.RED);
                 } else if (chest != null) {
                     msg = net.minecraft.text.Text.literal(
-                            "Chest at " + chest.getX() + ", " + chest.getY() + ", " + chest.getZ()
+                            (sw.getBlockState(chest).getBlock() instanceof net.minecraft.block.DoorBlock
+                                    ? "Door at " : "Chest at ") + chest.getX() + ", " + chest.getY() + ", " + chest.getZ()
                             + (where.carried() ? " (being carried)" : ""))
                             .formatted(net.minecraft.util.Formatting.YELLOW);
                 } else {
@@ -415,6 +416,7 @@ public final class UnbetaContent implements ModInitializer {
             });
 
         net.unbeta.content.lockey.LockeySweep.register();
+        net.unbeta.content.lockey.LockeyDoors.register();
         LOG.info("Lockey registered.");
 
         net.unbeta.content.clambox.ClamboxRegistry.register();

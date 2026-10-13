@@ -95,6 +95,53 @@ public class ObsidianDoorBlock extends DoorBlock {
         super.onBreak(world, pos, state, player);
     }
 
+    /** How far a redstone-powered door looks for someone to pay (or be repaid) its experience. */
+    public static final double REDSTONE_PAYER_RANGE = 16.0;
+
+    /**
+     * Redstone (buttons, levers, plates...) can open the door only if a player within 16 blocks
+     * has the 550 points (level 20) to pay - the nearest such player pays. Closing by redstone
+     * releases the stored experience as orbs, as closing by hand does. A Lockey-locked door
+     * ignores redstone entirely.
+     */
+    @Override
+    public void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock,
+                               BlockPos sourcePos, boolean notify) {
+        if (world.isClient || !(world instanceof ServerWorld sw)) return;
+        boolean powered = world.isReceivingRedstonePower(pos) || world.isReceivingRedstonePower(
+                pos.offset(state.get(HALF) == net.minecraft.block.enums.DoubleBlockHalf.LOWER
+                        ? net.minecraft.util.math.Direction.UP : net.minecraft.util.math.Direction.DOWN));
+        if (getDefaultState().isOf(sourceBlock) || powered == state.get(POWERED)) return;
+
+        BlockState next = state.with(POWERED, powered);
+        BlockPos lower = net.unbeta.content.lockey.LockeyDoors.lowerHalf(pos, state);
+        boolean locked = net.unbeta.content.lockey.LockeyDoors.lockedBy(sw, lower) != null;
+        if (powered != state.get(OPEN) && !locked) {
+            Vec3d center = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            boolean swing = true;
+            if (powered) {
+                PlayerEntity payer = world.getClosestPlayer(center.x, center.y, center.z, REDSTONE_PAYER_RANGE,
+                        e -> e instanceof PlayerEntity p && !p.isSpectator()
+                                && net.unbeta.content.obsidiandoor.XpHelper.canAfford(p, XP_COST));
+                if (payer == null) {
+                    swing = false;
+                    world.playSound(null, pos, net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,
+                            SoundCategory.BLOCKS, 0.8F, 1.0F);
+                } else {
+                    payer.addExperience(-XP_COST);
+                }
+            } else {
+                ExperienceOrbEntity.spawn(sw, center, XP_COST);
+            }
+            if (swing) {
+                next = next.with(OPEN, powered);
+                playOpenCloseSound(null, world, pos, powered);
+                world.emitGameEvent(null, powered ? GameEvent.BLOCK_OPEN : GameEvent.BLOCK_CLOSE, pos);
+            }
+        }
+        world.setBlockState(pos, next, Block.NOTIFY_LISTENERS);
+    }
+
     private void playOpenCloseSound(PlayerEntity player, World world, BlockPos pos, boolean open) {
         world.playSound(null, pos,
                 open ? net.unbeta.content.obsidiandoor.ObsidianDoorRegistry.DOOR_OPEN

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "group": "wooden_door",
+  "pattern": [
+    "##",
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": { "item": "minecraft:oak_planks" }
+  },
+  "result": {
+    "item": "minecraft:oak_door",
+    "count": 1
+  }
+}

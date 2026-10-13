@@ -25,6 +25,7 @@ public final class UnbetaContentClient implements ClientModInitializer {
                 net.unbeta.content.goldreath.GoldreathRegistry.BULLET,
                 net.unbeta.content.client.goldreath.GoldreathBulletRenderer::new);
         net.unbeta.content.client.skyhold.SkyholdFogClient.register();
+        net.unbeta.content.client.lockey.LockeyDoorsClient.register();
         net.unbeta.content.client.eating.EatingGuard.register();
         net.unbeta.content.client.burntchest.BurntChestsClient.register();
         net.unbeta.content.bucket.BucketBurn.clientClock = () -> {

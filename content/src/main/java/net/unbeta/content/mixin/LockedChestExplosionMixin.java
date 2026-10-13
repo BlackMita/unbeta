@@ -42,6 +42,11 @@ public abstract class LockedChestExplosionMixin {
                 && net.unbeta.content.lockey.LockeyState.isLocked(sw, pos)) {
             return false;
         }
+        // Inside a locked door's zone nothing is blown up.
+        if (this.world instanceof net.minecraft.server.world.ServerWorld sw2
+                && net.unbeta.content.lockey.LockeyDoors.isProtected(sw2, pos)) {
+            return false;
+        }
         return behavior.canDestroyBlock(explosion, view, pos, state, power);
     }
 }

@@ -20,26 +20,67 @@ import net.minecraft.world.WorldView;
 import net.minecraft.world.event.GameEvent;
 
 /**
- * Ladder quality of life:
+ * Ladder quality of life.
+ *
+ * <p><b>Columns.</b> A ladder no longer needs its own wall. It stays up as long as its
+ * column (the unbroken run of ladders above and below it) is <i>anchored</i>: some ladder in
+ * the column has a wall behind it, or the bottom ladder stands on the solid top of a block.
+ * So ladders can stand on a floor, stack up into the air, or hang down past the end of a
+ * wall like a rope ladder. Take away the last anchor and the column comes down, rung by rung.
+ *
+ * <p><b>Stacking.</b> Right-click any ladder while holding a ladder:
  * <ul>
- *   <li>Right-click any ladder while holding a ladder: one is added on TOP of that ladder's
- *       column (if there is room), facing the same way - like stacking scaffolding.</li>
- *   <li>Ladders can stand on the top face of a block or on another ladder (see LadderSupportMixin),
- *       so clicking a floor puts a ladder on it, facing you.</li>
+ *   <li>if the space under the column is empty (air), the new ladder goes on the BOTTOM -
+ *       so a ladder hung on a wall grows downward until it reaches something;</li>
+ *   <li>once the column stands on something, the new ladder goes on TOP.</li>
  * </ul>
- * Sneak-click to place a ladder the vanilla way instead.
+ * Sneak-click places ladders the vanilla way.
  */
 public final class LadderStacking {
 
-    private static final int MAX_CLIMB = 64;   // how far up a column we look for its top
+    private static final int MAX_COLUMN = 64;   // how far up or down a column we follow
 
     private LadderStacking() {}
 
-    /** True if a ladder at pos is held up from beneath: a ladder, or the solid top of a block. */
-    public static boolean supportedFromBelow(WorldView world, BlockPos pos) {
-        BlockPos down = pos.down();
-        BlockState below = world.getBlockState(down);
-        return below.getBlock() instanceof LadderBlock || below.isSideSolidFullSquare(world, down, Direction.UP);
+    public static boolean isLadder(BlockState state) {
+        return state.getBlock() instanceof LadderBlock;
+    }
+
+    /** Vanilla's own rule: a solid face directly behind the ladder. */
+    public static boolean wallBehind(WorldView world, BlockPos pos, Direction facing) {
+        BlockPos back = pos.offset(facing.getOpposite());
+        return world.getBlockState(back).isSideSolidFullSquare(world, back, facing);
+    }
+
+    /**
+     * True if a ladder at pos, facing this way, would be held up by its column: a wall behind
+     * it or behind any ladder above or below it, or a solid block top under the column.
+     */
+    public static boolean anchored(WorldView world, BlockPos pos, Direction facing) {
+        if (wallBehind(world, pos, facing)) return true;
+
+        BlockPos p = pos;
+        for (int i = 0; i < MAX_COLUMN; i++) {           // down the column
+            BlockPos down = p.down();
+            BlockState s = world.getBlockState(down);
+            if (isLadder(s)) {
+                if (wallBehind(world, down, s.get(LadderBlock.FACING))) return true;
+                p = down;
+                continue;
+            }
+            if (s.isSideSolidFullSquare(world, down, Direction.UP)) return true;
+            break;
+        }
+
+        p = pos;
+        for (int i = 0; i < MAX_COLUMN; i++) {           // up the column
+            BlockPos up = p.up();
+            BlockState s = world.getBlockState(up);
+            if (!isLadder(s)) break;
+            if (wallBehind(world, up, s.get(LadderBlock.FACING))) return true;
+            p = up;
+        }
+        return false;
     }
 
     public static void register() {
@@ -48,27 +89,37 @@ public final class LadderStacking {
             ItemStack stack = player.getStackInHand(hand);
             if (!(stack.getItem() instanceof BlockItem item) || !(item.getBlock() instanceof LadderBlock)) return ActionResult.PASS;
             BlockPos clicked = hit.getBlockPos();
-            if (!(world.getBlockState(clicked).getBlock() instanceof LadderBlock)) return ActionResult.PASS;
+            if (!isLadder(world.getBlockState(clicked))) return ActionResult.PASS;
 
-            // Climb to the top of the column.
-            BlockPos top = clicked;
-            for (int i = 0; i < MAX_CLIMB && world.getBlockState(top.up()).getBlock() instanceof LadderBlock; i++) top = top.up();
-            BlockPos target = top.up();
-            if (!world.isInBuildLimit(target) || !world.getBlockState(target).isReplaceable()
-                    || !world.canPlayerModifyAt(player, target)) return ActionResult.PASS;
+            BlockPos bottom = clicked, top = clicked;
+            for (int i = 0; i < MAX_COLUMN && isLadder(world.getBlockState(bottom.down())); i++) bottom = bottom.down();
+            for (int i = 0; i < MAX_COLUMN && isLadder(world.getBlockState(top.up())); i++) top = top.up();
 
-            Block block = item.getBlock();
-            Direction facing = world.getBlockState(top).get(LadderBlock.FACING);
-            BlockState place = block.getDefaultState().with(LadderBlock.FACING, facing)
+            // Nothing under the column yet: grow downward. Otherwise grow upward.
+            BlockPos target;
+            BlockPos from;
+            BlockPos under = bottom.down();
+            if (world.isInBuildLimit(under) && world.getBlockState(under).isAir()) {
+                target = under;
+                from = bottom;
+            } else {
+                target = top.up();
+                from = top;
+                if (!world.isInBuildLimit(target) || !world.getBlockState(target).isReplaceable()) return ActionResult.PASS;
+            }
+            if (!world.canPlayerModifyAt(player, target)) return ActionResult.PASS;
+
+            Direction facing = world.getBlockState(from).get(LadderBlock.FACING);
+            BlockState place = item.getBlock().getDefaultState().with(LadderBlock.FACING, facing)
                     .with(Properties.WATERLOGGED, world.getFluidState(target).getFluid() == Fluids.WATER);
             if (!place.canPlaceAt(world, target)) return ActionResult.PASS;
 
-            if (!world.isClient) place(player, world, hand, stack, target, place);
+            if (!world.isClient) place(player, world, stack, target, place);
             return ActionResult.SUCCESS;   // on the client: swing, and send the click to the server
         });
     }
 
-    private static void place(PlayerEntity player, World world, Hand hand, ItemStack stack, BlockPos at, BlockState state) {
+    private static void place(PlayerEntity player, World world, ItemStack stack, BlockPos at, BlockState state) {
         if (!world.setBlockState(at, state, Block.NOTIFY_ALL)) return;
         BlockSoundGroup sound = state.getSoundGroup();
         world.playSound(null, at, sound.getPlaceSound(), SoundCategory.BLOCKS,

@@ -43,6 +43,10 @@ public final class HeldLight {
         return isLit(stack) || stack.isOf(Items.FLINT_AND_STEEL);
     }
 
+    private static boolean isRangedWeapon(ItemStack stack) {
+        return stack.getItem() instanceof net.minecraft.item.RangedWeaponItem;
+    }
+
     /** Light whatever unlit light item is in this hand. */
     public static void lightHeld(PlayerEntity player, Hand hand, long now) {
         ItemStack held = player.getStackInHand(hand);
@@ -79,7 +83,11 @@ public final class HeldLight {
             return ActionResult.SUCCESS;
         }
 
-        // 4. Anything else snuffs a lit placed light.
+        // 4. Anything else snuffs a lit placed light - except while holding a bow or crossbow,
+        //    so drawing a shot at something behind a torch doesn't put the torch out.
+        if (placedLit && (isRangedWeapon(player.getMainHandStack()) || isRangedWeapon(player.getOffHandStack()))) {
+            return ActionResult.PASS;
+        }
         if (placedLit) {
             if (!world.isClient) extinguishPlaced.run();
             return ActionResult.SUCCESS;

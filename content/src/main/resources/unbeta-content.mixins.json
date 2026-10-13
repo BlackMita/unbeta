@@ -90,7 +90,18 @@
     "CyanHookshotNameMixin",
     "ShulkerBulletAccessor",
     "GoldreathShotMixin",
-    "LadderSupportMixin"
+    "LadderSupportMixin",
+    "LadderBackClimbMixin",
+    "FireArrowMixin",
+    "LockedDoorWorldMixin",
+    "LockedDoorDropsMixin",
+    "LockedDoorTntMixin",
+    "LockedDoorEndermanMixin",
+    "DoorPlacedMixin",
+    "DoorDamageCarryMixin",
+    "DamagedDoorStackMixin",
+    "DamagedDoorBarMixin",
+    "IronDoorHardnessMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -104,6 +115,7 @@
     "OffhandAfterEatingMixin",
     "BurntChestTextureMixin",
     "WthitMimicAttributesMixin",
-    "SkyholdFogMixin"
+    "SkyholdFogMixin",
+    "CharredArrowTextureMixin"
   ]
 }

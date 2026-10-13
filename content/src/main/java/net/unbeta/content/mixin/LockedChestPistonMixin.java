@@ -20,6 +20,12 @@ public class LockedChestPistonMixin {
                                                     Direction pistonDir,
                                                     CallbackInfoReturnable<Boolean> cir) {
         if (world.isClient) return;
+        // Nothing in a locked door's zone can be pushed, pulled or crushed.
+        if (!state.isAir() && net.unbeta.content.lockey.LockeyDoors.isProtected(
+                (net.minecraft.server.world.ServerWorld) world, pos)) {
+            cir.setReturnValue(false);
+            return;
+        }
         if (!(state.getBlock() instanceof net.minecraft.block.ChestBlock)) return;
         if (net.unbeta.content.lockey.LockeyState.isLocked(
                 (net.minecraft.server.world.ServerWorld) world, pos)) {
