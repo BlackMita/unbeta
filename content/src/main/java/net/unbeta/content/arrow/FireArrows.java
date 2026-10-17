@@ -33,8 +33,9 @@ import net.unbeta.content.torch.UnbetaWallTorchBlock;
  *   <li>Landing on flammable blocks: the Burnt mod chars or re-embers the block it hits
  *       (and its neighbours) itself, from the arrow being on fire; without Burnt, ordinary
  *       fire is lit against the face it hit.</li>
- *   <li>A coloured arrow landing on obsidian with open air above lights obsidian fire of
- *       that colour on top.</li>
+ *   <li>A coloured arrow landing on obsidian lights obsidian fire of that colour on top of the
+ *       column - hitting up to 4 blocks below the top block still counts. A top already burning
+ *       keeps its colour (snuff it with a snowball to change it).</li>
  *   <li>A few ticks after landing alight, the arrow burns out: it turns black and can no
  *       longer be picked up (see FireArrowMixin).</li>
  * </ul>
@@ -45,6 +46,7 @@ public final class FireArrows {
     public static final int BURN_SECONDS = 100;       // like a Flame bow's arrows
     public static final int CHAR_AFTER_TICKS = 10;    // landed and still burning this long -> charred
     private static final double STEP = 0.2;
+    public static final int OBSIDIAN_AIM_BELOW = 4;  // how far below an obsidian column's top a hit still lights it
 
     private FireArrows() {}
 
@@ -101,8 +103,11 @@ public final class FireArrows {
 
         if (state.isOf(Blocks.OBSIDIAN)) {
             if (color < 0 || color >= FireColor.VALUES.length || UnbetaContent.OBSIDIAN_FIRE == null) return;
-            BlockPos up = pos.up();
-            if (!world.isAir(up)) return;
+            // Forgiving aim: a hit up to OBSIDIAN_AIM_BELOW blocks down a column lights its top.
+            BlockPos top = pos;
+            for (int i = 0; i < OBSIDIAN_AIM_BELOW && world.getBlockState(top.up()).isOf(Blocks.OBSIDIAN); i++) top = top.up();
+            BlockPos up = top.up();
+            if (!world.isAir(up)) return;   // column runs on higher, or something (other fire too) is already on top
             BlockState fire = UnbetaContent.OBSIDIAN_FIRE.getDefaultState().with(ObsidianFireBlock.COLOR, FireColor.VALUES[color]);
             if (fire.canPlaceAt(world, up)) world.setBlockState(up, fire, Block.NOTIFY_ALL | Block.REDRAW_ON_MAIN_THREAD);
             return;

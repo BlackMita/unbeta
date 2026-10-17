@@ -1,0 +1,7 @@
+-d
+/tmp/jc
+-proc:none
+net/unbeta/content/snowball/Snowballs.java
+net/unbeta/content/arrow/FireArrows.java
+net/unbeta/content/mixin/SnowballPathMixin.java
+net/unbeta/content/mixin/SnowballSnuffMixin.java

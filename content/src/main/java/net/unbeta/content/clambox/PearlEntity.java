@@ -6,13 +6,15 @@ import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 
 /**
  * A thrown pearl. Flies like a snowball; on hitting anything it breaks and drops the
  * item stored inside it at the impact point. If that item is another pearl, the player
- * picks it up and throws again - peeling the nesting.
+ * picks it up and throws again - peeling the nesting. A mob it hits is knocked back like a
+ * snowball would, but takes real damage: one heart.
  */
 public class PearlEntity extends ThrownItemEntity {
 
@@ -27,6 +29,14 @@ public class PearlEntity extends ThrownItemEntity {
     @Override
     protected Item getDefaultItem() {
         return ClamboxRegistry.PEARL_ITEM;
+    }
+
+    public static final float DAMAGE = 2.0F;   // one heart
+
+    @Override
+    protected void onEntityHit(EntityHitResult hit) {
+        super.onEntityHit(hit);
+        hit.getEntity().damage(this.getDamageSources().thrown(this, this.getOwner()), DAMAGE);
     }
 
     @Override

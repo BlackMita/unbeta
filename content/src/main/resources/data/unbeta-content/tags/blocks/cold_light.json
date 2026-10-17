@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:glowstone",
+    "unbeta-content:glowsand",
+    { "id": "minecraft:cave_vines", "required": false },
+    { "id": "minecraft:cave_vines_plant", "required": false },
+    { "id": "minecraft:glow_lichen", "required": false },
+    { "id": "minecraft:sea_lantern", "required": false },
+    { "id": "minecraft:shroomlight", "required": false }
+  ]
+}

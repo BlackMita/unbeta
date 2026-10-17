@@ -101,7 +101,13 @@
     "DoorDamageCarryMixin",
     "DamagedDoorStackMixin",
     "DamagedDoorBarMixin",
-    "IronDoorHardnessMixin"
+    "IronDoorHardnessMixin",
+    "FurnaceTimesAccessor",
+    "LavaBucketFurnaceMixin",
+    "ColdLightIceMixin",
+    "ColdLightSnowMixin",
+    "SnowballSnuffMixin",
+    "SnowballPathMixin"
   ],
   "injectors": {
     "defaultRequire": 1
