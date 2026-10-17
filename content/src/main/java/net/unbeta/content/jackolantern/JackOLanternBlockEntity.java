@@ -72,6 +72,10 @@ public class JackOLanternBlockEntity extends BlockEntity {
 
         long now = world.getTime();
         long burnoutAt = be.getBurnoutAt();
+        if (burnoutAt < 0) {   // lit with no clock (some route skipped it): start a full burn
+            be.light(world, pos);
+            return;
+        }
 
         if (burnoutAt >= 0 && now >= burnoutAt) {
             JackOLanternLogic.extinguishPlaced(world, pos, state);

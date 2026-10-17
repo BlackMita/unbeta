@@ -34,6 +34,20 @@ public class UnbetaTorchBlockEntity extends BlockEntity {
         markDirty();
     }
 
+    /**
+     * Server ticker, attached by both torch blocks. The torch's own clock is the source of truth:
+     * past its burnout time it goes out, whatever happened to the scheduled burnout task. A torch
+     * found lit with no clock at all (lit by some route that skipped it) starts a full burn.
+     */
+    public static void serverTick(World world, BlockPos pos, net.minecraft.block.BlockState state, UnbetaTorchBlockEntity be) {
+        if (world.isClient || !state.get(TorchLogic.LIT)) return;
+        if (be.burnoutAt < 0) {
+            be.light(world, pos);
+        } else if (world.getTime() >= be.burnoutAt) {
+            TorchLogic.extinguishPlaced(world, pos, state);
+        }
+    }
+
     /** Extinguish: stop the clock. Remaining discarded. */
     public void extinguish() {
         this.burnoutAt = -1L;

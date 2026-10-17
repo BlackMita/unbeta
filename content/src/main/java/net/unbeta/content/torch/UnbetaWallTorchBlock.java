@@ -42,6 +42,15 @@ public class UnbetaWallTorchBlock extends WallTorchBlock implements BlockEntityP
     }
 
     @Override
+    public <T extends BlockEntity> net.minecraft.block.entity.BlockEntityTicker<T> getTicker(
+            World world, BlockState state, net.minecraft.block.entity.BlockEntityType<T> type) {
+        if (world.isClient) return null;
+        return (w, p, st, be) -> {
+            if (be instanceof UnbetaTorchBlockEntity torch) UnbetaTorchBlockEntity.serverTick(w, p, st, torch);
+        };
+    }
+
+    @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
         return TorchLogic.onUse(state, world, pos, player, hand);
