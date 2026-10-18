@@ -34,5 +34,6 @@ public final class Skyhold {
         VAULT = Registry.register(Registries.STRUCTURE_PIECE, new Identifier("unbeta-content", "skyhold_vault"), vault);
         StructurePieceType.Simple undercroft = SkyholdUndercroftPiece::new;
         UNDERCROFT = Registry.register(Registries.STRUCTURE_PIECE, new Identifier("unbeta-content", "skyhold_undercroft"), undercroft);
+        SkyholdSpawnGuard.register();
     }
 }

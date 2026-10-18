@@ -59,6 +59,7 @@ public final class SkyholdStructure extends Structure {
         ChunkPos chunk = context.chunkPos();
         int cx = chunk.getStartX() + 8;
         int cz = chunk.getStartZ() + 8;
+        if (SkyholdSpawnGuard.tooClose(cx, cz)) return Optional.empty();   // never within 300 blocks of spawn
         long seed = context.seed() ^ (chunk.toLong() * 0x9E3779B97F4A7C15L);
         Random rng = new Random(seed);
 
