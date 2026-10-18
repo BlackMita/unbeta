@@ -105,6 +105,19 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
         }
 
+        // Armour stands: scarecrows (a Jack o'Lantern for a head) - see Beacons.
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("armor_stand")), false);
+        ctx.set(RuleKey.of(ContentKind.ENTITY, mc("armor_stand")), false);
+
+        // Every music disc is back: creepers killed by skeletons drop any of them.
+        for (String disc : new String[]{"13", "cat", "blocks", "chirp", "far", "mall", "mellohi", "stal",
+                "strad", "ward", "11", "wait", "otherside", "5", "pigstep", "relic"}) {
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc("music_disc_" + disc)), false);
+        }
+
+        // Endermites: the Darkhold's spawners breed them.
+        ctx.set(RuleKey.of(ContentKind.ENTITY, mc("endermite")), false);
+
         // Additional re-enables
         for (String id : new String[]{
                 "oak_button", "azure_bluet", "cornflower", "oxeye_daisy", "rose_bush",

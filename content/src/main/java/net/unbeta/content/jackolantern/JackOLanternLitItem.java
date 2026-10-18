@@ -6,7 +6,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 
 /** The lit jack o'lantern item with a cosmetic burn bar. */
-public class JackOLanternLitItem extends BlockItem {
+public class JackOLanternLitItem extends BlockItem implements net.minecraft.item.Equipment {
+
+    /** Wearable: a beacon that draws hostile mobs, and burns the wearer (see Beacons). */
+    @Override
+    public net.minecraft.entity.EquipmentSlot getSlotType() {
+        return net.minecraft.entity.EquipmentSlot.HEAD;
+    }
+
+    @Override
+    public net.minecraft.sound.SoundEvent getEquipSound() {
+        return net.minecraft.sound.SoundEvents.ITEM_ARMOR_EQUIP_GENERIC;
+    }
 
     public JackOLanternLitItem(Block block, Settings settings) {
         super(block, settings);

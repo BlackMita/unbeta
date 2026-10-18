@@ -60,5 +60,10 @@
   "item.unbeta-content.ice_water_bucket": "Ice Water Bucket",
   "item.unbeta-content.ice_lava_bucket": "Ice Lava Bucket",
   "item.unbeta-content.ice_milk_bucket": "Ice Milk Bucket",
-  "item.unbeta-content.ice_cream": "Ice Cream"
+  "item.unbeta-content.ice_cream": "Ice Cream",
+  "item.unbeta-content.ice_scream": "Ice Scream",
+  "subtitles.unbeta-content.ice_scream": "Something screams",
+  "entity.unbeta-content.guardian_post": "Guardian Post",
+  "death.attack.unbeta_post_beam": "%1$s was judged",
+  "death.attack.unbeta_post_beam.player": "%1$s was judged by %2$s"
 }

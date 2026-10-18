@@ -33,8 +33,7 @@ public abstract class JolPassiveFleeMixin {
         double nearestDist = 16.0 * 16.0;
         for (ServerPlayerEntity sp : sw.getPlayers()) {
             if (sp.isSpectator()) continue;
-            if (!sp.getEquippedStack(EquipmentSlot.HEAD)
-                    .isOf(JackOLanternRegistry.UNLIT_ITEM)) continue;
+            if (!net.unbeta.content.light.Beacons.wearsJol(sp)) continue;
             double d = sp.squaredDistanceTo(self);
             if (d < nearestDist) { nearestDist = d; nearest = sp; }
         }
@@ -50,8 +49,7 @@ public abstract class JolPassiveFleeMixin {
                         e -> e instanceof ServerPlayerEntity sp2
                                 && !sp2.isSpectator()
                                 && !sp2.isCreative()
-                                && sp2.getEquippedStack(EquipmentSlot.HEAD)
-                                        .isOf(JackOLanternRegistry.UNLIT_ITEM));
+                                && net.unbeta.content.light.Beacons.wearsJol(sp2));
                 self.goalSelector.add(1, unbeta_jolFleeGoal);
             } else if (nearest.isCreative()) {
                 // Creative: FleeEntityGoal won't find creative players, nudge directly
@@ -73,6 +71,22 @@ public abstract class JolPassiveFleeMixin {
         } else if (unbeta_jolFleeGoal != null) {
             self.goalSelector.remove(unbeta_jolFleeGoal);
             unbeta_jolFleeGoal = null;
+        }
+
+        // Scarecrows: an armour stand wearing a Jack o'Lantern (lit or not) within 10 blocks.
+        if (!shouldFlee && self.age % 20 == 0) {
+            var crows = sw.getEntitiesByClass(net.minecraft.entity.decoration.ArmorStandEntity.class,
+                    self.getBoundingBox().expand(10.0), net.unbeta.content.light.Beacons::wearsJol);
+            if (!crows.isEmpty()) {
+                var crow = crows.get(0);
+                double dx = self.getX() - crow.getX();
+                double dz = self.getZ() - crow.getZ();
+                double dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist > 0.01) {
+                    self.getNavigation().startMovingTo(self.getX() + dx / dist * 6, self.getY(),
+                            self.getZ() + dz / dist * 6, 1.2);
+                }
+            }
         }
     }
 }

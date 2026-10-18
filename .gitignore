@@ -7,3 +7,6 @@ run/
 *.iml
 .DS_Store
 content/libs/
+
+# Third-party audio used locally only (not ours to publish): built into local jars, never pushed.
+content/src/main/resources/assets/unbeta-content/sounds/ice_scream.ogg

@@ -59,11 +59,11 @@ public class ObsidianDoorBlock extends DoorBlock {
                     world.playSound(null, pos,
                             net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,
                             SoundCategory.BLOCKS, 0.8F, 1.0F);
-                    player.sendMessage(Text.literal("This door needs more experience to open.")
+                    player.sendMessage(Text.literal("This door needs at least level 20 (550 experience) to open.")
                             .formatted(Formatting.GREEN), false);
                     return ActionResult.SUCCESS;
                 }
-                player.addExperience(-XP_COST);
+                pay((ServerWorld) world, player, pos);
             } else {
                 // Closing: release the stored XP as orbs
                 ExperienceOrbEntity.spawn((ServerWorld) world,
@@ -128,7 +128,7 @@ public class ObsidianDoorBlock extends DoorBlock {
                     world.playSound(null, pos, net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,
                             SoundCategory.BLOCKS, 0.8F, 1.0F);
                 } else {
-                    payer.addExperience(-XP_COST);
+                    pay(sw, payer, pos);
                 }
             } else {
                 ExperienceOrbEntity.spawn(sw, center, XP_COST);
@@ -140,6 +140,30 @@ public class ObsidianDoorBlock extends DoorBlock {
             }
         }
         world.setBlockState(pos, next, Block.NOTIFY_LISTENERS);
+    }
+
+    /**
+     * Takes the door's price from the player as experience orbs that visibly leave them and
+     * vanish into the door - very fast.
+     */
+    public static void pay(ServerWorld world, PlayerEntity player, BlockPos pos) {
+        Vec3d into = Vec3d.ofCenter(pos);
+        net.unbeta.content.xpdrain.XpDrain.drain(world, player, XP_COST, new net.unbeta.content.xpdrain.XpDrain.Sink() {
+            @Override
+            public Vec3d target() {
+                return into;
+            }
+
+            @Override
+            public boolean alive() {
+                return true;
+            }
+
+            @Override
+            public void absorb(int points) {
+                // Already paid: the door holds the price (and releases it when it closes).
+            }
+        }, 0.18, 2, 1.2);
     }
 
     private void playOpenCloseSound(PlayerEntity player, World world, BlockPos pos, boolean open) {

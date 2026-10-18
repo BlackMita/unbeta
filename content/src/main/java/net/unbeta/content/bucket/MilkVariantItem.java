@@ -27,6 +27,10 @@ public class MilkVariantItem extends MilkBucketItem {
         this.poisons = poisons;
     }
 
+    public Item emptyBucket() {
+        return empty.get();
+    }
+
     @Override
     public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
         ItemStack result = super.finishUsing(stack, world, user);

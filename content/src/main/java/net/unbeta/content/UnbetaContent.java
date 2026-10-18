@@ -65,6 +65,9 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.mimic.MimicLocks.register();
         net.unbeta.content.skyhold.Skyhold.register();
         net.unbeta.content.skyhold.SkyholdFog.register();
+        net.unbeta.content.guardianpost.GuardianPostRegistry.register();
+        net.unbeta.content.darkhold.Darkhold.register();
+        net.unbeta.content.enderman.EndermanMending.register();
         net.unbeta.content.goldreath.GoldreathRegistry.register();
         LOG.info("Registered Unbeta torches.");
 
@@ -416,6 +419,7 @@ public final class UnbetaContent implements ModInitializer {
 
         net.unbeta.content.lockey.LockeySweep.register();
         net.unbeta.content.lockey.LockeyDoors.register();
+        net.unbeta.content.light.Beacons.register();
         LOG.info("Lockey registered.");
 
         net.unbeta.content.clambox.ClamboxRegistry.register();

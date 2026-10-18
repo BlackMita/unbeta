@@ -9,8 +9,8 @@ import net.minecraft.item.ItemStack;
  * Inventory/dropped-item burnout for lit Jack o'Lantern ITEMS (mirrors TorchLightingHooks).
  * A lit JoL item that passes its burnout deadline reverts to an unlit JoL.
  *
- * Only UNLIT JoLs are wearable, so a lit JoL should never be in the head slot — but we
- * still scan the full inventory (which includes armor slots) for safety.
+ * The full inventory is scanned, armour slots included, so a lit JoL worn on the head burns
+ * down too. (Armour stands burn theirs down in Beacons.tickStand.)
  */
 public final class JackOLanternItemBurnout {
 

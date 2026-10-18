@@ -25,6 +25,9 @@ public final class UnbetaContentClient implements ClientModInitializer {
                 net.unbeta.content.goldreath.GoldreathRegistry.BULLET,
                 net.unbeta.content.client.goldreath.GoldreathBulletRenderer::new);
         net.unbeta.content.client.skyhold.SkyholdFogClient.register();
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.unbeta.content.guardianpost.GuardianPostRegistry.GUARDIAN_POST,
+                net.unbeta.content.client.guardianpost.GuardianPostRenderer::new);
         net.unbeta.content.client.lockey.LockeyDoorsClient.register();
         net.unbeta.content.client.ladder.BurntLadderModel.register();
         net.unbeta.content.client.eating.EatingGuard.register();

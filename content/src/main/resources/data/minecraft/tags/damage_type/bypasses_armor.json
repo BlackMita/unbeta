@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "unbeta-content:zombification"
+    "unbeta-content:zombification",
+    "unbeta-content:post_beam"
   ]
 }

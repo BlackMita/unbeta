@@ -152,6 +152,7 @@ public abstract class EndermanMixin {
         if (self.getWorld().isClient) { cir.setReturnValue(false); return; }
         // Play hurt sound and apply knockback manually
         self.playSound(SoundEvents.ENTITY_ENDERMAN_HURT, 1.0F, 1.0F);
+        net.unbeta.content.enderman.EndermanStrikeXp.struck(self, source);
         // Knockback toward attacker
         if (source.getAttacker() != null) {
             double dx = self.getX() - source.getAttacker().getX();

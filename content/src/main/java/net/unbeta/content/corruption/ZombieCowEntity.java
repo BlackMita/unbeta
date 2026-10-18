@@ -39,10 +39,23 @@ public class ZombieCowEntity extends CowEntity implements CorruptedAnimal {
         CorruptedAnimal.addHostileGoals(this, this.goalSelector, this.targetSelector);
     }
 
-    /** Only a golden apple does anything: it cures. No milking, shearing, saddling or breeding. */
+    /** A golden apple cures; an empty bucket gets Spoiled Milk. No shearing, saddling or breeding. */
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
+        ActionResult milked = SpoiledMilk.tryMilk(this, player, hand);
+        if (milked != ActionResult.PASS) return milked;
         return CorruptionCure.tryFeed(this, player, hand);
+    }
+
+    /** Hits like a goat's ram: a hard shove away. */
+    @Override
+    public boolean tryAttack(net.minecraft.entity.Entity target) {
+        boolean hit = super.tryAttack(target);
+        if (hit && target instanceof net.minecraft.entity.LivingEntity living) {
+            living.takeKnockback(2.5, this.getX() - target.getX(), this.getZ() - target.getZ());
+            target.velocityModified = true;
+        }
+        return hit;
     }
 
     @Override

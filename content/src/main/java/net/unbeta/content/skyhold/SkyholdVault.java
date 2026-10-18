@@ -13,6 +13,8 @@ import java.util.UUID;
 /** A Skyhold's vault plan, in the same shape as a stone stronghold's (see StrongholdVault). */
 public final class SkyholdVault {
 
+    public static final net.minecraft.util.Identifier PRIZE = new net.minecraft.util.Identifier("cloudboots", "cloud_boots");
+
     private SkyholdVault() {}
 
     public static StrongholdVault.Plan plan(StructureStart start) {
@@ -23,10 +25,10 @@ public final class SkyholdVault {
             else if (p instanceof SkyholdChestPiece c) chests.add(c.pos());
         }
         if (vault == null) return null;
-        if (chests.isEmpty()) return new StrongholdVault.Plan(vault, null, null, true);
+        if (chests.isEmpty()) return new StrongholdVault.Plan(vault, null, null, PRIZE);
         long mix = vault.asLong() * 0x9E3779B97F4A7C15L;
         BlockPos keyChest = chests.get((int) Math.floorMod(mix ^ (mix >>> 31), (long) chests.size()));
         UUID keyId = UUID.nameUUIDFromBytes(("unbeta:skyhold_vault:" + vault.asLong()).getBytes(StandardCharsets.UTF_8));
-        return new StrongholdVault.Plan(vault, keyChest, keyId, true);
+        return new StrongholdVault.Plan(vault, keyChest, keyId, PRIZE);
     }
 }

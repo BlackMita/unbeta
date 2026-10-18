@@ -51,8 +51,10 @@ public final class StrongholdVault {
     private static final Map<StructureStart, Plan> PLANS = Collections.synchronizedMap(new WeakHashMap<>());
     private static final int CENTRE = 13; // middle slot of a 27-slot chest
 
-    /** sky: a Skyhold's vault (Cloud Boots) rather than a stone stronghold's (Hookshot). */
-    public record Plan(BlockPos vault, BlockPos keyChest, UUID keyId, boolean sky) {}
+    /** prize: the centre-slot item - a stone stronghold's Hookshot, a Skyhold's Cloud Boots, a Darkhold's own. */
+    public record Plan(BlockPos vault, BlockPos keyChest, UUID keyId, Identifier prize) {}
+
+    public static final Identifier HOOKSHOT = new Identifier("hookshot", "cyan_hookshot");
 
     private StrongholdVault() {}
 
@@ -82,20 +84,23 @@ public final class StrongholdVault {
                 chests.add(at(p, 3, 4, 8));
             }
         }
-        if (portal == null) return net.unbeta.content.skyhold.SkyholdVault.plan(start);
+        if (portal == null) {
+            Plan sky = net.unbeta.content.skyhold.SkyholdVault.plan(start);
+            return sky != null ? sky : net.unbeta.content.darkhold.DarkholdVault.plan(start);
+        }
         BlockPos vault = at(portal, 5, 4, 10);
-        if (chests.isEmpty()) return new Plan(vault, null, null, false);
+        if (chests.isEmpty()) return new Plan(vault, null, null, HOOKSHOT);
         long mix = vault.asLong() * 0x9E3779B97F4A7C15L;
         BlockPos keyChest = chests.get((int) Math.floorMod(mix ^ (mix >>> 31), (long) chests.size()));
         UUID keyId = UUID.nameUUIDFromBytes(("unbeta:stronghold_vault:" + vault.asLong()).getBytes(StandardCharsets.UTF_8));
-        return new Plan(vault, keyChest, keyId, false);
+        return new Plan(vault, keyChest, keyId, HOOKSHOT);
     }
 
     /** Called right after the portal room places the vault chest. */
     public static void onVaultPlaced(StructureWorldAccess world, BlockPos vault, Random random) {
         if (!(world.getBlockEntity(vault) instanceof BurntChestBlockEntity chest)) return;
         Plan plan = currentPlan();
-        fill(chest, random, plan != null && plan.sky());
+        fill(chest, random, plan != null ? plan.prize() : HOOKSHOT);
         if (plan == null || plan.keyId() == null || !plan.vault().equals(vault)) return; // unlocked
         // World state belongs to the server thread; generation runs on worker threads.
         ServerWorld sw = world.toServerWorld();
@@ -125,7 +130,7 @@ public final class StrongholdVault {
     }
 
     /** The vault's contents: a quiet lesson in what a Lockey is made of. */
-    private static void fill(BurntChestBlockEntity chest, Random random, boolean sky) {
+    private static void fill(BurntChestBlockEntity chest, Random random, Identifier prizeId) {
         List<ItemStack> loot = new ArrayList<>();
         Item[] junk = {Items.DIRT, Items.GRAVEL, Items.COBBLESTONE};
         for (int i = 3 + random.nextInt(2); i > 0; i--) loot.add(new ItemStack(junk[random.nextInt(3)], 32 + random.nextInt(33)));
@@ -141,8 +146,7 @@ public final class StrongholdVault {
         for (int i = slots.size() - 1; i > 0; i--) Collections.swap(slots, i, random.nextInt(i + 1));
         for (int i = 0; i < loot.size(); i++) chest.setStack(slots.get(i), loot.get(i));
 
-        Item prize = Registries.ITEM.get(sky ? new Identifier("cloudboots", "cloud_boots")
-                                             : new Identifier("hookshot", "cyan_hookshot"));
+        Item prize = Registries.ITEM.get(prizeId);
         if (prize != Items.AIR) chest.setStack(CENTRE, new ItemStack(prize));
     }
 }

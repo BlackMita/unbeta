@@ -106,5 +106,15 @@
         "stream": false
       }
     ]
+  },
+  "ice_scream": {
+    "category": "player",
+    "subtitle": "subtitles.unbeta-content.ice_scream",
+    "sounds": [
+      {
+        "name": "unbeta-content:ice_scream",
+        "stream": false
+      }
+    ]
   }
 }

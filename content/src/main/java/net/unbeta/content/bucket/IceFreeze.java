@@ -49,7 +49,9 @@ public final class IceFreeze {
 
     public static ItemStack result(ItemStack stack) {
         if (stack.isOf(IceBuckets.ICE_LAVA_BUCKET)) return new ItemStack(Items.COBBLESTONE);
-        if (stack.isOf(IceBuckets.ICE_MILK_BUCKET)) return new ItemStack(IceBuckets.ICE_CREAM);
+        if (stack.isOf(IceBuckets.ICE_MILK_BUCKET)) {
+            return new ItemStack(net.unbeta.content.corruption.SpoiledMilk.isSpoiled(stack) ? IceBuckets.ICE_SCREAM : IceBuckets.ICE_CREAM);
+        }
         return new ItemStack(Items.ICE);
     }
 

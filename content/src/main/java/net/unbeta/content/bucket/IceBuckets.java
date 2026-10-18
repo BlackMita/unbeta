@@ -15,7 +15,7 @@ import net.minecraft.util.Identifier;
  */
 public final class IceBuckets {
 
-    public static Item ICE_BUCKET, ICE_WATER_BUCKET, ICE_LAVA_BUCKET, ICE_MILK_BUCKET, ICE_CREAM;
+    public static Item ICE_BUCKET, ICE_WATER_BUCKET, ICE_LAVA_BUCKET, ICE_MILK_BUCKET, ICE_CREAM, ICE_SCREAM;
 
     private IceBuckets() {}
 
@@ -30,6 +30,9 @@ public final class IceBuckets {
         ICE_MILK_BUCKET = reg("ice_milk_bucket", new IceMilkBucketItem(new Item.Settings().maxCount(1)));
         ICE_CREAM = reg("ice_cream", new IceCreamItem(new Item.Settings().maxCount(1).food(
                 new FoodComponent.Builder().hunger(4).saturationModifier(0.3f).alwaysEdible().build())));
+        ICE_SCREAM = reg("ice_scream", new IceScreamItem(new Item.Settings().maxCount(1).food(
+                new FoodComponent.Builder().hunger(4).saturationModifier(0.3f).alwaysEdible().build())));
+        IceScream.register();
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(entries -> {
             entries.add(ICE_BUCKET);
@@ -40,6 +43,7 @@ public final class IceBuckets {
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FOOD_AND_DRINK).register(entries -> {
             entries.add(ICE_MILK_BUCKET);
             entries.add(ICE_CREAM);
+            entries.add(ICE_SCREAM);
         });
     }
 }
