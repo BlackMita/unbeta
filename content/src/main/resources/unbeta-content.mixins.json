@@ -90,8 +90,6 @@
     "CyanHookshotNameMixin",
     "ShulkerBulletAccessor",
     "GoldreathShotMixin",
-    "LadderSupportMixin",
-    "LadderBackClimbMixin",
     "FireArrowMixin",
     "LockedDoorWorldMixin",
     "LockedDoorDropsMixin",
@@ -107,7 +105,8 @@
     "ColdLightIceMixin",
     "ColdLightSnowMixin",
     "SnowballSnuffMixin",
-    "SnowballPathMixin"
+    "SnowballPathMixin",
+    "SmartLadderGroundMixin"
   ],
   "injectors": {
     "defaultRequire": 1

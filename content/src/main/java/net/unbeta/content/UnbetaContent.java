@@ -66,7 +66,6 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.skyhold.Skyhold.register();
         net.unbeta.content.skyhold.SkyholdFog.register();
         net.unbeta.content.goldreath.GoldreathRegistry.register();
-        net.unbeta.content.ladder.LadderStacking.register();
         LOG.info("Registered Unbeta torches.");
 
         // Glowsand: luminous gravity-affected block. Smelts to glowstone.
