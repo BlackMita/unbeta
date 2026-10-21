@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_wood_door",
+    "unbeta-content:orange_wood_door",
+    "unbeta-content:magenta_wood_door",
+    "unbeta-content:light_blue_wood_door",
+    "unbeta-content:yellow_wood_door",
+    "unbeta-content:lime_wood_door",
+    "unbeta-content:pink_wood_door",
+    "unbeta-content:gray_wood_door",
+    "unbeta-content:light_gray_wood_door",
+    "unbeta-content:cyan_wood_door",
+    "unbeta-content:purple_wood_door",
+    "unbeta-content:blue_wood_door",
+    "unbeta-content:brown_wood_door",
+    "unbeta-content:green_wood_door",
+    "unbeta-content:red_wood_door",
+    "unbeta-content:black_wood_door"
+  ]
+}

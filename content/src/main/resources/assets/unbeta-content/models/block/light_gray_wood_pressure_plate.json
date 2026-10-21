@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/pressure_plate_up",
+  "textures": {
+    "texture": "unbeta-content:block/light_gray_wood_planks"
+  }
+}

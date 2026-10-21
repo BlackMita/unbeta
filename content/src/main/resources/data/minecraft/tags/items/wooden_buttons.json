@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_wood_button",
+    "unbeta-content:orange_wood_button",
+    "unbeta-content:magenta_wood_button",
+    "unbeta-content:light_blue_wood_button",
+    "unbeta-content:yellow_wood_button",
+    "unbeta-content:lime_wood_button",
+    "unbeta-content:pink_wood_button",
+    "unbeta-content:gray_wood_button",
+    "unbeta-content:light_gray_wood_button",
+    "unbeta-content:cyan_wood_button",
+    "unbeta-content:purple_wood_button",
+    "unbeta-content:blue_wood_button",
+    "unbeta-content:brown_wood_button",
+    "unbeta-content:green_wood_button",
+    "unbeta-content:red_wood_button",
+    "unbeta-content:black_wood_button"
+  ]
+}

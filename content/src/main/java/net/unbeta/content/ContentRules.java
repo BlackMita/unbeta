@@ -115,6 +115,11 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc("music_disc_" + disc)), false);
         }
 
+        // Stripped oak, birch and spruce logs as items: a gold tool keeps a stripped log whole.
+        for (String log : new String[]{"stripped_oak_log", "stripped_birch_log", "stripped_spruce_log"}) {
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(log)), false);
+        }
+
         // Endermites: the Darkhold's spawners breed them.
         ctx.set(RuleKey.of(ContentKind.ENTITY, mc("endermite")), false);
 
@@ -136,9 +141,14 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
         }
 
-        // Terracotta (plain only)
-        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("terracotta")), false);
-        ctx.set(RuleKey.of(ContentKind.ITEM, mc("terracotta")), false);
+        // Terracotta is gone: dyed Stone took its place (structures swap it - see TerracottaToStoneMixin).
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("terracotta")), true);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("terracotta")), true);
+
+        // All 16 dyes (white, black, blue and brown were missing).
+        for (String dye : new String[]{"white_dye", "black_dye", "blue_dye", "brown_dye"}) {
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(dye)), false);
+        }
 
         // Peony
         ctx.set(RuleKey.of(ContentKind.BLOCK, mc("peony")), false);

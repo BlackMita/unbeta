@@ -1,0 +1,24 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:stripped_oak_log",
+    "minecraft:stripped_birch_log",
+    "minecraft:stripped_spruce_log",
+    "unbeta-content:white_stripped_log",
+    "unbeta-content:orange_stripped_log",
+    "unbeta-content:magenta_stripped_log",
+    "unbeta-content:light_blue_stripped_log",
+    "unbeta-content:yellow_stripped_log",
+    "unbeta-content:lime_stripped_log",
+    "unbeta-content:pink_stripped_log",
+    "unbeta-content:gray_stripped_log",
+    "unbeta-content:light_gray_stripped_log",
+    "unbeta-content:cyan_stripped_log",
+    "unbeta-content:purple_stripped_log",
+    "unbeta-content:blue_stripped_log",
+    "unbeta-content:brown_stripped_log",
+    "unbeta-content:green_stripped_log",
+    "unbeta-content:red_stripped_log",
+    "unbeta-content:black_stripped_log"
+  ]
+}

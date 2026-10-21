@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "dyed_wood_button",
+  "pattern": [
+    "###",
+    "#D#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "unbeta-content:dyeable/wood_button"
+    },
+    "D": {
+      "item": "minecraft:light_gray_dye"
+    }
+  },
+  "result": {
+    "item": "unbeta-content:light_gray_wood_button",
+    "count": 8
+  }
+}

@@ -61,6 +61,8 @@ public final class CreativeTrims {
         String path = id.getPath();
         // Hookshots: only the cyan one.
         if ((path.contains("hookshot") || path.contains("hook_shot")) && !path.contains("cyan")) return true;
+        // Plain stripped logs exist (a gold tool keeps them whole) but stay out of the menu.
+        if (id.getNamespace().equals("minecraft") && path.startsWith("stripped_") && path.endsWith("_log")) return true;
         // Cloud Boots: only the plain pair.
         if (id.getNamespace().equals("cloudboots") && path.endsWith("boots") && !path.equals("cloud_boots")) return true;
         return false;
@@ -94,7 +96,11 @@ public final class CreativeTrims {
 
     private static boolean functional(Item item) {
         if (NOT_FUNCTIONAL.contains(Registries.ITEM.getId(item).toString())) return false;
+        // Dyed blocks stay together in Colored Blocks.
+        if (item instanceof BlockItem dyed && net.unbeta.content.dye.DyedBlocks.entry(dyed.getBlock()) != null
+                && net.unbeta.content.dye.DyedBlocks.entry(dyed.getBlock()).color() != null) return false;
         if (item instanceof BoatItem || item instanceof MinecartItem) return true;
+        if (item instanceof BlockItem bed && bed.getBlock() instanceof net.minecraft.block.BedBlock) return false;
         return item instanceof BlockItem bi && rightClickable(bi.getBlock());
     }
 
@@ -122,6 +128,9 @@ public final class CreativeTrims {
             if (key == null) return;
             if (key.equals(ItemGroups.FUNCTIONAL)) {
                 entries.getDisplayStacks().removeIf(s -> Registries.ITEM.getId(s.getItem()).getPath().contains("painting"));
+                // One bed is enough here: the red one. (Every colour is still in Colored Blocks.)
+                entries.getDisplayStacks().removeIf(s -> s.getItem() instanceof BlockItem bi
+                        && bi.getBlock() instanceof net.minecraft.block.BedBlock && !s.isOf(net.minecraft.item.Items.RED_BED));
                 List<Item> wanted = new java.util.ArrayList<>();
                 for (Item item : Registries.ITEM) if (functional(item) && shown(item)) wanted.add(item);
                 addMissing(entries.getDisplayStacks(), s -> entries.add(s, ItemGroup.StackVisibility.PARENT_TAB_ONLY), wanted);

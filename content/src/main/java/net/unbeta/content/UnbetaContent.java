@@ -68,6 +68,8 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.guardianpost.GuardianPostRegistry.register();
         net.unbeta.content.darkhold.Darkhold.register();
         net.unbeta.content.enderman.EndermanMending.register();
+        net.unbeta.content.dye.DyedBlocks.register();
+        net.unbeta.content.dye.Paintbrush.register();
         net.unbeta.content.goldreath.GoldreathRegistry.register();
         LOG.info("Registered Unbeta torches.");
 
@@ -121,13 +123,9 @@ public final class UnbetaContent implements ModInitializer {
                 if (world.isClient) return;
                 var block = state.getBlock();
                 net.minecraft.item.ItemStack drop = null;
-                if (block == net.minecraft.block.Blocks.STRIPPED_OAK_LOG)
-                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.OAK_LOG);
-                else if (block == net.minecraft.block.Blocks.STRIPPED_SPRUCE_LOG)
-                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.SPRUCE_LOG);
-                else if (block == net.minecraft.block.Blocks.STRIPPED_BIRCH_LOG)
-                    drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.BIRCH_LOG);
-                else if (block == net.minecraft.block.Blocks.STRIPPED_JUNGLE_LOG)
+                // (Stripped oak, birch and spruce logs: their loot tables drop the log - or, to a
+                // gold tool, the stripped log itself.)
+                if (block == net.minecraft.block.Blocks.STRIPPED_JUNGLE_LOG)
                     drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.JUNGLE_LOG);
                 else if (block == net.minecraft.block.Blocks.STRIPPED_ACACIA_LOG)
                     drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.ACACIA_LOG);

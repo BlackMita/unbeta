@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:oak_trapdoor",
+    "unbeta-content:white_wood_trapdoor",
+    "unbeta-content:orange_wood_trapdoor",
+    "unbeta-content:magenta_wood_trapdoor",
+    "unbeta-content:light_blue_wood_trapdoor",
+    "unbeta-content:yellow_wood_trapdoor",
+    "unbeta-content:lime_wood_trapdoor",
+    "unbeta-content:pink_wood_trapdoor",
+    "unbeta-content:gray_wood_trapdoor",
+    "unbeta-content:light_gray_wood_trapdoor",
+    "unbeta-content:cyan_wood_trapdoor",
+    "unbeta-content:purple_wood_trapdoor",
+    "unbeta-content:blue_wood_trapdoor",
+    "unbeta-content:brown_wood_trapdoor",
+    "unbeta-content:green_wood_trapdoor",
+    "unbeta-content:red_wood_trapdoor",
+    "unbeta-content:black_wood_trapdoor"
+  ]
+}

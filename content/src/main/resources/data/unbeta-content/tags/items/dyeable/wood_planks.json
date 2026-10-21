@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:oak_planks",
+    "unbeta-content:white_wood_planks",
+    "unbeta-content:orange_wood_planks",
+    "unbeta-content:magenta_wood_planks",
+    "unbeta-content:light_blue_wood_planks",
+    "unbeta-content:yellow_wood_planks",
+    "unbeta-content:lime_wood_planks",
+    "unbeta-content:pink_wood_planks",
+    "unbeta-content:gray_wood_planks",
+    "unbeta-content:light_gray_wood_planks",
+    "unbeta-content:cyan_wood_planks",
+    "unbeta-content:purple_wood_planks",
+    "unbeta-content:blue_wood_planks",
+    "unbeta-content:brown_wood_planks",
+    "unbeta-content:green_wood_planks",
+    "unbeta-content:red_wood_planks",
+    "unbeta-content:black_wood_planks"
+  ]
+}

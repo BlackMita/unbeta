@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_stone",
+    "unbeta-content:orange_stone",
+    "unbeta-content:magenta_stone",
+    "unbeta-content:light_blue_stone",
+    "unbeta-content:yellow_stone",
+    "unbeta-content:lime_stone",
+    "unbeta-content:pink_stone",
+    "unbeta-content:gray_stone",
+    "unbeta-content:light_gray_stone",
+    "unbeta-content:cyan_stone",
+    "unbeta-content:purple_stone",
+    "unbeta-content:blue_stone",
+    "unbeta-content:brown_stone",
+    "unbeta-content:green_stone",
+    "unbeta-content:red_stone",
+    "unbeta-content:black_stone"
+  ]
+}

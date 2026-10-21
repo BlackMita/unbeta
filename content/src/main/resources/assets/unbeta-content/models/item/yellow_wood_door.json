@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "unbeta-content:item/yellow_wood_door"
+  }
+}

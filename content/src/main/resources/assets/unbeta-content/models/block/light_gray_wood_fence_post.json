@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_post",
+  "textures": {
+    "texture": "unbeta-content:block/light_gray_wood_planks"
+  }
+}

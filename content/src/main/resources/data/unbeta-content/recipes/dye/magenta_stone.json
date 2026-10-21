@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "dyed_stone",
+  "pattern": [
+    "###",
+    "#D#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "unbeta-content:dyeable/stone"
+    },
+    "D": {
+      "item": "minecraft:magenta_dye"
+    }
+  },
+  "result": {
+    "item": "unbeta-content:magenta_stone",
+    "count": 8
+  }
+}

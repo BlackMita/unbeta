@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "unbeta-content:item/light_gray_paintbrush"
+  }
+}

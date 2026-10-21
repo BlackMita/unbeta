@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "unbeta-content:block/orange_wood_slab"
+    },
+    "type=double": {
+      "model": "unbeta-content:block/orange_wood_planks"
+    },
+    "type=top": {
+      "model": "unbeta-content:block/orange_wood_slab_top"
+    }
+  }
+}

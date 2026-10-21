@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "group": "loaded_paintbrush",
+  "ingredients": [
+    {
+      "item": "unbeta-content:paintbrush"
+    },
+    {
+      "item": "minecraft:red_dye"
+    }
+  ],
+  "result": {
+    "item": "unbeta-content:red_paintbrush"
+  }
+}

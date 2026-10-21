@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/button",
+  "textures": {
+    "texture": "unbeta-content:block/orange_wood_planks"
+  }
+}

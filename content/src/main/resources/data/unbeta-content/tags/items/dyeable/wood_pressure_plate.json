@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:oak_pressure_plate",
+    "unbeta-content:white_wood_pressure_plate",
+    "unbeta-content:orange_wood_pressure_plate",
+    "unbeta-content:magenta_wood_pressure_plate",
+    "unbeta-content:light_blue_wood_pressure_plate",
+    "unbeta-content:yellow_wood_pressure_plate",
+    "unbeta-content:lime_wood_pressure_plate",
+    "unbeta-content:pink_wood_pressure_plate",
+    "unbeta-content:gray_wood_pressure_plate",
+    "unbeta-content:light_gray_wood_pressure_plate",
+    "unbeta-content:cyan_wood_pressure_plate",
+    "unbeta-content:purple_wood_pressure_plate",
+    "unbeta-content:blue_wood_pressure_plate",
+    "unbeta-content:brown_wood_pressure_plate",
+    "unbeta-content:green_wood_pressure_plate",
+    "unbeta-content:red_wood_pressure_plate",
+    "unbeta-content:black_wood_pressure_plate"
+  ]
+}

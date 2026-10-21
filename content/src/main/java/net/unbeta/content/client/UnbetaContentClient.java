@@ -25,6 +25,8 @@ public final class UnbetaContentClient implements ClientModInitializer {
                 net.unbeta.content.goldreath.GoldreathRegistry.BULLET,
                 net.unbeta.content.client.goldreath.GoldreathBulletRenderer::new);
         net.unbeta.content.client.skyhold.SkyholdFogClient.register();
+        for (net.minecraft.block.Block b : net.unbeta.content.dye.DyedBlocks.CUTOUT)
+            BlockRenderLayerMap.INSTANCE.putBlock(b, RenderLayer.getCutout());
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 net.unbeta.content.guardianpost.GuardianPostRegistry.GUARDIAN_POST,
                 net.unbeta.content.client.guardianpost.GuardianPostRenderer::new);

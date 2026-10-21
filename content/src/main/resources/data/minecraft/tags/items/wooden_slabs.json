@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_wood_slab",
+    "unbeta-content:orange_wood_slab",
+    "unbeta-content:magenta_wood_slab",
+    "unbeta-content:light_blue_wood_slab",
+    "unbeta-content:yellow_wood_slab",
+    "unbeta-content:lime_wood_slab",
+    "unbeta-content:pink_wood_slab",
+    "unbeta-content:gray_wood_slab",
+    "unbeta-content:light_gray_wood_slab",
+    "unbeta-content:cyan_wood_slab",
+    "unbeta-content:purple_wood_slab",
+    "unbeta-content:blue_wood_slab",
+    "unbeta-content:brown_wood_slab",
+    "unbeta-content:green_wood_slab",
+    "unbeta-content:red_wood_slab",
+    "unbeta-content:black_wood_slab"
+  ]
+}

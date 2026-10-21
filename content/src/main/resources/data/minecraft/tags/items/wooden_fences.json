@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_wood_fence",
+    "unbeta-content:orange_wood_fence",
+    "unbeta-content:magenta_wood_fence",
+    "unbeta-content:light_blue_wood_fence",
+    "unbeta-content:yellow_wood_fence",
+    "unbeta-content:lime_wood_fence",
+    "unbeta-content:pink_wood_fence",
+    "unbeta-content:gray_wood_fence",
+    "unbeta-content:light_gray_wood_fence",
+    "unbeta-content:cyan_wood_fence",
+    "unbeta-content:purple_wood_fence",
+    "unbeta-content:blue_wood_fence",
+    "unbeta-content:brown_wood_fence",
+    "unbeta-content:green_wood_fence",
+    "unbeta-content:red_wood_fence",
+    "unbeta-content:black_wood_fence"
+  ]
+}

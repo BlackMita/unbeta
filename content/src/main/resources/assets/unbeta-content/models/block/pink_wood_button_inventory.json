@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/button_inventory",
+  "textures": {
+    "texture": "unbeta-content:block/pink_wood_planks"
+  }
+}

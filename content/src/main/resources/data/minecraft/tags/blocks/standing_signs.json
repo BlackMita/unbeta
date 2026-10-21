@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_wood_sign",
+    "unbeta-content:orange_wood_sign",
+    "unbeta-content:magenta_wood_sign",
+    "unbeta-content:light_blue_wood_sign",
+    "unbeta-content:yellow_wood_sign",
+    "unbeta-content:lime_wood_sign",
+    "unbeta-content:pink_wood_sign",
+    "unbeta-content:gray_wood_sign",
+    "unbeta-content:light_gray_wood_sign",
+    "unbeta-content:cyan_wood_sign",
+    "unbeta-content:purple_wood_sign",
+    "unbeta-content:blue_wood_sign",
+    "unbeta-content:brown_wood_sign",
+    "unbeta-content:green_wood_sign",
+    "unbeta-content:red_wood_sign",
+    "unbeta-content:black_wood_sign"
+  ]
+}

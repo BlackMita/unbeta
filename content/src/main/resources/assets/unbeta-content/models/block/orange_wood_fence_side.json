@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_side",
+  "textures": {
+    "texture": "unbeta-content:block/orange_wood_planks"
+  }
+}

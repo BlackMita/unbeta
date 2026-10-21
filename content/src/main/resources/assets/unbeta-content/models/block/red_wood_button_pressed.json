@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/button_pressed",
+  "textures": {
+    "texture": "unbeta-content:block/red_wood_planks"
+  }
+}
