@@ -36,6 +36,10 @@ public final class Families {
         brushes.add("unbeta-content:paintbrush");
         for (DyeColor c : DyeColor.values()) brushes.add("unbeta-content:" + c.getName() + "_paintbrush");
         GROUPS.add(brushes);
+        List<String> beds = new ArrayList<>();
+        beds.add("minecraft:red_bed");
+        for (DyeColor c : DyeColor.values()) if (c != DyeColor.RED) beds.add("minecraft:" + c.getName() + "_bed");
+        GROUPS.add(beds);
     }
 
     private static Map<Item, List<Item>> byItem;
