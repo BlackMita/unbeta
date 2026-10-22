@@ -20,6 +20,14 @@ public final class BundledDatapackInstaller {
 
     private BundledDatapackInstaller() {}
 
+    /** On a Hunger Games server (the unbeta-hg mod), the day counter and Varnish packs are left out. */
+    private static boolean wanted(String packName) {
+        net.fabricmc.loader.api.FabricLoader loader = net.fabricmc.loader.api.FabricLoader.getInstance();
+        // (The Hunger Games jar is also on players' games, for the Keep screen: only a dedicated server runs the mode.)
+        if (!loader.isModLoaded("unbeta-hg") || loader.getEnvironmentType() != net.fabricmc.api.EnvType.SERVER) return true;
+        return !packName.contains("daycount") && !packName.contains("Varnish");
+    }
+
     public static void register() {
         ServerWorldEvents.LOAD.register(BundledDatapackInstaller::onWorldLoad);
     }
@@ -31,6 +39,7 @@ public final class BundledDatapackInstaller {
 
         boolean installedAny = false;
         for (String packName : PACKS) {
+            if (!wanted(packName)) continue;
             Path dest = datapacksDir.resolve(packName);
             if (Files.exists(dest)) continue;
             String resource = "/unbeta_bundled_datapacks/" + packName;
@@ -52,6 +61,7 @@ public final class BundledDatapackInstaller {
             java.util.Set<String> toEnable = new java.util.LinkedHashSet<>(
                     server.getDataPackManager().getEnabledNames());
             for (String packName : PACKS) {
+                if (!wanted(packName)) continue;
                 // Pack name as Minecraft sees it (filename without .zip, prefixed with "file/")
                 toEnable.add("file/" + packName);
             }

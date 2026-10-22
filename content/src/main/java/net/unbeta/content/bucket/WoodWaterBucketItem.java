@@ -40,7 +40,7 @@ public class WoodWaterBucketItem extends Item {
             if (player != null) {
                 player.playSound(SoundEvents.ITEM_BUCKET_EMPTY, 1.0f, 1.2f);
                 if (!player.getAbilities().creativeMode) {
-                    player.setStackInHand(context.getHand(), new ItemStack(BucketItems.WOOD_BUCKET));
+                    player.setStackInHand(context.getHand(), new ItemStack(emptied()));
                 }
             }
         }
@@ -57,6 +57,11 @@ public class WoodWaterBucketItem extends Item {
         user.playSound(SoundEvents.ITEM_BUCKET_EMPTY, 1.0f, 1.0f);
         user.incrementStat(Stats.USED.getOrCreateStat(this));
         return TypedActionResult.success(
-                user.getAbilities().creativeMode ? stack : new ItemStack(BucketItems.WOOD_BUCKET), world.isClient());
+                user.getAbilities().creativeMode ? stack : new ItemStack(emptied()), world.isClient());
+    }
+
+    /** The empty bucket this one turns back into. */
+    protected Item emptied() {
+        return BucketItems.WOOD_BUCKET;
     }
 }

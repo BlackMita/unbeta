@@ -20,6 +20,9 @@ import java.util.List;
  * Terracotta is gone: wherever a structure template (villages included) would place terracotta
  * of any colour, glazed or not, it places dyed Stone of the same colour instead. Plain
  * terracotta, being brown, becomes Brown Stone.
+ *
+ * <p>Also: Stripped Oak Wood (the posts of village street lamps) becomes Stripped Oak Log,
+ * standing the same way.
  */
 @Mixin(StructureTemplate.class)
 public abstract class TerracottaToStoneMixin {
@@ -42,6 +45,10 @@ public abstract class TerracottaToStoneMixin {
     }
 
     private static BlockState replacement(BlockState state) {
+        if (state.isOf(net.minecraft.block.Blocks.STRIPPED_OAK_WOOD)) {
+            return net.minecraft.block.Blocks.STRIPPED_OAK_LOG.getDefaultState()
+                    .with(net.minecraft.block.PillarBlock.AXIS, state.get(net.minecraft.block.PillarBlock.AXIS));
+        }
         String path = Registries.BLOCK.getId(state.getBlock()).getPath();
         if (!path.endsWith("terracotta")) return null;
         if (path.equals("terracotta")) return DyedBlocks.block(DyedBlocks.Shape.STONE, DyeColor.BROWN).getDefaultState();

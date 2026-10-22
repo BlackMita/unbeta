@@ -41,7 +41,9 @@ public class ObsidianDoorBlock extends DoorBlock {
         return true;
     }
 
-    public static final int XP_COST = 550;
+    /** What opening costs: level 20 (550 points) normally; a Hunger Games server lowers it to 3 levels. */
+    public static int XP_COST = 550;
+    public static int XP_LEVELS = 20;
 
     /**
      * Manual right-click. Opening is gated on the nearest player's XP; closing releases
@@ -59,7 +61,7 @@ public class ObsidianDoorBlock extends DoorBlock {
                     world.playSound(null, pos,
                             net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,
                             SoundCategory.BLOCKS, 0.8F, 1.0F);
-                    player.sendMessage(Text.literal("This door needs at least level 20 (550 experience) to open.")
+                    player.sendMessage(Text.literal("This door needs at least level " + XP_LEVELS + " (" + XP_COST + " experience) to open.")
                             .formatted(Formatting.GREEN), false);
                     return ActionResult.SUCCESS;
                 }

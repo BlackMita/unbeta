@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "unbeta-hg",
+  "version": "${version}",
+  "name": "Unbeta Hunger Games",
+  "description": "The Unbeta Hunger Games server mode: rounds, lobby, keeps, dummies. The mode runs only on a dedicated server; on a player's game this jar just adds the Keep screen (K).",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.unbeta.hg.UnbetaHG"
+    ],
+    "client": [
+      "net.unbeta.hg.client.UnbetaHGClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "unbeta-content": ">=0.1.0"
+  },
+  "mixins": [
+    "unbeta-hg.mixins.json"
+  ]
+}

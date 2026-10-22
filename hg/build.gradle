@@ -1,0 +1,7 @@
+base { archivesName = "${project.archives_base_name}-hg" }
+
+dependencies {
+    // The game mode runs on top of Unbeta: it can use Unbeta's classes, but ships as its own jar.
+    implementation project(path: ':content', configuration: 'namedElements')
+    implementation project(path: ':core', configuration: 'namedElements')
+}
