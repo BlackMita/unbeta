@@ -32,6 +32,8 @@ public final class UnbetaHG implements ModInitializer {
         Round.register();
         Keeps.register();
         OutPlayers.register();
+        // A zombified player's revenant leaves their keeps with them.
+        net.unbeta.content.corruption.RevenantEntity.KEPT = (player, stack) -> Keeps.keptThroughDeath(player, stack.getItem());
         // Obsidian Doors open for 3 levels on this server.
         net.unbeta.content.obsidiandoor.ObsidianDoorBlock.XP_LEVELS = 3;
         net.unbeta.content.obsidiandoor.ObsidianDoorBlock.XP_COST = net.unbeta.content.obsidiandoor.XpHelper.pointsForLevel(3);

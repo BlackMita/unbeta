@@ -42,6 +42,16 @@ public class RevenantEntity extends ZombieEntity {
         this.setCanPickUpLoot(false);
     }
 
+    /**
+     * Items the player keeps through death (a Hunger Games server's keeps): the revenant leaves
+     * those with the player, who gets them back on respawning. Nothing is kept by default.
+     */
+    public static java.util.function.BiPredicate<ServerPlayerEntity, ItemStack> KEPT = (player, stack) -> false;
+
+    private static ItemStack take(ServerPlayerEntity player, ItemStack stack) {
+        return stack.isEmpty() || KEPT.test(player, stack) ? ItemStack.EMPTY : stack.copy();
+    }
+
     /** Hooked on death itself, so it only fires when the player really dies of zombification. */
     public static void registerDeathHook() {
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
@@ -67,23 +77,31 @@ public class RevenantEntity extends ZombieEntity {
 
         PlayerInventory inv = player.getInventory();
         // PlayerInventory.armor is feet, legs, chest, head
-        revenant.equipStack(EquipmentSlot.FEET,  inv.armor.get(0).copy());
-        revenant.equipStack(EquipmentSlot.LEGS,  inv.armor.get(1).copy());
-        revenant.equipStack(EquipmentSlot.CHEST, inv.armor.get(2).copy());
-        revenant.equipStack(EquipmentSlot.HEAD,  inv.armor.get(3).copy());
-        revenant.equipStack(EquipmentSlot.MAINHAND, inv.main.get(inv.selectedSlot).copy());
-        revenant.equipStack(EquipmentSlot.OFFHAND, inv.offHand.get(0).copy());
+        revenant.equipStack(EquipmentSlot.FEET,  take(player, inv.armor.get(0)));
+        revenant.equipStack(EquipmentSlot.LEGS,  take(player, inv.armor.get(1)));
+        revenant.equipStack(EquipmentSlot.CHEST, take(player, inv.armor.get(2)));
+        revenant.equipStack(EquipmentSlot.HEAD,  take(player, inv.armor.get(3)));
+        revenant.equipStack(EquipmentSlot.MAINHAND, take(player, inv.main.get(inv.selectedSlot)));
+        revenant.equipStack(EquipmentSlot.OFFHAND, take(player, inv.offHand.get(0)));
         // Above 1.0 = always dropped, and dropped as-is (no random durability loss).
         for (EquipmentSlot slot : EquipmentSlot.values()) revenant.setEquipmentDropChance(slot, 2.0F);
 
         for (int i = 0; i < inv.main.size(); i++) {
             if (i == inv.selectedSlot) continue;
-            ItemStack stack = inv.main.get(i);
-            if (!stack.isEmpty()) revenant.carried.add(stack.copy());
+            ItemStack stack = take(player, inv.main.get(i));
+            if (!stack.isEmpty()) revenant.carried.add(stack);
         }
 
-        inv.clear(); // vanilla now drops nothing but XP
+        // Vanilla now drops nothing but XP; kept items stay behind for the player's respawn.
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack stack = inv.getStack(i);
+            if (!stack.isEmpty() && !KEPT.test(player, stack)) inv.setStack(i, ItemStack.EMPTY);
+        }
         world.spawnEntity(revenant);
+        // The revenant IS them now: everyone else's view of the falling, red-tinted body ends at
+        // once (the player's own death screen is unchanged; their respawn brings them back).
+        world.getChunkManager().sendToOtherNearbyPlayers(player,
+                new net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket(player.getId()));
     }
 
     @Override

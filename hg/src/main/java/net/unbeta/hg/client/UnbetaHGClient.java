@@ -22,13 +22,15 @@ import java.util.List;
  * The player's side of keeps: K always opens the Keep screen on a Hunger Games server (it's
  * wired straight to the key, not a rebindable control), kept items say so in their tooltip, and
  * a big sign tells players about K at the start of every round (each round is a new connection)
- * until they've pressed it. Out players see everyone still in outlined through walls.
+ * until they've pressed it. Out players see everyone still in outlined through walls, and can
+ * jump again in mid-air as often as they like.
  */
 public final class UnbetaHGClient implements ClientModInitializer {
 
     /** K pressed since joining: the sign comes back each time you join (every round is a new world). */
     private static boolean seen;
     private static boolean kWasDown;
+    private static boolean jumpWasDown;
 
     @Override
     public void onInitializeClient() {
@@ -63,6 +65,15 @@ public final class UnbetaHGClient implements ClientModInitializer {
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // Spectres jump on air: every press of Jump is a jump, landed or not.
+            boolean jump = client.options.jumpKey.isPressed();
+            if (jump && !jumpWasDown && client.player != null && client.currentScreen == null
+                    && OutClient.isOut(client.player.getUuid()) && !client.player.isOnGround()
+                    && !client.player.isTouchingWater() && !client.player.isClimbing()) {
+                client.player.jump();
+            }
+            jumpWasDown = jump;
+
             boolean down = InputUtil.isKeyPressed(client.getWindow().getHandle(), GLFW.GLFW_KEY_K);
             boolean pressed = down && !kWasDown;
             kWasDown = down;

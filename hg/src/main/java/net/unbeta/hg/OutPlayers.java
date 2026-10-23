@@ -47,6 +47,31 @@ public final class OutPlayers {
 
     private static final java.util.Set<UUID> pending = new java.util.HashSet<>();
 
+    // ------------------------------------------------------------------ spectres
+
+    private static final String TEAM = "hg_spectres";
+
+    /** Out players' names read "Name's Spectre" (above their heads, in the tab list and in chat), in grey. */
+    public static void makeSpectre(MinecraftServer server, String name) {
+        net.minecraft.scoreboard.ServerScoreboard board = server.getScoreboard();
+        net.minecraft.scoreboard.Team team = board.getTeam(TEAM);
+        if (team == null) {
+            team = board.addTeam(TEAM);
+            team.setColor(net.minecraft.util.Formatting.GRAY);
+            team.setSuffix(net.minecraft.text.Text.literal("'s Spectre").formatted(net.minecraft.util.Formatting.GRAY));
+            team.setCollisionRule(net.minecraft.scoreboard.AbstractTeam.CollisionRule.NEVER);
+        }
+        board.addPlayerToTeam(name, team);
+    }
+
+    /** Hostile mobs drop any out player they were after (MobTargetMixin stops new ones). */
+    private static void calmMobs(ServerPlayerEntity p) {
+        for (net.minecraft.entity.mob.MobEntity m : p.getServerWorld().getEntitiesByClass(net.minecraft.entity.mob.MobEntity.class,
+                p.getBoundingBox().expand(48), mob -> mob.getTarget() == p)) {
+            m.setTarget(null);
+        }
+    }
+
     // ------------------------------------------------------------------ the glow
 
     public static void tick(MinecraftServer server) {
@@ -61,8 +86,12 @@ public final class OutPlayers {
             pending.clear();
         }
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-            if (Round.isOut(p) && p.isAlive() && !p.isSpectator()) follow(p);
-            else unlight(p.getUuid());
+            if (Round.isOut(p) && p.isAlive() && !p.isSpectator()) {
+                follow(p);
+                if (server.getTicks() % 20 == 0) calmMobs(p);
+            } else {
+                unlight(p.getUuid());
+            }
         }
         // Players who left.
         for (Iterator<Map.Entry<UUID, Light>> it = lights.entrySet().iterator(); it.hasNext(); ) {

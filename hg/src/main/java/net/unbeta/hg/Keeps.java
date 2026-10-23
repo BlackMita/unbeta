@@ -185,10 +185,29 @@ public final class Keeps {
 
     // ------------------------------------------------------------------ deaths
 
+    /**
+     * Dying on your last heart: this death puts you out, so your keeps drop with everything else
+     * (Attrition takes the last heart after the respawn; at the moment of death you're on 1).
+     */
+    public static boolean finalDeath(ServerPlayerEntity p) {
+        Round.Phase ph = Round.phase();
+        return (ph == Round.Phase.GRACE || ph == Round.Phase.GAME) && Round.tookPart(p.getUuid())
+                && !Round.isOut(p) && p.getMaxHealth() <= 2F;
+    }
+
+    /** Kept, and this isn't the death that puts you out. */
+    public static boolean keptThroughDeath(ServerPlayerEntity p, Item item) {
+        return kept(p, item) && !finalDeath(p);
+    }
+
     /** Called as a player's inventory is about to drop: kept items are set aside instead. */
     public static void stashKept(ServerPlayerEntity p) {
         if (p.getWorld().getGameRules().getBoolean(GameRules.KEEP_INVENTORY)) return;
-        if (!keeps.containsKey(p.getUuid())) return;
+        if (!keeps.containsKey(p.getUuid()) || keeps.get(p.getUuid()).isEmpty()) return;
+        if (finalDeath(p)) {
+            tell(p, "Your last heart is gone - your keeps fall with you.", Formatting.RED);
+            return;
+        }
         PlayerInventory inv = p.getInventory();
         List<Stashed> saved = stash.computeIfAbsent(p.getUuid(), k -> new ArrayList<>());
         for (int slot = 0; slot < inv.size(); slot++) {

@@ -6,11 +6,13 @@
     "RestrictedPickupMixin",
     "RestrictedOrbMixin",
     "KeepOnDeathMixin",
-    "DeathXpMixin"
+    "DeathXpMixin",
+    "MobTargetMixin"
   ],
   "client": [
     "client.GhostRenderMixin",
-    "client.OutSeesOutlinesMixin"
+    "client.OutSeesOutlinesMixin",
+    "client.KeptHeldNameMixin"
   ],
   "injectors": {
     "defaultRequire": 1

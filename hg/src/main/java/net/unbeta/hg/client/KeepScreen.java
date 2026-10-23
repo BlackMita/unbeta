@@ -78,6 +78,11 @@ public final class KeepScreen extends Screen {
         if (all.isEmpty()) {
             for (Item i : Registries.ITEM) if (i != Items.AIR && seen.add(i)) all.add(new ItemStack(i));
         }
+        // Items no Creative tab shows, but you can still find and keep.
+        for (String extra : new String[] {"unbeta-content:unbeta_pearl"}) {
+            Identifier id = new Identifier(extra);
+            if (Registries.ITEM.containsId(id) && seen.add(Registries.ITEM.get(id))) all.add(new ItemStack(Registries.ITEM.get(id)));
+        }
     }
 
     private void refilter() {

@@ -408,6 +408,7 @@ public final class Round {
         }
         if (p != null) Keeps.sync(p);
         OutPlayers.syncAll(server);
+        OutPlayers.makeSpectre(server, name);
         int left = stillIn().size();
         broadcast(server, Text.literal(name + " is out (" + why + "). " + left + (left == 1 ? " player" : " players") + " left.")
                 .formatted(Formatting.RED));
