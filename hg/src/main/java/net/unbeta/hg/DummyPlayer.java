@@ -18,6 +18,8 @@ public final class DummyPlayer extends ServerPlayerEntity {
 
     private int nextChange;
     private boolean walking;
+    /** A bot's body (orders, and from Phase 2 its brain); null for a plain wandering dummy. */
+    public net.unbeta.hg.bot.Body body;
 
     public DummyPlayer(MinecraftServer server, ServerWorld world, GameProfile profile) {
         super(server, world, profile);
@@ -31,6 +33,8 @@ public final class DummyPlayer extends ServerPlayerEntity {
             // Get up before the 20th tick of dying: at 20 the game takes a dead player's body out
             // of the world (a real player is then rebuilt by the Respawn button).
             if (this.deathTime >= 15) respawnHere();
+        } else if (body != null) {
+            body.tick();
         } else {
             wander();
         }
@@ -55,6 +59,7 @@ public final class DummyPlayer extends ServerPlayerEntity {
 
     /** Back on its feet at spawn: what pressing Respawn does, done in place. */
     private void respawnHere() {
+        if (body != null) body.stop();
         ServerWorld world = this.getServer().getOverworld();
         BlockPos spawn = world.getSpawnPos();
         this.dead = false;
