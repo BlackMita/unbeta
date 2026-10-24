@@ -32,11 +32,18 @@ public final class Body {
 
     public final DummyPlayer bot;
     public final Traits traits;
+    /** Its brain (Phase 2): runs whenever no order from /hg bot is running. */
+    public final Brain brain;
     private Action action;
+    /** While the brain drives, orders' chatter ("made a wooden pickaxe") stays out of chat. */
+    boolean quiet;
+    /** The last thing it would have said while quiet (shown by /hg bot why). */
+    String lastSaid = "";
 
     public Body(DummyPlayer bot, Traits traits) {
         this.bot = bot;
         this.traits = traits;
+        this.brain = new Brain(this);
     }
 
     /** One thing a bot is doing. tick() returns true when it has finished (or given up). */
@@ -52,7 +59,7 @@ public final class Body {
 
     public void tick() {
         if (action == null) {
-            stopMoving();
+            brain.tick();
             return;
         }
         boolean done;
@@ -70,9 +77,15 @@ public final class Body {
         }
     }
 
+    /** An order from /hg bot: the brain stands aside until it's done. */
     public void start(Action next) {
         stop();
+        brain.standAside();
         action = next;
+    }
+
+    public boolean hasOrder() {
+        return action != null;
     }
 
     public void stop() {
@@ -92,6 +105,10 @@ public final class Body {
 
     /** Says something in chat, in grey, for testing. */
     public void say(String text) {
+        if (quiet) {
+            lastSaid = text;
+            return;
+        }
         bot.getServer().getPlayerManager().broadcast(
                 Text.literal("[" + bot.getName().getString() + "] " + text).formatted(Formatting.GRAY), false);
     }
@@ -221,7 +238,7 @@ public final class Body {
         boolean wet = bot.isTouchingWater() || bot.isInLava();
         bot.setJumping(n.getY() > bot.getBlockY() || bot.horizontalCollision || wet);
         double left = bot.getPos().distanceTo(finalCentre);
-        bot.setSprinting(left > BotConfig.get().sprintOver && !wet && bot.getHungerManager().getFoodLevel() > 6 && off < 30F);
+        bot.setSprinting(!noSprint && left > BotConfig.get().sprintOver && !wet && bot.getHungerManager().getFoodLevel() > 6 && off < 30F);
     }
 
     public void stopMoving() {
@@ -299,7 +316,8 @@ public final class Body {
             stopBreaking();
             return Dig.DONE;
         }
-        if (state.getHardness(world, pos) < 0) {
+        if (state.getHardness(world, pos) < 0 || !canHarvest(state)) {
+            // Unbreakable, or it lacks the tool (Unbeta stone needs an iron pick): don't punch at it.
             stopBreaking();
             return Dig.FAILED;
         }
@@ -325,6 +343,17 @@ public final class Body {
         }
         return Dig.DIGGING;
     }
+
+    /** Has it something that breaks this block properly (or does it need no tool)? */
+    public boolean canHarvest(BlockState state) {
+        if (!state.isToolRequired()) return true;
+        PlayerInventory inv = bot.getInventory();
+        for (int i = 0; i < 36; i++) if (inv.getStack(i).isSuitableFor(state)) return true;
+        return false;
+    }
+
+    /** Tortoises never sprint while gearing up. */
+    public boolean noSprint;
 
     public void stopBreaking() {
         if (breaking != null) world().setBlockBreakingInfo(bot.getId(), breaking, -1);
@@ -456,5 +485,147 @@ public final class Body {
     /** Within reach of a block (from its eyes)? */
     public boolean inReach(BlockPos pos) {
         return bot.getEyePos().distanceTo(Vec3d.ofCenter(pos)) <= BotConfig.get().reach;
+    }
+
+    // ------------------------------------------------------------------ Phase 2 helpers
+
+    /** How many items pass the test, across its 36 slots. */
+    public int count(java.util.function.Predicate<ItemStack> test) {
+        int n = 0;
+        PlayerInventory inv = bot.getInventory();
+        for (int i = 0; i < 36; i++) if (!inv.getStack(i).isEmpty() && test.test(inv.getStack(i))) n += inv.getStack(i).getCount();
+        return n;
+    }
+
+    public int count(Item item) {
+        return count(st -> st.isOf(item));
+    }
+
+    public boolean has(java.util.function.Predicate<ItemStack> test) {
+        return slot(test) >= 0;
+    }
+
+    /** The first slot holding something that passes the test, or -1. */
+    public int slot(java.util.function.Predicate<ItemStack> test) {
+        PlayerInventory inv = bot.getInventory();
+        for (int i = 0; i < 36; i++) if (!inv.getStack(i).isEmpty() && test.test(inv.getStack(i))) return i;
+        return -1;
+    }
+
+    public boolean hold(java.util.function.Predicate<ItemStack> test) {
+        int s = slot(test);
+        if (s < 0) return false;
+        holdSlot(s);
+        return true;
+    }
+
+    /** Uses what it holds (eat, drink, fill or pour a bucket where it's looking, throw). */
+    public boolean useHeld() {
+        ActionResult r = bot.interactionManager.interactItem(bot, world(), bot.getMainHandStack(), Hand.MAIN_HAND);
+        return r.isAccepted();
+    }
+
+    /** Clicks a block face with what it holds (lights a torch on fire, opens, sleeps in a bed). */
+    public boolean useOn(BlockPos pos) {
+        Vec3d eye = bot.getEyePos();
+        Direction face = Direction.getFacing(eye.x - (pos.getX() + 0.5), eye.y - (pos.getY() + 0.5), eye.z - (pos.getZ() + 0.5));
+        BlockHitResult hit = new BlockHitResult(Vec3d.ofCenter(pos).add(Vec3d.of(face.getVector()).multiply(0.5)), face, pos, false);
+        ActionResult r = bot.interactionManager.interactBlock(bot, world(), bot.getMainHandStack(), Hand.MAIN_HAND, hit);
+        bot.swingHand(Hand.MAIN_HAND);
+        return r.isAccepted();
+    }
+
+    /** Places the block item it holds into one exact spot, against any solid neighbour. */
+    public boolean placeAt(BlockPos target) {
+        ServerWorld world = world();
+        if (!world.getBlockState(target).isReplaceable() || !inReach(target)) return false;
+        for (Direction dir : Direction.values()) {
+            BlockPos against = target.offset(dir);
+            BlockState there = world.getBlockState(against);
+            if (!there.isSideSolidFullSquare(world, against, dir.getOpposite())) continue;
+            Direction face = dir.getOpposite();
+            lookAt(Vec3d.ofCenter(against));
+            bot.setSneaking(true);
+            BlockHitResult hit = new BlockHitResult(Vec3d.ofCenter(against).add(Vec3d.of(face.getVector()).multiply(0.5)), face, against, false);
+            ActionResult r = bot.interactionManager.interactBlock(bot, world, bot.getMainHandStack(), Hand.MAIN_HAND, hit);
+            bot.setSneaking(false);
+            if (r.isAccepted() && !world.getBlockState(target).isReplaceable()) {
+                bot.swingHand(Hand.MAIN_HAND);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Runs flat out the way it's facing, hopping anything in the way. */
+    public void run() {
+        path = null;
+        goal = null;
+        bot.forwardSpeed = 1F;
+        bot.sidewaysSpeed = 0F;
+        bot.setSprinting(bot.getHungerManager().getFoodLevel() > 6);
+        bot.setJumping(bot.horizontalCollision || bot.isTouchingWater());
+    }
+
+    /** Heads away from a point: turns its back on it and runs. */
+    public void flee(Vec3d from) {
+        Vec3d away = bot.getPos().subtract(from);
+        if (away.horizontalLengthSquared() < 0.01) away = bot.getRotationVector().multiply(-1);
+        Vec3d aim = bot.getEyePos().add(new Vec3d(away.x, 0, away.z).normalize().multiply(8));
+        lookAt(aim);
+        run();
+    }
+
+    /** Swings at something: walks into reach, faces it, hits when its swing has charged. True once dead or gone. */
+    public boolean attack(net.minecraft.entity.Entity target) {
+        if (target == null || target.isRemoved() || (target instanceof net.minecraft.entity.LivingEntity le && le.isDead())) {
+            stopMoving();
+            return true;
+        }
+        double d = bot.distanceTo(target);
+        lookAt(target.getEyePos().add(0, -0.3, 0));
+        if (d > 2.8) {
+            walkTo(target.getBlockPos(), 2.0);
+            return false;
+        }
+        halt();
+        if (bot.getAttackCooldownProgress(0.5F) >= 0.9F) {
+            bot.attack(target);
+            bot.swingHand(Hand.MAIN_HAND);
+        }
+        return false;
+    }
+
+    /** Holds its hardest-hitting sword or axe, if it has one. */
+    public boolean holdBestWeapon() {
+        PlayerInventory inv = bot.getInventory();
+        int best = -1;
+        float bestDmg = 0F;
+        for (int i = 0; i < 36; i++) {
+            float dmg = weaponDamage(inv.getStack(i));
+            if (dmg > bestDmg) {
+                bestDmg = dmg;
+                best = i;
+            }
+        }
+        holdSlot(best);
+        return best >= 0;
+    }
+
+    public static float weaponDamage(ItemStack s) {
+        if (s.getItem() instanceof net.minecraft.item.SwordItem sword) return sword.getAttackDamage() + 1F;
+        if (s.getItem() instanceof net.minecraft.item.AxeItem axe) return axe.getAttackDamage();
+        return 0F;
+    }
+
+    /** Throws a whole stack the way it is facing. */
+    public void throwSlot(int slot, double speed) {
+        PlayerInventory inv = bot.getInventory();
+        ItemStack s = inv.getStack(slot);
+        if (s.isEmpty()) return;
+        inv.setStack(slot, ItemStack.EMPTY);
+        net.minecraft.entity.ItemEntity thrown = bot.dropItem(s, false, true);
+        if (thrown != null) thrown.setVelocity(bot.getRotationVector().multiply(speed).add(0, 0.15, 0));
+        bot.swingHand(Hand.MAIN_HAND);
     }
 }

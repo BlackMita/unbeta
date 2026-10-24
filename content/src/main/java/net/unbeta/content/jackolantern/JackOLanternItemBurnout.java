@@ -35,6 +35,7 @@ public final class JackOLanternItemBurnout {
                     }
                 }
 
+                if (now % 20 != 0) continue;   // dropped ones: once a second is plenty
                 // Dropped lit JoLs that expired → fresh unlit entity (same dynamic-lights
                 // caching issue as torches: must spawn a new entity, not swap the stack).
                 world.getEntitiesByClass(ItemEntity.class,

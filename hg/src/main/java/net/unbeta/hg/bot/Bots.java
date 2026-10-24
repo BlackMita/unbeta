@@ -66,6 +66,18 @@ public final class Bots {
         return added;
     }
 
+    /** /hg bot brains on|off: every bot's brain at once. */
+    public static boolean brainsOn = true;
+
+    /** Shows what a bot is doing after its traits on its nametag: "the Middling Survivor Hog · S1 On fire 3s". */
+    public static void status(net.unbeta.hg.DummyPlayer bot, String doing) {
+        String name = bot.getName().getString();
+        Team team = bot.getServer().getScoreboard().getTeam("hgbot_" + name.toLowerCase());
+        if (team == null || bot.body == null) return;
+        team.setSuffix(Text.literal(" " + bot.body.traits.title()).formatted(Formatting.GRAY)
+                .append(Text.literal(" · " + doing).formatted(Formatting.YELLOW)));
+    }
+
     /** "Name the Middling Survivor Hog" on its nametag and in the tab list. */
     private static void title(MinecraftServer server, String name, Traits traits) {
         ServerScoreboard board = server.getScoreboard();

@@ -21,7 +21,7 @@ public record Traits(Win win, Keep keep, Play play) {
 
     /** B: what the bot values and keeps. */
     public enum Keep {
-        WOODSMAN("Woodsman"), STONEMASON("Stonemason"), IRONCLAD("Ironclad"), COPPERHEAD("Copperhead"),
+        WOODSMAN("Woodsman"), FLETCHER("Fletcher"), IRONCLAD("Ironclad"), COPPERHEAD("Copperhead"),
         GILDED("Gilded"), SURVIVOR("Survivor"), LIGHTENER("Lightener"), MEDIC("Medic"), GLUTTON("Glutton"),
         BULWARK("Bulwark"), DUELIST("Duelist"), BUILDER("Builder"), HOMESTEADER("Homesteader"),
         BUCKETEER("Bucketeer"), SPELUNKER("Spelunker"), PEARL_DIVER("Pearl Diver"), PACK_RAT("Pack Rat"),

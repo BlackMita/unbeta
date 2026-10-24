@@ -139,6 +139,8 @@ public final class Orders {
 
     /** Craft an item, making whatever it needs on the way (planks, sticks, a crafting table). */
     public static final class Craft implements Body.Action {
+        private final java.util.function.Predicate<ItemStack> want;
+        private final String label;
         private final Item target;
         private List<Crafting.Step> steps;
         private int step;
@@ -150,6 +152,15 @@ public final class Orders {
 
         public Craft(Item target) {
             this.target = target;
+            this.want = st -> st.isOf(target);
+            this.label = name(target);
+        }
+
+        /** Craft anything that passes the test ("planks", any colour of wood). */
+        public Craft(java.util.function.Predicate<ItemStack> want, String label) {
+            this.target = null;
+            this.want = want;
+            this.label = label;
         }
 
         @Override
@@ -157,15 +168,15 @@ public final class Orders {
             if (!planned) {
                 planned = true;
                 table = body.findNear(Blocks.CRAFTING_TABLE, 8);
-                steps = Crafting.plan(body.bot, target, table != null);
+                steps = Crafting.plan(body.bot, want, table != null);
                 if (steps == null) {
-                    body.say("can't make " + name(target) + " from what I'm carrying");
+                    body.say("can't make " + label + " from what I'm carrying");
                     return true;
                 }
             }
             if (step >= steps.size()) {
-                body.hold(target);
-                body.say("made " + name(target));
+                if (target != null) body.hold(target);
+                body.say("made " + label);
                 succeeded = true;
                 return true;
             }
@@ -226,7 +237,7 @@ public final class Orders {
 
         @Override
         public String describe() {
-            return "crafting " + name(target);
+            return "crafting " + label;
         }
     }
 
@@ -352,7 +363,7 @@ public final class Orders {
                 if (smeltable && rank(s) < oreRank) {
                     ore = i;
                     oreRank = rank(s);
-                } else if (fuel < 0 && isFuel) {
+                } else if (isFuel && fuelRank(s) < (fuel < 0 ? Integer.MAX_VALUE : fuelRank(inv.getStack(fuel)))) {
                     fuel = i;
                 }
             }
@@ -360,7 +371,7 @@ public final class Orders {
                 body.say("I have nothing to smelt");
                 return true;
             }
-            if (fuel < 0) {
+            if (fuel < 0 || fuelRank(inv.getStack(fuel)) >= Integer.MAX_VALUE - 1) {
                 body.say("I have no fuel");
                 return true;
             }
@@ -378,6 +389,19 @@ public final class Orders {
             body.bot.swingHand(Hand.MAIN_HAND);
             loaded = true;
             return false;
+        }
+
+        /**
+         * Which fuel to burn first: lava (it lights the furnace itself), then coal, then wood.
+         * Never tools, weapons or anything else worth more than its burn time.
+         */
+        private static int fuelRank(ItemStack s) {
+            if (s.isDamageable() || s.isOf(Items.CRAFTING_TABLE) || s.isOf(Items.CHEST)) return Integer.MAX_VALUE - 1;
+            if (net.unbeta.content.furnace.LavaFuel.burnTime(s) > 0) return 0;
+            if (s.isOf(Items.COAL) || s.isOf(Items.CHARCOAL)) return 1;
+            if (s.isIn(net.minecraft.registry.tag.ItemTags.LOGS)) return 2;
+            if (s.isIn(net.minecraft.registry.tag.ItemTags.PLANKS)) return 3;
+            return 4;
         }
 
         /** What's most worth smelting: ore first, then raw food, then anything else (cobblestone, sand) last. */

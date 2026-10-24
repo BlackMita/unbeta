@@ -50,22 +50,23 @@ public final class BoomSporeTickHook {
                         e.discard();
                     }
                 });
+            }
 
-                // 3. Scan nearby containers (chests, barrels, etc.)
-                for (var pos : BlockPos.iterateOutwards(player.getBlockPos(),
-                        SCAN_RADIUS, SCAN_RADIUS, SCAN_RADIUS)) {
-                    BlockEntity be = world.getBlockEntity(pos);
-                    if (!(be instanceof Inventory container)) continue;
-                    for (int i = 0; i < container.size(); i++) {
-                        ItemStack stack = container.getStack(i);
-                        if (BoomSporeItem.isLive(stack) && now >= BoomSporeItem.getDetonationAt(stack)) {
-                            container.setStack(i, ItemStack.EMPTY);
-                            // Explode below the container (destroys it)
-                            world.createExplosion(null,
-                                    pos.getX() + 0.5, pos.getY() - 0.5, pos.getZ() + 0.5,
-                                    3.0F, World.ExplosionSourceType.MOB);
-                            break;
-                        }
+            // 3. Containers (chests, barrels...): every loaded one, once a second. (This was a
+            // 33-block cube of block reads around every player, every tick.)
+            if (now % 20 != 0) return;
+            for (BlockEntity be : net.unbeta.content.lockey.LoadedBlockEntities.iterate(world)) {
+                if (!(be instanceof Inventory container)) continue;
+                BlockPos pos = be.getPos();
+                for (int i = 0; i < container.size(); i++) {
+                    ItemStack stack = container.getStack(i);
+                    if (BoomSporeItem.isLive(stack) && now >= BoomSporeItem.getDetonationAt(stack)) {
+                        container.setStack(i, ItemStack.EMPTY);
+                        // Explode below the container (destroys it)
+                        world.createExplosion(null,
+                                pos.getX() + 0.5, pos.getY() - 0.5, pos.getZ() + 0.5,
+                                3.0F, World.ExplosionSourceType.MOB);
+                        break;
                     }
                 }
             }

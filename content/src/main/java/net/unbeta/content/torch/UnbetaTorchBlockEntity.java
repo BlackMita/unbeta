@@ -41,6 +41,11 @@ public class UnbetaTorchBlockEntity extends BlockEntity {
      */
     public static void serverTick(World world, BlockPos pos, net.minecraft.block.BlockState state, UnbetaTorchBlockEntity be) {
         if (world.isClient || !state.get(TorchLogic.LIT)) return;
+        // In water (or any fluid): out, so the torch that pops off drops unlit.
+        if (!world.getFluidState(pos).isEmpty()) {
+            TorchLogic.extinguishPlaced(world, pos, state);
+            return;
+        }
         if (be.burnoutAt < 0) {
             be.light(world, pos);
         } else if (world.getTime() >= be.burnoutAt) {

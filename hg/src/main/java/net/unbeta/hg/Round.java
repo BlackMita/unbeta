@@ -85,6 +85,16 @@ public final class Round {
         return phase;
     }
 
+    /** Ticks left on the round's clock (from the start of the grace minute). */
+    public static int ticksLeft() {
+        return Math.max(0, GAME_TICKS - clock);
+    }
+
+    /** How many players were in when the grace minute began. */
+    public static int startedWith() {
+        return startedWith;
+    }
+
     public static boolean testMode() {
         return testMode;
     }

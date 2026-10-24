@@ -21,7 +21,7 @@ import net.unbeta.hg.DummyPlayer;
 import java.util.List;
 
 /**
- * /hg bot ... - adding bots and giving them orders (Phase 1: they have bodies, not brains yet).
+ * /hg bot ... - adding bots, giving them orders, and seeing inside their heads.
  * <ul>
  *   <li>/hg bot add [count] [traits] - e.g. /hg bot add 3, or /hg bot add 1 lower lightener hare</li>
  *   <li>/hg bot come &lt;bot&gt; - walk to you</li>
@@ -30,6 +30,9 @@ import java.util.List;
  *   <li>/hg bot craft &lt;bot&gt; &lt;item&gt; - make it, crafting whatever it needs on the way</li>
  *   <li>/hg bot smelt &lt;bot&gt; - smelt what it carries (makes and places a furnace if needed)</li>
  *   <li>/hg bot stop &lt;bot&gt;, /hg bot what &lt;bot&gt;, /hg bot remove</li>
+ *   <li>/hg bot why &lt;bot&gt; - what it's doing and why, and its last 10 Reactions</li>
+ *   <li>/hg bot notebook &lt;bot&gt; - what it remembers seeing</li>
+ *   <li>/hg bot brains on|off - every bot thinks for itself (on) or only follows orders (off)</li>
  * </ul>
  */
 public final class BotCommands {
@@ -86,8 +89,29 @@ public final class BotCommands {
                         })))
                         .then(CommandManager.literal("what").then(bot().executes(ctx -> {
                             Body b = body(ctx);
-                            return say(ctx.getSource(), name(b) + " " + b.traits.title() + ": " + b.doing());
-                        }))))));
+                            return say(ctx.getSource(), name(b) + " " + b.traits.title() + ": " + b.brain.doing());
+                        })))
+                        .then(CommandManager.literal("why").then(bot().executes(ctx -> {
+                            Body b = body(ctx);
+                            say(ctx.getSource(), name(b) + " " + b.traits.title() + ":");
+                            for (String line : b.brain.why()) say(ctx.getSource(), line);
+                            return 1;
+                        })))
+                        .then(CommandManager.literal("notebook").then(bot().executes(ctx -> {
+                            Body b = body(ctx);
+                            say(ctx.getSource(), name(b) + "'s notebook:");
+                            for (String line : b.brain.notebook.describe(b.brain.now(), b.bot.getBlockPos())) say(ctx.getSource(), "  " + line);
+                            return 1;
+                        })))
+                        .then(CommandManager.literal("brains")
+                                .then(CommandManager.literal("on").executes(ctx -> {
+                                    Bots.brainsOn = true;
+                                    return say(ctx.getSource(), "Bot brains on: they act for themselves.");
+                                }))
+                                .then(CommandManager.literal("off").executes(ctx -> {
+                                    Bots.brainsOn = false;
+                                    return say(ctx.getSource(), "Bot brains off: they only follow orders.");
+                                }))))));
     }
 
     private static com.mojang.brigadier.builder.RequiredArgumentBuilder<ServerCommandSource, ?> bot() {

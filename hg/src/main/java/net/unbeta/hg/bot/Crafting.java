@@ -34,10 +34,15 @@ public final class Crafting {
 
     /** The steps to make the item from what the bot carries, or null if it can't. */
     public static List<Step> plan(ServerPlayerEntity bot, Item target, boolean tableNearby) {
+        return plan(bot, s -> s.isOf(target), tableNearby);
+    }
+
+    /** The steps to make anything that passes the test (any planks, say), or null if it can't. */
+    public static List<Step> plan(ServerPlayerEntity bot, Predicate<ItemStack> want, boolean tableNearby) {
         MinecraftServer server = bot.getServer();
         List<ItemStack> inv = snapshot(bot.getInventory());
         List<Step> steps = new ArrayList<>();
-        if (!make(server, inv, steps, s -> s.isOf(target), DEPTH)) return null;
+        if (!make(server, inv, steps, want, DEPTH)) return null;
         boolean needsTable = steps.stream().anyMatch(Step::needsTable);
         if (!needsTable || tableNearby || has(bot, net.minecraft.item.Items.CRAFTING_TABLE)) return steps;
         // It needs a crafting table first: make one, place it, then the rest.
@@ -46,7 +51,7 @@ public final class Crafting {
         if (!make(server, inv, steps, s -> s.isOf(net.minecraft.item.Items.CRAFTING_TABLE), DEPTH)) return null;
         take(inv, s -> s.isOf(net.minecraft.item.Items.CRAFTING_TABLE));
         steps.add(new Step(null, ItemStack.EMPTY, false));
-        if (!make(server, inv, steps, s -> s.isOf(target), DEPTH)) return null;
+        if (!make(server, inv, steps, want, DEPTH)) return null;
         return steps;
     }
 

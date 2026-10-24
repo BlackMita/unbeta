@@ -30,6 +30,60 @@ public final class BotConfig {
     /** Sprint when the walk has more than this many blocks to go. */
     public double sprintOver = 8.0;
 
+    // ---- Brains (Phase 2) ----
+    /** A bot looks and thinks every this many ticks (5 = four times a second), staggered between bots. */
+    public int thinkTicks = 5;
+    /** How far it sees living things, in blocks; in the dark (light 4 or less, not burning) only this far. */
+    public double sightRange = 32.0;
+    public double darkSightRange = 12.0;
+    /** Its view cone, in degrees; narrower while its eyes are busy (mining, crafting, fighting). */
+    public double sightConeDegrees = 140.0;
+    public double busyConeDegrees = 90.0;
+    /** Glance rays for noticing blocks: how many a second, and how far. */
+    public int glanceRaysPerSecond = 60;
+    public double glanceRange = 24.0;
+    /** At most this many new things taken in per look. */
+    public int newThingsPerLook = 3;
+    /** Win Methods: Reaction length multipliers (for set-length Reactions). */
+    public double lowerLength = 1.75;
+    public double middlingLength = 0.5;
+    public double higherLength = 1.0;
+    /** Middling: how many Reactions it queues. */
+    public int middlingQueue = 2;
+    /** Middling contagion: how often it checks the people it sees (ticks), and the chance to copy each. */
+    public int contagionTicks = 40;
+    public double contagionChance = 0.35;
+    /** Lower rage: interrupted 3 times within this many ticks, it locks on for this many. */
+    public int rageWindowTicks = 400;
+    public int rageTicks = 1200;
+    /** Higher wears off: the same Reaction 3 times running, and it's ignored this many ticks. */
+    public int wearsOffTicks = 1200;
+    /** Health (half-hearts) at which each Win Method retreats. */
+    public double lowerRetreatHealth = 6.0;
+    public double middlingRetreatHealth = 10.0;
+    public double higherRetreatHealth = 8.0;
+    /** Chance to water-drop a long fall, by Win Method. */
+    public double lowerWaterDrop = 0.1;
+    public double middlingWaterDrop = 0.4;
+    public double higherWaterDrop = 0.8;
+    /** After a Reaction gives up, it isn't tried again for this many ticks; after one succeeds, this many. */
+    public int failCooldownTicks = 300;
+    public int doneCooldownTicks = 40;
+
+    // ---- Fighting, Player Methods, flavour (steps 4 to 6) ----
+    /** Chance a swing misses, by Win Method (divided by skill). */
+    public double lowerMiss = 0.25;
+    public double middlingMiss = 0.15;
+    public double higherMiss = 0.08;
+    /** Middling buys a keep once this many of its 36 slots are full. */
+    public int middlingBuyAtSlots = 24;
+    /** Hog: longest it guards a pile (ticks). */
+    public int hogGuardTicks = 1200;
+    /** Tortoise turns Terminator with this many ticks left on the round clock (15 minutes). */
+    public int terminatorTicksLeft = 18000;
+    /** Chance a chat-worthy moment (iron, a kill, a death) gets a line in chat. */
+    public double chatChance = 0.25;
+
     private static BotConfig current = new BotConfig();
 
     public static BotConfig get() {

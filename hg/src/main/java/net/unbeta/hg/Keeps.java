@@ -103,6 +103,16 @@ public final class Keeps {
 
     // ------------------------------------------------------------------ picking
 
+    /** A bot buying a keep: exactly what pressing the item on the K screen does. */
+    public static void buy(ServerPlayerEntity p, Item item) {
+        pick(p.getServer(), p, Registries.ITEM.getId(item));
+    }
+
+    public static int owned(ServerPlayerEntity p) {
+        List<Keep> list = keeps.get(p.getUuid());
+        return list == null ? 0 : list.size();
+    }
+
     private static void pick(MinecraftServer server, ServerPlayerEntity p, Identifier id) {
         if (!Registries.ITEM.containsId(id)) return;
         Item item = Registries.ITEM.get(id);

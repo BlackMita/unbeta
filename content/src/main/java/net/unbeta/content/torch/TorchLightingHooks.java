@@ -75,6 +75,9 @@ public final class TorchLightingHooks {
                 }
 
                 // Dropped lit torches that have expired → discard and respawn as unlit.
+                // Checked once a second: an entity search around every player every tick
+                // added up with many players. (Placed torches in water: their own ticker.)
+                if (now % 20 != 0) continue;
                 // We MUST spawn a new entity rather than swapping the stack, because the
                 // dynamic lights datapack caches a light-level score on the entity. Swapping
                 // the stack doesn't clear that score, so the old entity keeps emitting
@@ -95,23 +98,6 @@ public final class TorchLightingHooks {
                         e.discard();
                     }
                 });
-
-                // Placed lit torches in fluid → extinguish.
-                // Vanilla water flow will pop the block off anyway, but we extinguish first
-                // so the dropped item is UNLIT (not a lit torch dropped into water).
-                var bb = player.getBoundingBox().expand(16);
-                for (var pos : net.minecraft.util.math.BlockPos.iterateOutwards(
-                        player.getBlockPos(), 16, 16, 16)) {
-                    if (!bb.contains(pos.getX(), pos.getY(), pos.getZ())) continue;
-                    var state = world.getBlockState(pos);
-                    boolean isLitTorch = (state.getBlock() instanceof UnbetaTorchBlock
-                            || state.getBlock() instanceof UnbetaWallTorchBlock)
-                            && state.get(TorchLogic.LIT);
-                    if (!isLitTorch) continue;
-                    if (!world.getFluidState(pos).isEmpty()) {
-                        TorchLogic.extinguishPlaced(world, pos, state);
-                    }
-                }
             }
         });
     }

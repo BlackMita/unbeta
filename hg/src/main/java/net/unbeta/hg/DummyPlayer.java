@@ -67,6 +67,9 @@ public final class DummyPlayer extends ServerPlayerEntity {
         if (body != null) body.stop();
         ServerWorld world = this.getServer().getOverworld();
         BlockPos spawn = world.getSpawnPos();
+        // A bed it slept in, if it's still there.
+        BlockPos bed = this.getSpawnPointPosition();
+        boolean atBed = bed != null && world.getBlockState(bed).getBlock() instanceof net.minecraft.block.BedBlock;
         this.dead = false;
         this.deathTime = 0;
         this.hurtTime = 0;
@@ -76,17 +79,23 @@ public final class DummyPlayer extends ServerPlayerEntity {
         this.fallDistance = 0;
         this.getHungerManager().setFoodLevel(20);
         this.getHungerManager().setSaturationLevel(5.0F);
-        double y = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, spawn.getX(), spawn.getZ());
-        this.teleport(world, spawn.getX() + 0.5, y, spawn.getZ() + 0.5, this.getYaw(), 0F);
+        if (atBed) {
+            this.teleport(world, bed.getX() + 0.5, bed.getY() + 0.6, bed.getZ() + 0.5, this.getYaw(), 0F);
+        } else {
+            double y = world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, spawn.getX(), spawn.getZ());
+            this.teleport(world, spawn.getX() + 0.5, y, spawn.getZ() + 0.5, this.getYaw(), 0F);
+        }
         // Everyone watching still has the dying body (on its side, flushed red): make their game
         // forget it and see the dummy fresh, standing.
         net.minecraft.server.world.ServerChunkManager chunks = world.getChunkManager();
         chunks.unloadEntity(this);
         chunks.loadEntity(this);
+        if (body != null) body.brain.onRespawn();
     }
 
     @Override
     public void onDeath(DamageSource source) {
+        if (body != null) body.brain.onDeath(source);
         super.onDeath(source);
         nextChange = 0;
     }
