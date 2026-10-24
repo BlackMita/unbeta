@@ -63,7 +63,15 @@ public final class Brain {
     long handledC2 = -1;
     long lastKillAt = -1000;
     private final Deque<Hearing.Sound> sounds = new ArrayDeque<>();
+    /** Times monsters have killed it at night (from then on it hides at night). */
+    int nightDeaths;
+    private long rolledNight = -1;
+    private boolean timidTonight;
     private boolean hadIron;
+
+    /** Picking up the drops of the block it just broke. */
+    BlockPos collectPos;
+    int collectTicks;
 
     // Things its triggers want to know about itself
     BlockPos lastSafe;
@@ -205,7 +213,7 @@ public final class Brain {
             begin(pick, now);
         } else if (!before.contains(pick.id)) {
             // Same tier, newly true.
-            if (win() == Traits.Win.MIDDLING) {
+            if (win() == Traits.Win.MIDDLING && pick.tier != Reaction.Tier.SURVIVAL) {
                 enqueue(pick);
             } else {
                 finish(current, Reaction.Outcome.FAILED, "dropped for " + pick.label());
@@ -316,6 +324,7 @@ public final class Brain {
             notebook.grudge = killer.getUuid();
             notebook.grudgeName = killer.getName().getString();
         }
+        if (world().isNight() && source.getAttacker() instanceof Monster) nightDeaths++;
         if (current != null) finish(current, Reaction.Outcome.FAILED, "died");
         queue.clear();
         record("died: " + source.getName());
@@ -348,6 +357,24 @@ public final class Brain {
 
     void forgetSound() {
         sounds.clear();
+    }
+
+    /** N16: does it hide tonight? Rolled once per night; always, once monsters have killed it at night. */
+    boolean hidesTonight() {
+        if (nightDeaths > 0) return true;
+        long night = world().getTimeOfDay() / 24000;
+        if (night != rolledNight) {
+            rolledNight = night;
+            BotConfig c = BotConfig.get();
+            double chance = switch (win()) {
+                case LOWER -> c.lowerHideChance;
+                case MIDDLING -> c.middlingHideChance;
+                case HIGHER -> c.higherHideChance;
+            };
+            if (!body.has(Moves::weapon)) chance *= 2;
+            timidTonight = random.nextDouble() < chance;
+        }
+        return timidTonight;
     }
 
     /** Tortoise: late in the round (15 minutes left, or over half the players out), it starts hunting. */

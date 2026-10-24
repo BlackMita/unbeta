@@ -34,6 +34,7 @@ public final class UnbetaHGClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        Halo.register();
 
         ClientPlayNetworking.registerGlobalReceiver(Keeps.SYNC, (client, handler, buf, sender) -> {
             boolean canBuy = buf.readBoolean();

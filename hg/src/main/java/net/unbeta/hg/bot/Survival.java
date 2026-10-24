@@ -453,47 +453,28 @@ final class Survival {
     // ------------------------------------------------------------------ S12 dark
 
     static final class Dark extends Reaction {
-        Dark() { super("S12", "Dark", SURVIVAL, 600, false, HIDING); }
+        Dark() { super("S12", "Dark", SURVIVAL, 30, false, HIDING); }
         public Reaction fresh() { return new Dark(); }
 
         private final Moves.LightTorch lighting = new Moves.LightTorch();
-        private final Moves.Hide hide = new Moves.Hide();
-        private boolean hiding;
-        private boolean huddling;
-        private boolean lightFailed;
-
-        public void stopped(Brain br) {
-            br.bot().setSneaking(false);
-        }
 
         static boolean dark(Brain br) {
             return br.world().isNight() && br.world().getLightLevel(br.bot().getBlockPos()) <= 4;
         }
 
+        /** Only when it has a torch to light the dark with; hiding for the night is N16's (rare) call. */
         public boolean trigger(Brain br) {
             if (!dark(br)) return false;
-            because = "night, and too dark to see";
+            Body b = br.body;
+            boolean canLight = b.has(Moves::litTorch)
+                    || (b.has(Moves::unlitTorch) && br.notebook.nearest(Notebook.Kind.FLAME, b.bot.getBlockPos(), 32) != null);
+            if (!canLight) return false;
+            because = "too dark: a torch here";
             return true;
         }
 
         public Outcome tick(Brain br) {
             Body b = br.body;
-            if (huddling) {
-                // Couldn't dig in (stone needs an iron pick): crouch by a wall till it's light.
-                if (!dark(br)) return DONE;
-                b.stopMoving();
-                b.bot.setSneaking(true);
-                return RUNNING;
-            }
-            if (hiding) {
-                boolean stay = br.world().isNight();
-                Outcome o = hide.tick(br, stay);
-                if (o == FAILED && !hide.started()) {
-                    huddling = true;
-                    return RUNNING;
-                }
-                return o;
-            }
             if (!dark(br)) return DONE;
             if (b.has(Moves::litTorch)) {
                 net.minecraft.block.Block torch = Registries.BLOCK.get(new Identifier("unbeta-content", "torch"));
@@ -501,13 +482,7 @@ final class Survival {
                 if (p.working()) return RUNNING;
                 return p.failed() ? FAILED : DONE;
             }
-            if (!lightFailed && b.has(Moves::unlitTorch) && br.notebook.nearest(Notebook.Kind.FLAME, b.bot.getBlockPos(), 32) != null) {
-                Outcome o = lighting.tick(br);
-                if (o == FAILED) lightFailed = true;
-                return RUNNING;
-            }
-            hiding = true;
-            return RUNNING;
+            return lighting.tick(br) == FAILED ? FAILED : RUNNING;
         }
     }
 

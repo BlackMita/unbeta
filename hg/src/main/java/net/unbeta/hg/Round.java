@@ -195,6 +195,9 @@ public final class Round {
     private static void tick(MinecraftServer server) {
         List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
         ticks++;
+        // Attrition's "has surrendered a heart of maximum health!" lines are muted on this server:
+        // its own text-off tag. (They read too much like someone surrendering the round.)
+        if (ticks % 20 == 0) for (ServerPlayerEntity p : players) p.addCommandTag("mp.attr.fixed_off");
         // Attrition's last heart: out of the round, in our restricted mode rather than its spectator mode.
         for (ServerPlayerEntity p : new ArrayList<>(players)) {
             if (p.getCommandTags().contains(SPIRIT_TAG)) {
@@ -432,6 +435,8 @@ public final class Round {
         if (phase != Phase.GRACE && phase != Phase.GAME) return "You can only surrender while a round is being played.";
         if (!tookPart.contains(player.getUuid())) return "You're not playing this round.";
         if (out.contains(player.getUuid())) return "You're already out.";
+        // Surrendering leaves everything behind, keeps included, right where you stand.
+        player.getInventory().dropAll();
         putOut(server, player, "surrendered");
         return null;
     }

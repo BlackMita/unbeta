@@ -81,6 +81,10 @@ public final class BotConfig {
     public int hogGuardTicks = 1200;
     /** Tortoise turns Terminator with this many ticks left on the round clock (15 minutes). */
     public int terminatorTicksLeft = 18000;
+    /** N16: chance a bot hides for a night, by Win Method (doubled with no weapon; always after a night death to monsters). */
+    public double lowerHideChance = 0.05;
+    public double middlingHideChance = 0.12;
+    public double higherHideChance = 0.2;
     /** Chance a chat-worthy moment (iron, a kill, a death) gets a line in chat. */
     public double chatChance = 0.25;
 

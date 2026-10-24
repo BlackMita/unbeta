@@ -41,19 +41,45 @@ final class Needs {
         return c.succeeded ? DONE : FAILED;
     }
 
-    /** Walks into reach of a block and breaks it. DONE once it's gone. */
+    /**
+     * Walks into reach of a block, breaks it, and picks up what drops. DONE once it's gone and the
+     * drops are collected; FAILED if it can't reach it (too high up a tree, say) or can't break it.
+     */
     static Reaction.Outcome mine(Brain br, BlockPos pos) {
         Body b = br.body;
-        if (br.world().getBlockState(pos).isAir()) return DONE;
+        if (br.world().getBlockState(pos).isAir()) return collect(br, pos);
         if (!b.inReach(pos)) {
-            if (b.walkTo(pos, 2.5) == Body.Walk.FAILED) return FAILED;
-            if (!b.inReach(pos)) return RUNNING;
+            Body.Walk w = b.walkTo(pos, 2.5);
+            if (w == Body.Walk.FAILED) return FAILED;
+            if (!b.inReach(pos)) return w == Body.Walk.ARRIVED ? FAILED : RUNNING;   // got as close as it can: out of reach
         }
         return switch (b.dig(pos)) {
-            case DONE -> DONE;
+            case DONE -> collect(br, pos);
             case FAILED -> FAILED;
             default -> RUNNING;
         };
+    }
+
+    /** Walks over the drops from a broken block (players only pick up what's within a block or so). */
+    static Reaction.Outcome collect(Brain br, BlockPos pos) {
+        if (!pos.equals(br.collectPos)) {
+            br.collectPos = pos;
+            br.collectTicks = 0;
+        }
+        if (++br.collectTicks > 80) return DONE;
+        net.minecraft.entity.ItemEntity nearest = null;
+        double best = Double.MAX_VALUE;
+        for (net.minecraft.entity.ItemEntity it : br.world().getEntitiesByClass(net.minecraft.entity.ItemEntity.class,
+                new net.minecraft.util.math.Box(pos).expand(4), e -> !Moves.boomSpore(e.getStack()))) {
+            double d = it.squaredDistanceTo(br.bot());
+            if (d < best) {
+                best = d;
+                nearest = it;
+            }
+        }
+        if (nearest == null) return br.collectTicks > 3 ? DONE : RUNNING;   // drops can take a tick to appear
+        if (br.body.walkTo(nearest.getBlockPos(), 0.3) == Body.Walk.FAILED) return DONE;
+        return RUNNING;
     }
 
     // ------------------------------------------------------------------ N1 chop
@@ -592,6 +618,49 @@ final class Needs {
             if (worst < 0 || worstScore >= 5) return FAILED;
             b.throwSlot(worst, 0.3);
             return DONE;
+        }
+    }
+
+    // ------------------------------------------------------------------ N16 hide for the night
+
+    /**
+     * Digs in and seals itself in until dawn. Uncommon: most bots carry on at night. A few roll to
+     * be timid each night (Higher most, Lower least, more so with no weapon), and any bot that has
+     * died to monsters at night hides every night after.
+     */
+    static final class NightHide extends Reaction {
+        NightHide() { super("N16", "Hide for the night", NEED, 600, false, Tag.HIDING); }
+        public Reaction fresh() { return new NightHide(); }
+
+        private final Moves.Hide hide = new Moves.Hide();
+        private boolean huddling;
+
+        public boolean trigger(Brain br) {
+            if (!Survival.Dark.dark(br) || !br.hidesTonight()) return false;
+            because = br.nightDeaths > 0 ? "monsters killed me at night before" : "the dark makes me nervous";
+            return true;
+        }
+
+        public Outcome tick(Brain br) {
+            Body b = br.body;
+            boolean night = br.world().isNight();
+            if (huddling) {
+                // Couldn't dig in (stone needs an iron pick): crouch by a wall till dawn.
+                if (!night) return DONE;
+                b.stopMoving();
+                b.bot.setSneaking(true);
+                return RUNNING;
+            }
+            Outcome o = hide.tick(br, night);
+            if (o == FAILED && !hide.started()) {
+                huddling = true;
+                return RUNNING;
+            }
+            return o;
+        }
+
+        public void stopped(Brain br) {
+            br.bot().setSneaking(false);
         }
     }
 

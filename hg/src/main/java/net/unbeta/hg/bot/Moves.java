@@ -233,6 +233,8 @@ final class Moves {
         private int climbed;
         private double climbFrom;
         private boolean begun;
+        private int centring;
+        private int falling;
 
         /** Did it get as far as starting to dig? */
         boolean started() {
@@ -242,7 +244,16 @@ final class Moves {
         Reaction.Outcome tick(Brain br, boolean stillNeeded) {
             Body b = br.body;
             if (top == null) {
-                top = b.bot.getBlockPos();
+                // Stand square on one block first, or it digs a hole beside its feet and never drops in.
+                BlockPos here = b.bot.getBlockPos();
+                Vec3d centre = Vec3d.ofBottomCenter(here);
+                if (b.bot.getPos().multiply(1, 0, 1).distanceTo(centre.multiply(1, 0, 1)) > 0.2 && centring++ < 30) {
+                    b.lookAt(centre.add(0, b.bot.getStandingEyeHeight(), 0));
+                    b.bot.forwardSpeed = 0.25F;
+                    return Reaction.Outcome.RUNNING;
+                }
+                b.stopMoving();
+                top = here;
                 for (int i = 1; i <= 4; i++) {
                     BlockState st = br.world().getBlockState(top.down(i));
                     if (st.isAir() || !st.getFluidState().isEmpty()) return Reaction.Outcome.FAILED;
@@ -264,7 +275,14 @@ final class Moves {
                 return Reaction.Outcome.RUNNING;
             }
             if (!sealed) {
-                if (b.bot.getBlockPos().getY() > top.getY() - 3) return Reaction.Outcome.RUNNING;   // still falling
+                if (b.bot.getBlockPos().getY() > top.getY() - 3) {
+                    // Still falling; or stuck on the rim: shuffle over the hole, and give up if that fails.
+                    Vec3d hole = Vec3d.ofBottomCenter(top);
+                    b.lookAt(hole.add(0, -1, 0));
+                    b.bot.forwardSpeed = 0.3F;
+                    return ++falling > 60 ? Reaction.Outcome.FAILED : Reaction.Outcome.RUNNING;
+                }
+                b.bot.forwardSpeed = 0F;
                 if (!b.hold(Moves::buildingBlock)) {
                     sealed = true;   // nothing to seal with: sit in the hole anyway
                     return Reaction.Outcome.RUNNING;
