@@ -42,6 +42,8 @@ public final class BotConfig {
     /** Glance rays for noticing blocks: how many a second, and how far. */
     public int glanceRaysPerSecond = 60;
     public double glanceRange = 24.0;
+    /** In the dark (light 2 or less, carrying no light), it can only make out blocks this close. */
+    public double darkGlanceRange = 6.0;
     /** At most this many new things taken in per look. */
     public int newThingsPerLook = 3;
     /** Win Methods: Reaction length multipliers (for set-length Reactions). */
@@ -85,6 +87,10 @@ public final class BotConfig {
     public double lowerHideChance = 0.05;
     public double middlingHideChance = 0.12;
     public double higherHideChance = 0.2;
+    /** Unbeta know-how: how fast it rows a boat (blocks a tick), how deep it digs for ore, and how long a round's digging may take in all (ticks). */
+    public double boatSpeed = 0.3;
+    public int mineDepthY = 16;
+    public int excavateTicks = 12000;
     /** Chance a chat-worthy moment (iron, a kill, a death) gets a line in chat. */
     public double chatChance = 0.25;
 

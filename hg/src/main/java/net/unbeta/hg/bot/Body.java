@@ -618,6 +618,41 @@ public final class Body {
         return 0F;
     }
 
+    /** Where it's walking to right now, or null. */
+    public BlockPos goal() {
+        return goal;
+    }
+
+    /**
+     * Holds something plain: an empty hand if a hotbar slot is free, else anything that is not a
+     * light, an igniter or a bow (clicking a lit torch with that snuffs it).
+     */
+    public void holdPlain() {
+        PlayerInventory inv = bot.getInventory();
+        for (int i = 0; i < 9; i++) {
+            if (inv.getStack(i).isEmpty()) {
+                inv.selectedSlot = i;
+                return;
+            }
+        }
+        for (int i = 0; i < 36; i++) {
+            ItemStack s = inv.getStack(i);
+            if (!net.unbeta.content.light.HeldLight.isUnlit(s) && !net.unbeta.content.light.HeldLight.isIgniter(s)
+                    && !(s.getItem() instanceof net.minecraft.item.RangedWeaponItem)) {
+                holdSlot(i);
+                return;
+            }
+        }
+    }
+
+    /** Swaps an inventory slot with its off hand (where a light goes, leaving the main hand for tools). */
+    public void toOffhand(int slot) {
+        PlayerInventory inv = bot.getInventory();
+        ItemStack off = inv.offHand.get(0);
+        inv.offHand.set(0, inv.getStack(slot));
+        inv.setStack(slot, off);
+    }
+
     /** Throws a whole stack the way it is facing. */
     public void throwSlot(int slot, double speed) {
         PlayerInventory inv = bot.getInventory();

@@ -27,6 +27,8 @@ public final class Notebook {
         // Structures: never
         TABLE("crafting table", -1, 8), FURNACE("furnace", -1, 8), CHEST("chest", -1, 16),
         CLAMBOX("clambox", -1, 8), DOOR("obsidian door", -1, 8), PLACED("someone's handiwork", 6000, 24),
+        // Ways down: cave openings it has seen into, and rails (Unbeta's old minecart tracks run past ore)
+        CAVE("cave", -1, 24), RAIL("rail", -1, 16),
         // Flames to light a torch from: lit furnaces and torches go out, so these fade
         FLAME("flame", 6000, 12),
         // Danger: 10 minutes; its own death spots never

@@ -245,12 +245,22 @@ public final class Orders {
 
     /** Smelt everything smeltable it carries in a real furnace (making and placing one if needed), then take it all out. */
     public static final class Smelt implements Body.Action {
+        /** What to smelt; null = its most worthwhile thing (ore first). Logs for charcoal, say. */
+        private final java.util.function.Predicate<ItemStack> input;
         private BlockPos furnace;
         private Craft makingFurnace;
         private boolean loaded;
         private int lightTries;
         private int waited;
         private int limit;
+
+        public Smelt() {
+            this(null);
+        }
+
+        public Smelt(java.util.function.Predicate<ItemStack> input) {
+            this.input = input;
+        }
 
         @Override
         public boolean tick(Body body) {
@@ -334,6 +344,9 @@ public final class Orders {
             if (be instanceof AbstractFurnaceBlockEntity oven
                     && net.unbeta.content.furnace.LavaFuel.burnTime(oven.getStack(1)) > 0) return true;
             PlayerInventory inv = body.bot.getInventory();
+            // A light carried in the off hand comes to the main hand to strike with.
+            ItemStack off = body.bot.getOffHandStack();
+            if (off.isOf(Items.FLINT_AND_STEEL) || net.unbeta.content.light.HeldLight.isLit(off)) body.toOffhand(inv.selectedSlot);
             int igniter = -1;
             for (int i = 0; i < 36 && igniter < 0; i++) {
                 ItemStack s = inv.getStack(i);
@@ -357,8 +370,9 @@ public final class Orders {
             for (int i = 0; i < 36; i++) {
                 ItemStack s = inv.getStack(i);
                 if (s.isEmpty()) continue;
-                boolean isFuel = AbstractFurnaceBlockEntity.canUseAsFuel(s);
-                boolean smeltable = !isFuel && body.bot.getServer().getRecipeManager()
+                boolean wanted = input != null && input.test(s);
+                boolean isFuel = !wanted && AbstractFurnaceBlockEntity.canUseAsFuel(s);
+                boolean smeltable = (input == null || wanted) && !isFuel && body.bot.getServer().getRecipeManager()
                         .getFirstMatch(RecipeType.SMELTING, new SimpleInventory(s), body.world()).isPresent();
                 if (smeltable && rank(s) < oreRank) {
                     ore = i;

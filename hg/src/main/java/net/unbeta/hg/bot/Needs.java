@@ -96,8 +96,9 @@ final class Needs {
             boolean table = Moves.tableAt(br, 16);
             boolean pick = br.body.has(Moves::pick);
             if (!table && !pick) return 16;
-            if (!pick) return 8;
-            return 4;
+            // With a pick it keeps 8 planks' worth: enough for a fresh crafting table wherever it ends up
+            // (deep in a cave, far from its first), and for fires at lava and buckets.
+            return 8;
         }
 
         public boolean trigger(Brain br) {
@@ -404,7 +405,7 @@ final class Needs {
         public boolean trigger(Brain br) {
             Body b = br.body;
             if (!b.has(Needs::rawOre)) return false;
-            if (!b.has(Moves::igniter)) return false;
+            if (!b.has(Moves::igniter) && !Know.hasLitLight(b)) return false;
             boolean fuel = b.has(s -> Moves.lavaBucket(s) || s.isOf(Items.COAL) || s.isOf(Items.CHARCOAL) || Moves.log(s) || Moves.planks(s));
             if (!fuel) return false;
             boolean furnace = b.has(s -> s.isOf(Items.FURNACE))
@@ -476,11 +477,13 @@ final class Needs {
             Body b = br.body;
             if (b.count(s -> s.isOf(Items.COAL) || s.isOf(Items.CHARCOAL)) == 0) return false;
             if (b.count(s -> s.isOf(Items.STICK)) == 0 && b.count(Moves::planks) == 0) return false;
-            if (b.count(s -> Moves.unlitTorch(s) || Moves.litTorch(s)) >= 8) return false;
+            int torches = b.count(s -> Moves.unlitTorch(s) || Moves.litTorch(s)) + (Moves.litTorch(b.bot.getOffHandStack()) ? 1 : 0);
+            if (torches >= 8) return false;
             long day = br.world().getTimeOfDay() % 24000;
             boolean duskSoon = day >= 6000 && day < 13000;
-            if (!duskSoon && br.traits().keep() != Traits.Keep.LIGHTENER) return false;
-            because = "coal and sticks, and dusk is coming";
+            boolean caving = torches < 3 && (Know.underground(br) || Know.Delve.wantsOre(br));   // two to juggle, one spare
+            if (!duskSoon && !caving && br.traits().keep() != Traits.Keep.LIGHTENER) return false;
+            because = caving ? "coal and sticks: torches for the dark below" : "coal and sticks, and dusk is coming";
             return true;
         }
 
@@ -497,12 +500,15 @@ final class Needs {
 
         public boolean trigger(Brain br) {
             Body b = br.body;
-            if (!b.has(Moves::unlitTorch) || b.has(Moves::litTorch)) return false;
+            if (!b.has(Moves::unlitLight) || Know.hasLitLight(b)) return false;
             long day = br.world().getTimeOfDay() % 24000;
-            if (day < 11000 && br.traits().keep() != Traits.Keep.LIGHTENER) return false;
-            Notebook.Mark f = br.notebook.nearest(Notebook.Kind.FLAME, b.bot.getBlockPos(), 32);
+            boolean needIgniter = b.has(Needs::rawOre) && !b.has(Moves::igniter);
+            boolean dark = day >= 11000 || Know.underground(br) || br.world().getLightLevel(b.bot.getBlockPos()) <= 7;
+            if (!dark && !needIgniter && br.traits().keep() != Traits.Keep.LIGHTENER) return false;
+            Notebook.Mark f = br.notebook.nearest(Notebook.Kind.FLAME, b.bot.getBlockPos(), 48);
             if (f == null) return false;
-            because = "an unlit torch, and " + f.what + " at " + f.pos.toShortString();
+            because = "an unlit light, and " + f.what + " at " + f.pos.toShortString()
+                    + (needIgniter ? " (a lit torch lights the furnace)" : "");
             return true;
         }
 

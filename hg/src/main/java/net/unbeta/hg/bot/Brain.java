@@ -63,6 +63,10 @@ public final class Brain {
     long handledC2 = -1;
     long lastKillAt = -1000;
     private final Deque<Hearing.Sound> sounds = new ArrayDeque<>();
+    /** Ticks it has been swimming (no ground under it): long swims call for a boat. */
+    int swimTicks;
+    /** Ticks spent digging staircases and tunnels this round (there's a budget). */
+    int excavated;
     /** Times monsters have killed it at night (from then on it hides at night). */
     int nightDeaths;
     private long rolledNight = -1;
@@ -121,6 +125,7 @@ public final class Brain {
         if (bot.isSleeping()) return;
         if (bot.isOnGround() && !bot.isInLava() && !bot.isTouchingWater()) lastSafe = bot.getBlockPos();
         if (bot.isOnGround()) fallRolled = false;
+        swimTicks = bot.isTouchingWater() && !bot.isOnGround() && !bot.hasVehicle() ? swimTicks + 1 : 0;
 
         Round.Phase phase = Round.phase();
         boolean out = Round.isOut(bot);
@@ -173,7 +178,29 @@ public final class Brain {
         } finally {
             body.quiet = false;
         }
+        if (playing) lightReflexes();
         if (bot.age % 20 == 0) status();
+    }
+
+    /**
+     * Habits with light, no Reaction needed: in the dark it carries a lit torch or Jack o'Lantern
+     * in its off hand (its main hand stays free for tools); and in water with a lit torch on it, it
+     * keeps its head up, because going under puts every lit torch it carries out.
+     */
+    private void lightReflexes() {
+        DummyPlayer bot = bot();
+        boolean litTorch = body.has(Moves::litTorch) || Moves.litTorch(bot.getOffHandStack());
+        if (litTorch && bot.isTouchingWater() && !bot.hasVehicle()) bot.setJumping(true);
+        if (bot.age % 10 != 0) return;
+        if (!bot.getOffHandStack().isEmpty()) return;
+        if (world().getLightLevel(bot.getBlockPos()) > 7) return;
+        // A Jack o'Lantern first near water (it's waterproof), else a torch.
+        int slot = body.slot(st -> Moves.litLight(st) && !Moves.litTorch(st));
+        if (slot < 0 || !bot.isTouchingWater()) {
+            int torch = body.slot(Moves::litTorch);
+            if (torch >= 0 && !bot.isTouchingWater()) slot = torch;
+        }
+        if (slot >= 0) body.toOffhand(slot);
     }
 
     /** Checks every trigger, highest tier first, and decides what happens. */

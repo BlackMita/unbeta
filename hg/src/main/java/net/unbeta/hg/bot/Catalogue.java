@@ -27,11 +27,13 @@ final class Catalogue {
             new Combat.Grudge(), new Combat.Pounce(), new Combat.Terminator(), new Combat.Brandish(),
             new Combat.Followed(), new Combat.Chase(), new Combat.Bow(), new Combat.Unarmed(),
             new Combat.OthersFighting(), new Combat.Pile(), new Opportunity.Orbs(Reaction.Tier.COMBAT),
-            // Need: the gear ladder
-            new Needs.Full(), new Keeping.Regear(), new Needs.Forage(), new Needs.Planks(), new Needs.Table(),
-            new Needs.WoodTools(), new Needs.Furnace(), new Needs.IronTools(), new Needs.Armour(), new Needs.Smelt(),
-            new Needs.LavaFuel(), new Needs.Torches(), new Needs.LightTorches(), new Needs.WornTool(), new Needs.Water(),
-            new Needs.Bed(), new Needs.NightHide(), new Keeping.Stash(), new Keeping.Goal(), new Needs.Ore(), new Needs.Cobble(), new Needs.Chop(),
+            // Need: the gear ladder, and Unbeta know-how
+            new Needs.Full(), new Know.Boat(), new Keeping.Regear(), new Needs.Forage(), new Needs.Planks(),
+            new Needs.Table(), new Needs.WoodTools(), new Needs.Furnace(), new Needs.IronTools(), new Needs.Armour(),
+            new Needs.Smelt(), new Know.LavaFurnace(), new Know.LavaFire(), new Know.Juggle(), new Needs.Torches(),
+            new Needs.LightTorches(), new Know.Charcoal(), new Know.Flint(), new Know.Lantern(), new Know.MakeBoat(),
+            new Needs.WornTool(), new Needs.Water(), new Needs.Bed(), new Needs.NightHide(), new Keeping.Stash(),
+            new Keeping.Goal(), new Needs.Ore(), new Needs.Cobble(), new Needs.Chop(), new Know.Delve(), new Know.Excavate(),
             // Opportunity
             new Opportunity.ItemsOnGround(), new Opportunity.Orbs(Reaction.Tier.OPPORTUNITY), new Opportunity.Chest(),
             new Opportunity.EndermanXp(), new Opportunity.Vandal(), new Opportunity.Clambox(), new Opportunity.Pumpkin(),

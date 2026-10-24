@@ -83,6 +83,16 @@ final class Moves {
         return TorchItems.isLitTorch(s);
     }
 
+    /** Any light that can be lit: an unlit torch or Jack o'Lantern. */
+    static boolean unlitLight(ItemStack s) {
+        return net.unbeta.content.light.HeldLight.isUnlit(s);
+    }
+
+    /** A burning torch or Jack o'Lantern. */
+    static boolean litLight(ItemStack s) {
+        return net.unbeta.content.light.HeldLight.isLit(s);
+    }
+
     /** Something to light a furnace with: flint and steel, a lit torch or Jack o'Lantern, or lava as fuel. */
     static boolean igniter(ItemStack s) {
         return s.isOf(Items.FLINT_AND_STEEL) || litTorch(s) || JackOLanternItems.isLit(s) || lavaBucket(s);
@@ -371,6 +381,80 @@ final class Moves {
         }
     }
 
+    // ------------------------------------------------------------------ digging down
+
+    /**
+     * A staircase down to a depth, then a tunnel along: each step clears the blocks ahead (head,
+     * feet, and the step below when going down) and moves in. It never breaks into lava or water:
+     * a fluid next to the next block, or a drop under it, and it turns 90 degrees instead.
+     */
+    static final class Staircase {
+        private net.minecraft.util.math.Direction dir;
+        private int tunnelled;
+        private int turns;
+        private int stuck;
+        private BlockPos lastFeet;
+
+        Reaction.Outcome tick(Brain br, int depthY, int tunnelLength) {
+            Body b = br.body;
+            net.unbeta.hg.DummyPlayer bot = b.bot;
+            if (dir == null) dir = bot.getHorizontalFacing();
+            BlockPos feet = bot.getBlockPos();
+            boolean down = feet.getY() > depthY;
+            if (!down && tunnelled >= tunnelLength) return Reaction.Outcome.DONE;
+            if (turns > 4) return Reaction.Outcome.FAILED;
+            BlockPos ahead = feet.offset(dir);
+            BlockPos next = down ? ahead.down() : ahead;
+            java.util.List<BlockPos> clear = down ? java.util.List.of(ahead.up(), ahead, ahead.down()) : java.util.List.of(ahead.up(), ahead);
+            // Safe ground under the next step, and no fluid beside anything it opens up.
+            BlockState floor = br.world().getBlockState(next.down());
+            boolean unsafe = !floor.isSideSolidFullSquare(br.world(), next.down(), net.minecraft.util.math.Direction.UP);
+            for (BlockPos p : clear) {
+                for (net.minecraft.util.math.Direction d : net.minecraft.util.math.Direction.values()) {
+                    if (!br.world().getFluidState(p.offset(d)).isEmpty()) unsafe = true;
+                }
+                if (!br.world().getFluidState(p).isEmpty()) unsafe = true;
+            }
+            if (floor.isAir() || !floor.getFluidState().isEmpty()) unsafe = true;
+            if (unsafe) {
+                dir = dir.rotateYClockwise();
+                turns++;
+                return Reaction.Outcome.RUNNING;
+            }
+            for (BlockPos p : clear) {
+                BlockState st = br.world().getBlockState(p);
+                if (st.isAir() || st.isReplaceable()) continue;
+                Body.Dig d = b.dig(p);
+                if (d == Body.Dig.FAILED) {
+                    dir = dir.rotateYClockwise();
+                    turns++;
+                }
+                return Reaction.Outcome.RUNNING;
+            }
+            // All clear: step in.
+            Vec3d centre = Vec3d.ofBottomCenter(next);
+            if (bot.getPos().multiply(1, 0, 1).distanceTo(centre.multiply(1, 0, 1)) < 0.3 && feet.getY() <= next.getY()) {
+                if (!down) tunnelled++;
+                turns = 0;
+                b.stopMoving();
+                return Reaction.Outcome.RUNNING;
+            }
+            b.lookAt(centre.add(0, bot.getStandingEyeHeight(), 0));
+            bot.forwardSpeed = 0.35F;
+            if (feet.equals(lastFeet)) {
+                if (++stuck > 60) {
+                    dir = dir.rotateYClockwise();
+                    turns++;
+                    stuck = 0;
+                }
+            } else {
+                stuck = 0;
+                lastFeet = feet;
+            }
+            return Reaction.Outcome.RUNNING;
+        }
+    }
+
     // ------------------------------------------------------------------ lighting a torch
 
     /** Walks to the nearest flame it knows and lights one torch there. */
@@ -380,8 +464,8 @@ final class Moves {
 
         Reaction.Outcome tick(Brain br) {
             Body b = br.body;
-            if (b.has(Moves::litTorch)) return Reaction.Outcome.DONE;
-            if (!b.has(Moves::unlitTorch)) return Reaction.Outcome.FAILED;
+            if (b.has(Moves::litLight) || net.unbeta.content.light.HeldLight.isLit(b.bot.getOffHandStack())) return Reaction.Outcome.DONE;
+            if (!b.has(Moves::unlitLight)) return Reaction.Outcome.FAILED;
             if (flame == null) {
                 flame = br.notebook.nearest(Notebook.Kind.FLAME, b.bot.getBlockPos(), 32);
                 if (flame == null) return Reaction.Outcome.FAILED;
@@ -398,7 +482,7 @@ final class Moves {
                 return Reaction.Outcome.RUNNING;
             }
             b.stopMoving();
-            b.hold(Moves::unlitTorch);
+            b.hold(Moves::unlitLight);
             b.lookAt(Vec3d.ofCenter(flame.pos));
             if (tries++ % 10 == 5) {
                 b.useOn(flame.pos);

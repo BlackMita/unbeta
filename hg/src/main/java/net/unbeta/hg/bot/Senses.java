@@ -125,6 +125,8 @@ public final class Senses {
         // Glance rays: blocks.
         int rays = Math.max(1, (int) Math.round(cfg.glanceRaysPerSecond * cfg.thinkTicks / 20.0));
         List<Glimpse> glimpses = new ArrayList<>();
+        boolean carriesLight = net.unbeta.content.light.HeldLight.isLit(bot.getMainHandStack())
+                || net.unbeta.content.light.HeldLight.isLit(bot.getOffHandStack());
         for (int i = 0; i < rays; i++) {
             float yaw = bot.getYaw() + (float) ((random.nextDouble() - 0.5) * cone);
             float pitch = MathHelper.clamp(bot.getPitch() + (float) ((random.nextDouble() - 0.5) * 100), -80F, 80F);
@@ -141,7 +143,19 @@ public final class Senses {
                         && k != Notebook.Kind.DEATH) brain.notebook.forget(k, pos);
             }
             Notebook.Kind kind = classify(world, pos, state);
-            if (kind != null) glimpses.add(new Glimpse(kind, pos.toImmutable(), describe(state)));
+            BlockPos air = pos.offset(hit.getSide());
+            // In the dark it can't make things out past a few blocks (lava and flames light themselves).
+            boolean seen = carriesLight || world.getLightLevel(air) > 2
+                    || pos.getSquaredDistance(bot.getBlockPos()) <= cfg.darkGlanceRange * cfg.darkGlanceRange;
+            if (kind != null && (seen || kind == Notebook.Kind.LAVA || kind == Notebook.Kind.FLAME)) {
+                glimpses.add(new Glimpse(kind, pos.toImmutable(), describe(state)));
+            }
+            // A way down: open space it can see into, well below the surface, that sky never reaches.
+            if (world.isAir(air) && world.getLightLevel(net.minecraft.world.LightType.SKY, air) == 0
+                    && air.getY() < world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, air.getX(), air.getZ()) - 4
+                    && brain.notebook.nearest(Notebook.Kind.CAVE, air, 6) == null) {
+                glimpses.add(new Glimpse(Notebook.Kind.CAVE, air.toImmutable(), "cave"));
+            }
         }
         glimpses.sort(Comparator.comparingDouble(g -> g.pos.getSquaredDistance(bot.getBlockPos())));
         int newMarks = 0;
@@ -210,6 +224,7 @@ public final class Senses {
             if (state.getFluidState().isIn(FluidTags.WATER)) return Notebook.Kind.WATER;
         }
         if (state.isIn(BlockTags.LOGS)) return Notebook.Kind.LOG;
+        if (state.isIn(BlockTags.RAILS)) return Notebook.Kind.RAIL;
         if (isOre(state)) return Notebook.Kind.ORE;
         if (state.isOf(Blocks.COBBLESTONE) || state.isOf(Blocks.MOSSY_COBBLESTONE)) return Notebook.Kind.COBBLE;
         if (state.isOf(Blocks.OAK_LEAVES)) return Notebook.Kind.LEAVES;
