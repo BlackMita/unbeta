@@ -143,6 +143,7 @@ public final class Round {
         server.getGameRules().get(GameRules.SPAWN_RADIUS).set(0, server);
         // Sleeping never skips the night (beds still set your respawn point).
         server.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(101, server);
+        Cage.build(world, spawn);
         phase = Phase.LOBBY;
         ticks = 0;
         UnbetaHG.LOG.info("Round ready: lobby open, border +-{} around {}", BORDER, spawn.toShortString());

@@ -38,6 +38,7 @@ public final class UnbetaHG implements ModInitializer {
         net.unbeta.content.obsidiandoor.ObsidianDoorBlock.XP_LEVELS = 3;
         net.unbeta.content.obsidiandoor.ObsidianDoorBlock.XP_COST = net.unbeta.content.obsidiandoor.XpHelper.pointsForLevel(3);
         Restrictions.register();
+        Cage.register();
         Dummies.register();
         HGCommands.register();
         Perf.register();

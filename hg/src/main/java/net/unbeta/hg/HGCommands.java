@@ -23,22 +23,25 @@ import net.minecraft.util.Formatting;
  *   <li>/hg test &lt;true|false&gt; - test mode: one player is enough to start</li>
  *   <li>/hg dummy add [count] | /hg dummy remove - wandering dummy players</li>
  * </ul>
- * And for everyone: /surrender, which asks you to click to confirm (the cage's surrender button
- * comes in stage 4).
+ * And for everyone: /surrender, which asks you to click to confirm (as does the cage's button).
  */
 public final class HGCommands {
 
     private HGCommands() {}
 
+    /** "Surrender and be out of this round? [Yes, I surrender]" - from /surrender or the cage's button. */
+    public static void surrenderPrompt(ServerPlayerEntity p) {
+        Text yes = Text.literal("[Yes, I surrender]").styled(st -> st.withColor(Formatting.RED).withBold(true)
+                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/surrender confirm"))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Puts you out of this round for good, and drops everything you carry"))));
+        p.sendMessage(Text.literal("Surrender and be out of this round? ").formatted(Formatting.GRAY).append(yes));
+    }
+
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
                 CommandManager.literal("surrender")
                         .executes(ctx -> {
-                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
-                            Text yes = Text.literal("[Yes, I surrender]").styled(st -> st.withColor(Formatting.RED).withBold(true)
-                                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/surrender confirm"))
-                                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("Puts you out of this round for good"))));
-                            p.sendMessage(Text.literal("Surrender and be out of this round? ").formatted(Formatting.GRAY).append(yes));
+                            surrenderPrompt(ctx.getSource().getPlayerOrThrow());
                             return 1;
                         })
                         .then(CommandManager.literal("confirm").executes(ctx -> {
@@ -50,6 +53,15 @@ public final class HGCommands {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
                 CommandManager.literal("hg").requires(src -> src.hasPermissionLevel(2))
                         .then(CommandManager.literal("perf").executes(ctx -> say(ctx.getSource(), Perf.report())))
+                        .then(CommandManager.literal("cage")
+                                .then(CommandManager.literal("save").executes(ctx ->
+                                        say(ctx.getSource(), Cage.save(ctx.getSource().getServer().getOverworld()))))
+                                .then(CommandManager.literal("default").executes(ctx -> say(ctx.getSource(), Cage.forget())))
+                                .then(CommandManager.literal("rebuild").executes(ctx -> {
+                                    var world = ctx.getSource().getServer().getOverworld();
+                                    Cage.build(world, world.getSpawnPos());
+                                    return say(ctx.getSource(), "Rebuilt the cage at spawn.");
+                                })))
                         .then(CommandManager.literal("status").executes(ctx -> say(ctx.getSource(), Round.status(ctx.getSource().getServer()))))
                         .then(CommandManager.literal("start").executes(ctx -> {
                             MinecraftServer server = ctx.getSource().getServer();
