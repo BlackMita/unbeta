@@ -49,6 +49,7 @@ public final class HGCommands {
                         }))));
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
                 CommandManager.literal("hg").requires(src -> src.hasPermissionLevel(2))
+                        .then(CommandManager.literal("perf").executes(ctx -> say(ctx.getSource(), Perf.report())))
                         .then(CommandManager.literal("status").executes(ctx -> say(ctx.getSource(), Round.status(ctx.getSource().getServer()))))
                         .then(CommandManager.literal("start").executes(ctx -> {
                             MinecraftServer server = ctx.getSource().getServer();

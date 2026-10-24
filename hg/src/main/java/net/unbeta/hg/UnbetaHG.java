@@ -40,6 +40,7 @@ public final class UnbetaHG implements ModInitializer {
         Restrictions.register();
         Dummies.register();
         HGCommands.register();
+        Perf.register();
         net.unbeta.hg.bot.BotConfig.load();
         net.unbeta.hg.bot.BotCommands.register();
         LOG.info("Unbeta Hunger Games loaded: this server runs rounds.");

@@ -95,6 +95,8 @@
     "ShulkerBulletAccessor",
     "GoldreathShotMixin",
     "FireArrowMixin",
+    "HeavenArrowMixin",
+    "GoldenFeatherFoodMixin",
     "LockedDoorWorldMixin",
     "LockedDoorDropsMixin",
     "LockedDoorTntMixin",

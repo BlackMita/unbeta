@@ -27,8 +27,11 @@ public final class DummyPlayer extends ServerPlayerEntity {
 
     @Override
     public void tick() {
+        long t0 = System.nanoTime();
         super.tick();
+        long brain = 0;
         if (this.isRemoved()) return;
+        long t1 = System.nanoTime();
         if (this.isDead()) {
             // Get up before the 20th tick of dying: at 20 the game takes a dead player's body out
             // of the world (a real player is then rebuilt by the Respawn button).
@@ -38,7 +41,9 @@ public final class DummyPlayer extends ServerPlayerEntity {
         } else {
             wander();
         }
+        brain = System.nanoTime() - t1;
         this.playerTick();
+        Perf.dummy(System.nanoTime() - t0 - brain, brain);
     }
 
     private void wander() {
