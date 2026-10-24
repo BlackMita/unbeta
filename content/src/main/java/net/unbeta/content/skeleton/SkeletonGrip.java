@@ -25,7 +25,8 @@ import java.util.WeakHashMap;
  * Empty-handed skeletons don't punch: they grab. A skeleton with nothing in its hand (bare, or
  * only wearing what it picked up - armour shows on its body, not in its hand) holds the player
  * it reaches still, for as long as it stays next to them and keeps grabbing. Hitting or
- * otherwise hurting that skeleton breaks the grip, and it can't grab again for a second.
+ * otherwise hurting that skeleton breaks the grip, and it can't grab again for a second. An
+ * Unlike-like can snatch a player out of a skeleton's grip; no skeleton can take one from it.
  * (Skeletons holding junk - a flower, a plank - can't hurt or hold anyone: BonePileRegistry.isHarmless.)
  */
 public final class SkeletonGrip {
@@ -86,6 +87,7 @@ public final class SkeletonGrip {
         long now = skeleton.getWorld().getTime();
         Long blocked = NO_GRIP_UNTIL.get(skeleton);
         if (blocked != null && now < blocked) return;
+        if (inUnlikeLike(p)) return;
         Grip g = HELD_PLAYERS.get(p);
         if (g != null && g.skeleton == skeleton) {
             g.until = now + HOLD_TICKS;
@@ -95,7 +97,23 @@ public final class SkeletonGrip {
         EntityAttributeInstance speed = p.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speed != null && speed.getModifier(SLOW_ID) == null) speed.addTemporaryModifier(HELD);
         p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.ENTITY_SKELETON_AMBIENT, SoundCategory.HOSTILE, 1F, 0.6F);
-        p.sendMessage(Text.literal("A skeleton has hold of you - hit it to break free.").formatted(Formatting.GRAY), true);
+        say(p);
+    }
+
+    /** Shown above the hotbar the whole time a skeleton has hold of you. */
+    private static void say(ServerPlayerEntity p) {
+        p.sendMessage(Text.literal("Held by a skeleton - hit it to break free").formatted(Formatting.GRAY), true);
+    }
+
+    /** Is an Unlike-like chewing on this player? Then no skeleton can get hold of them. */
+    private static boolean inUnlikeLike(ServerPlayerEntity p) {
+        return !p.getWorld().getEntitiesByClass(net.unbeta.content.unlikelike.UnlikeLikeEntity.class,
+                p.getBoundingBox().expand(10), u -> u.grabbedPlayer == p).isEmpty();
+    }
+
+    /** An Unlike-like has snatched this player out of a skeleton's grip. */
+    public static void snatched(ServerPlayerEntity p) {
+        if (HELD_PLAYERS.remove(p) != null) release(p);
     }
 
     /** Hurting a skeleton makes it let go. */
@@ -113,6 +131,7 @@ public final class SkeletonGrip {
     private static void release(ServerPlayerEntity p) {
         EntityAttributeInstance speed = p.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speed != null) speed.removeModifier(SLOW_ID);
+        if (!inUnlikeLike(p)) p.sendMessage(Text.empty(), true);   // clear the "held" line
     }
 
     private static void tick(MinecraftServer server) {
@@ -130,6 +149,7 @@ public final class SkeletonGrip {
                 it.remove();
                 continue;
             }
+            if (s.getWorld().getTime() % 10 == 0) say(p);
             // Held in place: it may fall, but not walk, jump or get pushed away.
             Vec3d now = p.getPos();
             if (now.y < g.at.y) g.at = new Vec3d(g.at.x, now.y, g.at.z);

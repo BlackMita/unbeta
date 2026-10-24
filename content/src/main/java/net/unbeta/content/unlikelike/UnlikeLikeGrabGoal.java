@@ -59,6 +59,11 @@ public class UnlikeLikeGrabGoal extends Goal {
                 0, false, false));
         grabTimer = UnlikeLikeEntity.GRAB_DURATION;
         unlikeLike.grabbedPlayer = target;
+        // Out of any skeleton's grip: the Unlike-like has them now.
+        if (target instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+            net.unbeta.content.skeleton.SkeletonGrip.snatched(sp);
+            say(sp);
+        }
         unlikeLike.getNavigation().stop();
     }
 
@@ -76,12 +81,20 @@ public class UnlikeLikeGrabGoal extends Goal {
         double dz = ulPos.z - pPos.z;
         target.setVelocity(dx * 0.5, dy * 0.5, dz * 0.5);
         target.velocityModified = true;
+        if (grabTimer % 10 == 0 && target instanceof net.minecraft.server.network.ServerPlayerEntity sp) say(sp);
         grabTimer--;
         if (grabTimer <= 0) spitOut();
     }
 
+    /** Shown above the hotbar the whole time an Unlike-like has you. */
+    private static void say(net.minecraft.server.network.ServerPlayerEntity p) {
+        p.sendMessage(net.minecraft.text.Text.literal("Grabbed by an Unlike-like")
+                .formatted(net.minecraft.util.Formatting.RED), true);
+    }
+
     @Override
     public void stop() {
+        if (target instanceof net.minecraft.server.network.ServerPlayerEntity sp) sp.sendMessage(net.minecraft.text.Text.empty(), true);
         unlikeLike.grabbedPlayer = null;
         target = null;
         grabTimer = 0;
@@ -94,6 +107,8 @@ public class UnlikeLikeGrabGoal extends Goal {
 
         // Spew sound at spit
         unlikeLike.playSound(UnlikeLikeSounds.SPEW, 1.0F, 1.0F);
+
+        if (target instanceof net.minecraft.server.network.ServerPlayerEntity sp) sp.sendMessage(net.minecraft.text.Text.empty(), true);
 
         // Fling player away hard
         Vec3d dir = target.getPos().subtract(unlikeLike.getPos()).normalize();
