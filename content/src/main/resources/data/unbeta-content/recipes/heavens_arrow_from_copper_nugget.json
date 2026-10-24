@@ -1,0 +1,32 @@
+{
+  "fabric:load_conditions": [
+    {
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "cloudboots"
+      ]
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "X",
+    "#",
+    "Y"
+  ],
+  "key": {
+    "X": {
+      "item": "unbeta-content:copper_nugget"
+    },
+    "#": {
+      "item": "minecraft:stick"
+    },
+    "Y": {
+      "item": "cloudboots:golden_feather"
+    }
+  },
+  "result": {
+    "item": "unbeta-content:heavens_arrow",
+    "count": 5
+  }
+}
