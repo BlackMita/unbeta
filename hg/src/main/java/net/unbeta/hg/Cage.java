@@ -44,8 +44,9 @@ import java.io.File;
  * Its fence gates stand open (the lobby is for wandering the map and planning). Any button
  * inside is a surrender button (it asks you to confirm, like /surrender).
  *
- * <p>My first draft is built in code. Edit it in Creative and run /hg cage save: from then on
- * every round builds yours (config/unbeta-hg-cage.nbt). /hg cage default goes back to the draft.
+ * <p>Which cage: this server's saved one (config/unbeta-hg-cage.nbt, from /hg cage save) if it has
+ * one; otherwise the one built into the mod (resources/unbeta_hg/cage.nbt); otherwise my first
+ * draft, built in code. /hg cage default deletes the server's saved one.
  */
 public final class Cage {
 
@@ -198,18 +199,27 @@ public final class Cage {
 
     /** /hg cage default: back to my draft. */
     public static String forget() {
-        return file().delete() ? "Deleted your saved cage: new rounds build the draft." : "There was no saved cage.";
+        return file().delete() ? "Deleted this server's saved cage: new rounds build the mod's built-in cage." : "There was no saved cage.";
     }
 
+    /** The server's own saved cage if it has one, else the cage built into the mod, else null (the draft). */
     private static StructureTemplate load() {
         File f = file();
-        if (!f.exists()) return null;
         try {
+            NbtCompound nbt = null;
+            if (f.exists()) {
+                nbt = NbtIo.readCompressed(f);
+            } else {
+                try (java.io.InputStream in = Cage.class.getResourceAsStream("/unbeta_hg/cage.nbt")) {
+                    if (in != null) nbt = NbtIo.readCompressed(in);
+                }
+            }
+            if (nbt == null) return null;
             StructureTemplate t = new StructureTemplate();
-            t.readNbt(Registries.BLOCK.getReadOnlyWrapper(), NbtIo.readCompressed(f));
+            t.readNbt(Registries.BLOCK.getReadOnlyWrapper(), nbt);
             return t;
         } catch (Exception e) {
-            UnbetaHG.LOG.error("Couldn't read the saved cage - building the draft", e);
+            UnbetaHG.LOG.error("Couldn't read the cage template - building the draft", e);
             return null;
         }
     }
