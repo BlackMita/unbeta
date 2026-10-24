@@ -9,6 +9,8 @@
     "EndPortalBlockMixin",
     "EnderEyeItemMixin",
     "EntitySwimmingMixin",
+    "GatedSpawnMixin",
+    "GatedWorldgenSpawnMixin",
     "LivingEntityClimbMixin",
     "MobDaylightMixin",
     "NetherPortalBlockMixin",

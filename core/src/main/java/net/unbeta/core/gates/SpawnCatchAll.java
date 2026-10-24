@@ -27,34 +27,55 @@ import net.unbeta.core.config.UnbetaConfig;
  */
 public final class SpawnCatchAll {
 
-    private final UnbetaConfig config;
+    private static UnbetaConfig config;
+    /** Gated mobs seen loading, removed at the end of the tick (never in the middle of their own loading). */
+    private static final java.util.Set<Entity> pending = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
 
-    private SpawnCatchAll(UnbetaConfig config) {
-        this.config = config;
+    private SpawnCatchAll() {}
+
+    public static void register(UnbetaConfig cfg) {
+        config = cfg;
+        ServerEntityEvents.ENTITY_LOAD.register(SpawnCatchAll::onEntityLoad);
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_WORLD_TICK.register(SpawnCatchAll::afterTick);
     }
 
-    public static void register(UnbetaConfig config) {
-        SpawnCatchAll gate = new SpawnCatchAll(config);
-        ServerEntityEvents.ENTITY_LOAD.register(gate::onEntityLoad);
-    }
-
-    private void onEntityLoad(Entity entity, net.minecraft.server.world.ServerWorld world) {
-        if (!UnbetaApi.isReady()) return;
-
-        // Only living mobs are subject to spawn gating. Items, projectiles, boats etc.
-        // are handled by other gates or kept.
-        if (!(entity instanceof LivingEntity) || !(entity instanceof MobEntity)) return;
-
-        if (config.allowDeliberateGatedSpawns) return; // escape hatch: gate disabled
-
+    /**
+     * Is this a mob Unbeta has removed? Used here, and by the spawn hooks (GatedSpawnMixin) that
+     * stop such mobs being created at all - villagers, iron golems and cats in village structures,
+     * cats from the cat spawner, and so on.
+     */
+    public static boolean gated(Entity entity) {
+        if (config == null || config.allowDeliberateGatedSpawns || !UnbetaApi.isReady()) return false;
+        if (!(entity instanceof LivingEntity) || !(entity instanceof MobEntity)) return false;
         Identifier id = Registries.ENTITY_TYPE.getId(entity.getType());
-        if (id == null) return;
+        return id != null && UnbetaApi.rules().isRemoved(ContentKind.ENTITY, id);
+    }
 
-        if (UnbetaApi.rules().isRemoved(ContentKind.ENTITY, id)) {
-            entity.discard();
-            if (config.verboseGateLogging) {
-                UnbetaCore.LOG.debug("Spawn catch-all discarded {} at {}", id, entity.getBlockPos());
+    private static void onEntityLoad(Entity entity, net.minecraft.server.world.ServerWorld world) {
+        // Discarding an entity in the middle of its own loading could leave it half there: still
+        // ticking on the server (opening doors, fighting zombies) but never sent to anyone's game -
+        // the ghost villagers and golems. So it's set aside and removed once the tick is over.
+        if (gated(entity)) pending.add(entity);
+    }
+
+    private static void afterTick(net.minecraft.server.world.ServerWorld world) {
+        if (!pending.isEmpty()) {
+            for (Entity e : new java.util.ArrayList<>(pending)) {
+                if (e.getWorld() != world) continue;
+                pending.remove(e);
+                if (!e.isRemoved()) {
+                    e.discard();
+                    if (config.verboseGateLogging) {
+                        UnbetaCore.LOG.debug("Spawn catch-all discarded {} at {}", Registries.ENTITY_TYPE.getId(e.getType()), e.getBlockPos());
+                    }
+                }
             }
+        }
+        // And every 10 seconds, a sweep for anything gated that got in some other way.
+        if (world.getTime() % 200 == 0) {
+            java.util.List<Entity> found = new java.util.ArrayList<>();
+            for (Entity e : world.iterateEntities()) if (gated(e) && !e.isRemoved()) found.add(e);
+            for (Entity e : found) e.discard();
         }
     }
 }

@@ -57,6 +57,8 @@ public final class Cage {
     /** The cage's corner (floor level, lowest x and z), and the space it protects. */
     private static BlockPos origin;
     private static BlockBox box;
+    /** The diamond block in the middle of the floor, and the border switch standing on it. */
+    private static BlockPos diamond, switchPos;
 
     private static File file() {
         return FabricLoader.getInstance().getConfigDir().resolve("unbeta-hg-cage.nbt").toFile();
@@ -64,6 +66,19 @@ public final class Cage {
 
     public static boolean protects(BlockPos pos) {
         return box != null && box.contains(pos);
+    }
+
+    /** Puts the diamond block and border switch back if anything (water, say) took them. */
+    public static void keepSwitch(ServerWorld world) {
+        if (switchPos == null || !world.isChunkLoaded(switchPos)) return;
+        if (!world.getBlockState(diamond).isOf(Blocks.DIAMOND_BLOCK)) world.setBlockState(diamond, Blocks.DIAMOND_BLOCK.getDefaultState(), Block.NOTIFY_ALL);
+        BlockState st = world.getBlockState(switchPos);
+        if (!st.isOf(Border.SWITCH) || st.get(net.minecraft.block.LeverBlock.POWERED) != Border.shrinking()) {
+            world.setBlockState(switchPos, Border.SWITCH.getDefaultState()
+                    .with(net.minecraft.block.LeverBlock.FACE, WallMountLocation.FLOOR)
+                    .with(net.minecraft.block.LeverBlock.FACING, st.isOf(Border.SWITCH) ? st.get(net.minecraft.block.LeverBlock.FACING) : Direction.NORTH)
+                    .with(net.minecraft.block.LeverBlock.POWERED, Border.shrinking()), Block.NOTIFY_ALL);
+        }
     }
 
     public static BlockBox box() {
@@ -115,7 +130,16 @@ public final class Cage {
             if (!st.isAir()) world.setBlockState(p, Block.postProcessState(st, world, p), Block.NOTIFY_LISTENERS);
         }
         setGates(world, true);   // open from the start: the lobby is for wandering and planning
-        world.setSpawnPos(new BlockPos(spawn.getX(), floor + 1, spawn.getZ()), 0F);
+        // The border switch: a diamond block in the floor, dead centre (on 0,0), with the switch on it.
+        diamond = new BlockPos(spawn.getX(), floor, spawn.getZ());
+        switchPos = diamond.up();
+        world.setBlockState(diamond, Blocks.DIAMOND_BLOCK.getDefaultState(), Block.NOTIFY_ALL);
+        world.setBlockState(switchPos, Border.SWITCH.getDefaultState()
+                .with(net.minecraft.block.LeverBlock.FACE, WallMountLocation.FLOOR)
+                .with(net.minecraft.block.LeverBlock.FACING, Direction.NORTH)
+                .with(net.minecraft.block.LeverBlock.POWERED, Border.shrinking()), Block.NOTIFY_ALL);
+        // Spawn just beside it, so nobody appears standing in the switch.
+        world.setSpawnPos(new BlockPos(spawn.getX(), floor + 1, spawn.getZ() + 2), 0F);
     }
 
     /**
@@ -231,11 +255,18 @@ public final class Cage {
     }
 
     public static void register() {
-        PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, be) -> exempt(player) || !protects(pos));
+        PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, be) ->
+                !pos.equals(switchPos) && !pos.equals(diamond) && (exempt(player) || !protects(pos)));   // the switch: nobody, ever
         UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
-            if (world.isClient || exempt(player)) return ActionResult.PASS;
+            if (world.isClient) return ActionResult.PASS;
             BlockPos pos = hit.getBlockPos();
             BlockState st = world.getBlockState(pos);
+            // The border switch decides for itself who may flip it (see Border.flip).
+            if (pos.equals(switchPos)) {
+                return player.shouldCancelInteraction() && player.getStackInHand(hand).getItem() instanceof BlockItem
+                        ? ActionResult.FAIL : ActionResult.PASS;
+            }
+            if (exempt(player)) return ActionResult.PASS;
             if (protects(pos) && st.getBlock() instanceof ButtonBlock) {
                 Round.Phase ph = Round.phase();
                 if ((ph == Round.Phase.GRACE || ph == Round.Phase.GAME) && player instanceof ServerPlayerEntity sp) {

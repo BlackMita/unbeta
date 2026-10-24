@@ -181,6 +181,13 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(tool)), true);
         }
 
+        // Hay bales and grass paths are back (villages and farms read better with them; a
+        // shovel on grass makes a path again, and hay is crafted from 9 wheat).
+        for (String id : new String[]{"hay_block", "dirt_path"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
+        }
+
         // Phase 2: re-enable glow berries (Phase 1 gated them; now they're the
         // ingredient for Glowsand and a held light source via dynamic lights).
         // Cave vines re-enabled so they drop berries from lush caves.

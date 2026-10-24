@@ -28,6 +28,7 @@ public final class UnbetaHG implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        Border.registerBlock();   // on both sides: players' games draw the border switch
         if (!ACTIVE) return;
         Round.register();
         Keeps.register();

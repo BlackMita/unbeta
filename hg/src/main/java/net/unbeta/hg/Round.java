@@ -55,7 +55,7 @@ public final class Round {
 
     public enum Phase { LOBBY, COUNTDOWN, GRACE, GAME, ENDED }
 
-    public static final int BORDER = 999;
+    public static final int BORDER = Border.START_RADIUS;
     private static final int COUNTDOWN_TICKS = 10 * 20;
     private static final int GRACE_TICKS = 60 * 20;
     private static final int GAME_TICKS = 45 * 60 * 20;          // counted from the start of GRACE
@@ -137,9 +137,10 @@ public final class Round {
 
     private static void setUpWorld(MinecraftServer server) {
         ServerWorld world = server.getOverworld();
-        BlockPos spawn = world.getSpawnPos();
-        world.getWorldBorder().setCenter(spawn.getX() + 0.5, spawn.getZ() + 0.5);
-        world.getWorldBorder().setSize(BORDER * 2 + 1);
+        // The round is played around 0,0: spawn and the cage there, the border centred on it.
+        BlockPos spawn = new BlockPos(0, world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, 0, 0), 0);
+        world.setSpawnPos(spawn, 0F);
+        Border.setUp(world);
         server.getGameRules().get(GameRules.SPAWN_RADIUS).set(0, server);
         // Sleeping never skips the night (beds still set your respawn point).
         server.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(101, server);
@@ -208,6 +209,7 @@ public final class Round {
             }
         }
         OutPlayers.tick(server);
+        Border.tick(server);
         switch (phase) {
             case LOBBY -> lobby(server, players);
             case COUNTDOWN -> countdown(server, players);
@@ -505,7 +507,7 @@ public final class Round {
         List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
         return "Phase " + phase + ", " + time(ticks) + " in it; game clock " + time(clock) + "; "
                 + stillIn().size() + " in (" + in(players).size() + " online), " + out.size() + " out; test mode "
-                + (testMode ? "on" : "off") + hp(players);
+                + (testMode ? "on" : "off") + "; border " + Border.describe(server.getOverworld()) + hp(players);
     }
 
     private static String hp(List<ServerPlayerEntity> players) {
