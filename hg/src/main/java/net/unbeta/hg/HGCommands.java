@@ -57,11 +57,9 @@ public final class HGCommands {
                                 .then(CommandManager.literal("save").executes(ctx ->
                                         say(ctx.getSource(), Cage.save(ctx.getSource().getServer().getOverworld()))))
                                 .then(CommandManager.literal("default").executes(ctx -> say(ctx.getSource(), Cage.forget())))
-                                .then(CommandManager.literal("rebuild").executes(ctx -> {
-                                    var world = ctx.getSource().getServer().getOverworld();
-                                    Cage.build(world, world.getSpawnPos());
-                                    return say(ctx.getSource(), "Rebuilt the cage at spawn.");
-                                })))
+                                .then(CommandManager.literal("rebuild").executes(ctx ->
+                                        say(ctx.getSource(), Cage.rebuild(ctx.getSource().getServer().getOverworld())
+                                                ? "Rebuilt the cage where it stands." : "No cage in this world yet."))))
                         .then(CommandManager.literal("status").executes(ctx -> say(ctx.getSource(), Round.status(ctx.getSource().getServer()))))
                         .then(CommandManager.literal("start").executes(ctx -> {
                             MinecraftServer server = ctx.getSource().getServer();

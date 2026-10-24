@@ -74,7 +74,19 @@ public final class Cage {
     /** Builds the cage centred on spawn (your saved one if there is one), and puts spawn inside it. */
     public static void build(ServerWorld world, BlockPos spawn) {
         int floor = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, spawn.getX(), spawn.getZ()) - 1;
-        origin = new BlockPos(spawn.getX() - SIZE / 2, floor, spawn.getZ() - SIZE / 2);
+        place(world, new BlockPos(spawn.getX() - SIZE / 2, floor, spawn.getZ() - SIZE / 2), spawn);
+    }
+
+    /** /hg cage rebuild: builds it again exactly where it stands (never on top of itself). */
+    public static boolean rebuild(ServerWorld world) {
+        if (origin == null) return false;
+        place(world, origin, world.getSpawnPos());
+        return true;
+    }
+
+    private static void place(ServerWorld world, BlockPos corner, BlockPos spawn) {
+        origin = corner;
+        int floor = corner.getY();
         Vec3i size = new Vec3i(SIZE, HEIGHT, SIZE);
         // Clear the space, and give it a solid stone footing over caves or water.
         for (int x = 0; x < SIZE; x++) for (int z = 0; z < SIZE; z++) {
