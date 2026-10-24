@@ -30,6 +30,8 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
     /** True for the ~1s after a skeleton dies: invisible, untargetable, won't fall. */
     public static final BooleanProperty HIDDEN = BooleanProperty.of("hidden");
     private static final VoxelShape SHAPE = Block.createCuboidShape(0, 0, 0, 16, 9, 16);
+    /** Positions launching as falling blocks right now: their contents ride along, so no scatter. */
+    private static final java.util.Set<Long> FALLING = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
 
     public BonePileBlock(Settings settings) {
         super(settings);
@@ -84,7 +86,7 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
     @Override
     public void onStateReplaced(BlockState state, World world, BlockPos pos,
                                 BlockState newState, boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
+        if (!state.isOf(newState.getBlock()) && !FALLING.contains(pos.asLong())) {
             var be = world.getBlockEntity(pos);
             if (be instanceof BonePileBlockEntity bonePile) {
                 bonePile.scatterItems(world);
@@ -130,7 +132,48 @@ public class BonePileBlock extends FallingBlock implements BlockEntityProvider, 
             world.scheduleBlockTick(pos, this, this.getFallDelay());
             return;
         }
-        super.scheduledTick(state, world, pos, random);
+        fall(state, world, pos);
+    }
+
+    /**
+     * Falls like a clambox: the contents (and respawn time) ride along in the falling block and
+     * are written back where it lands, instead of spilling out where it started.
+     */
+    private void fall(BlockState state, net.minecraft.server.world.ServerWorld world, BlockPos pos) {
+        if (!canFallThrough(world.getBlockState(pos.down())) || pos.getY() < world.getBottomY()) return;
+        net.minecraft.nbt.NbtCompound data = world.getBlockEntity(pos) instanceof BonePileBlockEntity be ? be.createNbt() : null;
+        FALLING.add(pos.asLong());
+        try {
+            net.minecraft.entity.FallingBlockEntity fbe = net.minecraft.entity.FallingBlockEntity.spawnFromBlock(world, pos, state.with(WATERLOGGED, false));
+            if (data != null) fbe.blockEntityData = data;
+            configureFallingBlockEntity(fbe);
+        } finally {
+            FALLING.remove(pos.asLong());
+        }
+    }
+
+    /** Landed: the skeleton still comes back on time, from here now. */
+    @Override
+    public void onLanding(World world, BlockPos pos, BlockState fallingState, BlockState current,
+                          net.minecraft.entity.FallingBlockEntity fbe) {
+        if (!(world instanceof net.minecraft.server.world.ServerWorld sw) || fbe.blockEntityData == null) return;
+        if (!fbe.blockEntityData.contains("RespawnAt")) return;
+        long at = fbe.blockEntityData.getLong("RespawnAt");
+        if (at < 0) return;
+        long left = Math.max(1, at - sw.getTime());
+        long warn = left - (BonePileRespawn.RESPAWN_TICKS - BonePileRespawn.WARNING_TICKS);
+        if (warn > 0) net.unbeta.core.sched.UnbetaScheduler.schedule(sw, pos, warn, BonePileRespawn.WARNING_HANDLER_ID);
+        net.unbeta.core.sched.UnbetaScheduler.schedule(sw, pos, left, BonePileRespawn.RESPAWN_HANDLER_ID);
+    }
+
+    /** Broke on landing (fell onto a torch, a slab...): its contents spill there. */
+    @Override
+    public void onDestroyedOnLanding(World world, BlockPos pos, net.minecraft.entity.FallingBlockEntity fbe) {
+        if (world.isClient || fbe.blockEntityData == null) return;
+        net.minecraft.util.collection.DefaultedList<net.minecraft.item.ItemStack> items =
+                net.minecraft.util.collection.DefaultedList.ofSize(9, net.minecraft.item.ItemStack.EMPTY);
+        net.minecraft.inventory.Inventories.readNbt(fbe.blockEntityData, items);
+        for (net.minecraft.item.ItemStack st : items) if (!st.isEmpty()) Block.dropStack(world, pos, st);
     }
 
     // --- Render type ---

@@ -123,7 +123,11 @@ public abstract class SkeletonDeathMixin {
         BlockPos.Mutable pos = from.mutableCopy();
         while (pos.getY() > world.getBottomY()) {
             BlockState below = world.getBlockState(pos.down());
-            if (below.isSolidBlock(world, pos.down()) || below.isOf(Blocks.LAVA)) {
+            // A solid top to rest on - ice and packed ice included (they don't count as
+            // "solid blocks", so piles used to sink through them into the water below).
+            if (below.isSolidBlock(world, pos.down()) || below.isIn(net.minecraft.registry.tag.BlockTags.ICE)
+                    || below.isSideSolidFullSquare(world, pos.down(), net.minecraft.util.math.Direction.UP)
+                    || below.isOf(Blocks.LAVA)) {
                 return pos.toImmutable();
             }
             pos.move(0, -1, 0);
