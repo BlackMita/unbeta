@@ -39,13 +39,6 @@ public final class TorchLightingHooks {
                     break;
                 }
             }
-            // A lit furnace is a flame too: an unlit torch or Jack o'Lantern lights at it (and the
-            // furnace doesn't open). The wiki has always said so; now it's so.
-            var clicked = world.getBlockState(hit.getBlockPos());
-            if (!isFire && clicked.getBlock() instanceof net.minecraft.block.AbstractFurnaceBlock
-                    && clicked.get(net.minecraft.block.AbstractFurnaceBlock.LIT)) {
-                isFire = true;
-            }
             if (isFire) {
                 if (!world.isClient) {
                     if (heldUnlitTorch) {
