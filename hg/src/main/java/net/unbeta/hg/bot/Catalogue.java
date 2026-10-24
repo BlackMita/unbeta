@@ -21,7 +21,7 @@ final class Catalogue {
             new Survival.Creeper(), new Survival.SporeLanded(), new Survival.WaterDrop(), new Survival.Zombification(),
             new Survival.Retreat(), new Survival.HitFromBehind(), new Survival.ShotAt(), new Survival.Mimic(),
             new Survival.GuardianBeam(), new Survival.Enderman(), new Survival.Respawned(), new Survival.Border(),
-            new Survival.Hungry(), new Survival.Heal(), new Survival.Dark(),
+            new Survival.Hungry(), new Survival.Heal(), new Survival.Dark(), new Survival.SkeletonHold(),
             // Combat
             new Combat.Gloat(), new Combat.HitByPlayer(), new Combat.PillarUp(), new Combat.Outnumbered(),
             new Combat.Grudge(), new Combat.Pounce(), new Combat.Terminator(), new Combat.Brandish(),

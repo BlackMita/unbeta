@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *   plan a route out, whether wandering or chasing. Only affected bare-headed skeletons.
  * - Add SwimGoal. Vanilla skeletons have none, so in deep water they sink and walk the
  *   bottom, and can't path out of pools with walls higher than one block.
- * - 1/6 chance to spawn with a damaged wooden sword instead of a bow
+ * - Out of 7 skeletons: 4 spawn with a bow, 2 with a worn wooden sword, 1 empty-handed
  */
 @Mixin(AbstractSkeletonEntity.class)
 public class SkeletonBehaviorMixin {
@@ -41,8 +41,12 @@ public class SkeletonBehaviorMixin {
     private void unbeta_maybeSwordInstead(Random random, LocalDifficulty difficulty,
                                            CallbackInfo ci) {
         AbstractSkeletonEntity self = (AbstractSkeletonEntity)(Object)this;
-        // 1/6 chance: replace bow with a damaged wooden sword
-        if (random.nextInt(6) == 0) {
+        // Out of 7: 4 keep their bow, 2 get a worn wooden sword, 1 comes empty-handed
+        // (and grabs - see SkeletonGrip).
+        int roll = random.nextInt(7);
+        if (roll == 6) {
+            self.equipStack(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+        } else if (roll >= 4) {
             ItemStack sword = new ItemStack(Items.WOODEN_SWORD);
             // Damage it randomly between 25% and 90% worn
             int maxDamage = sword.getMaxDamage();

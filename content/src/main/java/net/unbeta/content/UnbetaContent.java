@@ -108,6 +108,8 @@ public final class UnbetaContent implements ModInitializer {
         // Bone Pile: skeleton death remnant with 9-slot inventory, respawns after 20s.
         net.unbeta.content.skeleton.BonePileRegistry.register();
         net.unbeta.content.skeleton.BonePileRespawn.register();
+        // Empty-handed skeletons hold you in place instead of punching; hit them to break free.
+        net.unbeta.content.skeleton.SkeletonGrip.register();
         LOG.info("Registered Bone Pile.");
 
         // Sullied chunks: zombie death marks chunk, rising zombie spawns on next player entry.

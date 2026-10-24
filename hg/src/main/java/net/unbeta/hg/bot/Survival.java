@@ -588,6 +588,29 @@ final class Survival {
         }
     }
 
+    // ------------------------------------------------------------------ S20 held by a skeleton
+
+    static final class SkeletonHold extends Reaction {
+        SkeletonHold() { super("S20", "Held by a skeleton", SURVIVAL, 7, true, FEARFUL); }
+        public Reaction fresh() { return new SkeletonHold(); }
+
+        private LivingEntity skeleton;
+
+        public boolean trigger(Brain br) {
+            skeleton = net.unbeta.content.skeleton.SkeletonGrip.holder(br.bot());
+            if (skeleton == null) return false;
+            because = "a skeleton has hold of me";
+            return true;
+        }
+
+        public Outcome tick(Brain br) {
+            // Hitting it is the only way out.
+            if (net.unbeta.content.skeleton.SkeletonGrip.holder(br.bot()) == null) return DONE;
+            br.body.attack(skeleton);
+            return RUNNING;
+        }
+    }
+
     // ------------------------------------------------------------------ S16 respawned
 
     static final class Respawned extends Reaction {
