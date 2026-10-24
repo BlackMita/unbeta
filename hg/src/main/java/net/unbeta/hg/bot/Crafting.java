@@ -30,28 +30,39 @@ public final class Crafting {
         }
     }
 
-    private static final int DEPTH = 4;
+    private static final int DEPTH = 3;
+    /** Most recipe trials one plan may make, so no plan can ever stall the server. */
+    private static final int BUDGET = 400;
 
     /** The steps to make the item from what the bot carries, or null if it can't. */
     public static List<Step> plan(ServerPlayerEntity bot, Item target, boolean tableNearby) {
-        return plan(bot, s -> s.isOf(target), tableNearby);
+        return plan(bot, s -> s.isOf(target), tableNearby, index(bot.getServer()).makes(target));
     }
 
     /** The steps to make anything that passes the test (any planks, say), or null if it can't. */
     public static List<Step> plan(ServerPlayerEntity bot, Predicate<ItemStack> want, boolean tableNearby) {
+        return plan(bot, want, tableNearby, index(bot.getServer()).all);
+    }
+
+    private static List<Step> plan(ServerPlayerEntity bot, Predicate<ItemStack> want, boolean tableNearby, List<CraftingRecipe> candidates) {
         MinecraftServer server = bot.getServer();
+        Index idx = index(server);
         List<ItemStack> inv = snapshot(bot.getInventory());
         List<Step> steps = new ArrayList<>();
-        if (!make(server, inv, steps, want, DEPTH)) return null;
+        int[] budget = {BUDGET};
+        if (!make(server, idx, inv, steps, want, candidates, DEPTH, budget, new java.util.HashSet<>())) return null;
         boolean needsTable = steps.stream().anyMatch(Step::needsTable);
         if (!needsTable || tableNearby || has(bot, net.minecraft.item.Items.CRAFTING_TABLE)) return steps;
         // It needs a crafting table first: make one, place it, then the rest.
         inv = snapshot(bot.getInventory());
         steps = new ArrayList<>();
-        if (!make(server, inv, steps, s -> s.isOf(net.minecraft.item.Items.CRAFTING_TABLE), DEPTH)) return null;
+        budget[0] = BUDGET;
+        if (!make(server, idx, inv, steps, s -> s.isOf(net.minecraft.item.Items.CRAFTING_TABLE),
+                idx.makes(net.minecraft.item.Items.CRAFTING_TABLE), DEPTH, budget, new java.util.HashSet<>())) return null;
         take(inv, s -> s.isOf(net.minecraft.item.Items.CRAFTING_TABLE));
         steps.add(new Step(null, ItemStack.EMPTY, false));
-        if (!make(server, inv, steps, want, DEPTH)) return null;
+        budget[0] = BUDGET;
+        if (!make(server, idx, inv, steps, want, candidates, DEPTH, budget, new java.util.HashSet<>())) return null;
         return steps;
     }
 
@@ -61,8 +72,39 @@ public final class Crafting {
         return false;
     }
 
-    private static List<CraftingRecipe> recipes(MinecraftServer server) {
-        return server.getRecipeManager().listAllOfType(RecipeType.CRAFTING);
+    /** Every crafting recipe, once, and which recipes make each item (rebuilt if recipes reload). */
+    private static final class Index {
+        final Object manager;
+        final List<CraftingRecipe> all;
+        final java.util.Map<Item, List<CraftingRecipe>> byOutput = new java.util.HashMap<>();
+
+        Index(MinecraftServer server) {
+            manager = server.getRecipeManager();
+            all = new ArrayList<>(server.getRecipeManager().listAllOfType(RecipeType.CRAFTING));
+            for (CraftingRecipe r : all) {
+                ItemStack out = r.getOutput(server.getRegistryManager());
+                if (!out.isEmpty()) byOutput.computeIfAbsent(out.getItem(), k -> new ArrayList<>()).add(r);
+            }
+        }
+
+        List<CraftingRecipe> makes(Item item) {
+            return byOutput.getOrDefault(item, List.of());
+        }
+
+        /** Recipes that make anything an ingredient accepts. */
+        List<CraftingRecipe> makes(Ingredient ing) {
+            List<CraftingRecipe> out = new ArrayList<>();
+            java.util.Set<Item> seen = new java.util.HashSet<>();
+            for (ItemStack s : ing.getMatchingStacks()) if (seen.add(s.getItem())) out.addAll(makes(s.getItem()));
+            return out;
+        }
+    }
+
+    private static Index index;
+
+    private static Index index(MinecraftServer server) {
+        if (index == null || index.manager != server.getRecipeManager()) index = new Index(server);
+        return index;
     }
 
     private static boolean needsTable(CraftingRecipe recipe) {
@@ -72,23 +114,31 @@ public final class Crafting {
         return n > 4;
     }
 
-    /** Plans making something that passes `want`, using (and updating) the pretend inventory. */
-    private static boolean make(MinecraftServer server, List<ItemStack> inv, List<Step> steps, Predicate<ItemStack> want, int depth) {
+    /**
+     * Plans making something that passes `want` from the candidate recipes, using (and updating)
+     * the pretend inventory. Never tries to make an item while already making it (Unbeta's dyed
+     * wood loops planks back into planks), and gives up when the budget runs out.
+     */
+    private static boolean make(MinecraftServer server, Index idx, List<ItemStack> inv, List<Step> steps, Predicate<ItemStack> want,
+                                List<CraftingRecipe> candidates, int depth, int[] budget, java.util.Set<Item> making) {
         if (depth < 0) return false;
-        for (CraftingRecipe recipe : recipes(server)) {
+        for (CraftingRecipe recipe : candidates) {
             ItemStack out = recipe.getOutput(server.getRegistryManager());
-            if (out.isEmpty() || !want.test(out)) continue;
+            if (out.isEmpty() || !want.test(out) || making.contains(out.getItem())) continue;
+            if (--budget[0] < 0) return false;
             List<ItemStack> trial = copy(inv);
             List<Step> trialSteps = new ArrayList<>(steps);
             boolean ok = true;
+            making.add(out.getItem());
             for (Ingredient ing : recipe.getIngredients()) {
                 if (ing.isEmpty()) continue;
                 if (take(trial, ing)) continue;
-                if (!make(server, trial, trialSteps, ing, depth - 1) || !take(trial, ing)) {
+                if (!make(server, idx, trial, trialSteps, ing, idx.makes(ing), depth - 1, budget, making) || !take(trial, ing)) {
                     ok = false;
                     break;
                 }
             }
+            making.remove(out.getItem());
             if (!ok) continue;
             trial.add(out.copy());
             trialSteps.add(new Step(recipe, out.copy(), needsTable(recipe)));

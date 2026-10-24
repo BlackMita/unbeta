@@ -14,12 +14,16 @@ public final class ClamboxSpawner {
     private static final int CONVERT_CHANCE = 80;
     private static final int RADIUS = 48;
     private static final int MIN_SPACING = 32;
+    /** At most this many seagrass may try to become a clambox per pass. */
+    private static final int MAX_ATTEMPTS = 8;
+    private static int attempts;
 
     private ClamboxSpawner() {}
 
     public static void register() {
         ServerTickEvents.END_WORLD_TICK.register(world -> {
             if (world.getTime() % TICK_INTERVAL != 0) return;
+            attempts = 0;
 
             // Every loaded chunk within RADIUS of any player, each once (players standing
             // together share chunks), and in each only the ocean floor of every column:
@@ -54,6 +58,7 @@ public final class ClamboxSpawner {
                    == net.minecraft.block.enums.DoubleBlockHalf.LOWER;
         if (!isSeagrass && !isTallBase) return;
         if (world.getRandom().nextInt(CONVERT_CHANCE) != 0) return;
+        if (++attempts > MAX_ATTEMPTS) return;
 
         // Hard stop: don't convert if a clambox already exists within MIN_SPACING
         if (clamboxNearby(world, pos, MIN_SPACING)) return;
@@ -72,10 +77,23 @@ public final class ClamboxSpawner {
         }
     }
 
+    /**
+     * A clambox within the spacing already? Looks only at the block entities of the nearby chunks
+     * (a clambox has one), not at every block: this used to read some 72,000 blocks per candidate,
+     * and near an ocean dozens of candidates come up every pass.
+     */
     private static boolean clamboxNearby(ServerWorld world, BlockPos origin, int radius) {
-        for (BlockPos p : BlockPos.iterateOutwards(origin, radius, 8, radius)) {
-            if (!world.isChunkLoaded(p)) continue;
-            if (world.getBlockState(p).isOf(ClamboxRegistry.CLAMBOX_BLOCK)) return true;
+        int r = (radius >> 4) + 1;
+        ChunkPos c = new ChunkPos(origin);
+        for (int dx = -r; dx <= r; dx++) for (int dz = -r; dz <= r; dz++) {
+            net.minecraft.world.chunk.WorldChunk chunk = world.getChunkManager().getWorldChunk(c.x + dx, c.z + dz);
+            if (chunk == null) continue;
+            for (var be : chunk.getBlockEntities().values()) {
+                if (!(be instanceof ClamboxBlockEntity)) continue;
+                BlockPos p = be.getPos();
+                if (Math.abs(p.getX() - origin.getX()) <= radius && Math.abs(p.getZ() - origin.getZ()) <= radius
+                        && Math.abs(p.getY() - origin.getY()) <= 8) return true;
+            }
         }
         return false;
     }
