@@ -88,6 +88,19 @@ public final class SkeletonGrip {
         Long blocked = NO_GRIP_UNTIL.get(skeleton);
         if (blocked != null && now < blocked) return;
         if (inUnlikeLike(p)) return;
+        // A raised shield facing it turns the grab aside like any melee blow: a clang, the
+        // skeleton knocked back, any hold it had broken, and a second before it can try again.
+        if (shieldBlocks(p, skeleton)) {
+            p.getWorld().playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1F, 0.8F + p.getRandom().nextFloat() * 0.4F);
+            skeleton.takeKnockback(0.5, p.getX() - skeleton.getX(), p.getZ() - skeleton.getZ());
+            NO_GRIP_UNTIL.put(skeleton, now + REGRIP_TICKS);
+            Grip held = HELD_PLAYERS.get(p);
+            if (held != null && held.skeleton == skeleton) {
+                HELD_PLAYERS.remove(p);
+                release(p);
+            }
+            return;
+        }
         Grip g = HELD_PLAYERS.get(p);
         if (g != null && g.skeleton == skeleton) {
             g.until = now + HOLD_TICKS;
@@ -103,6 +116,15 @@ public final class SkeletonGrip {
     /** Shown above the hotbar the whole time a skeleton has hold of you. */
     private static void say(ServerPlayerEntity p) {
         p.sendMessage(Text.literal("Held by a skeleton - hit it to break free").formatted(Formatting.GRAY), true);
+    }
+
+    /** Shield up and facing the skeleton (the same test vanilla uses for blocking a blow). */
+    private static boolean shieldBlocks(ServerPlayerEntity p, SkeletonEntity skeleton) {
+        if (!p.isBlocking()) return false;
+        Vec3d look = p.getRotationVec(1.0F);
+        Vec3d to = skeleton.getPos().relativize(p.getPos()).normalize();
+        to = new Vec3d(to.x, 0.0, to.z);
+        return to.dotProduct(look) < 0.0;
     }
 
     /** Is an Unlike-like chewing on this player? Then no skeleton can get hold of them. */

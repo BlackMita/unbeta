@@ -26,6 +26,10 @@
     "moderner_beta": ">=3.0.0"
   },
   "mixins": [
-    "unbeta-content.mixins.json"
+    "unbeta-content.mixins.json",
+    {
+      "config": "unbeta-content.suggest.mixins.json",
+      "environment": "client"
+    }
   ]
 }

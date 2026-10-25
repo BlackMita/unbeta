@@ -130,6 +130,14 @@ public final class Round {
         ServerLifecycleEvents.SERVER_STARTED.register(Round::setUpWorld);
         ServerTickEvents.END_SERVER_TICK.register(Round::tick);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> joined(server, handler.player));
+        // Out players who die (a /kill, a fall) come back still out: restricted, halo and all.
+        net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+            if ((phase == Phase.GRACE || phase == Phase.GAME) && out.contains(newPlayer.getUuid())) {
+                restrict(newPlayer);
+                OutPlayers.makeSpectre(newPlayer.getServer(), newPlayer.getName().getString());
+                OutPlayers.syncAll(newPlayer.getServer());
+            }
+        });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> left(server, handler.player));
     }
 
@@ -156,7 +164,12 @@ public final class Round {
         if (phase == Phase.GRACE || phase == Phase.GAME) {
             // Too late to play this round: watch instead.
             if (!out.contains(player.getUuid()) && !wasIn(player)) {
+                // Wasn't here when the countdown ended: a spectre for this round - halo, see-through,
+                // "Name's Spectre", the glow - same as anyone who's out.
                 out.add(player.getUuid());
+                names.putIfAbsent(player.getUuid(), player.getName().getString());
+                OutPlayers.makeSpectre(server, player.getName().getString());
+                OutPlayers.syncAll(server);
                 player.sendMessage(Text.literal("A round is under way - you're watching this one.").formatted(Formatting.GRAY));
             } else if (wasIn(player) && !out.contains(player.getUuid())) {
                 player.sendMessage(Text.literal("Welcome back. Leaving cost you a heart; you're still in.").formatted(Formatting.YELLOW));
