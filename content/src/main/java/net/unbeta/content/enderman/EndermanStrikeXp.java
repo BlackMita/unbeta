@@ -14,13 +14,11 @@ import java.util.WeakHashMap;
 /**
  * Endermen can't be hurt, but striking one knocks a little experience out of it - a smaller
  * echo of a Guardian Post. A critical hit, an arrow or any other projectile from a player
- * knocks out a fifth of a typical Post strike (5 points); an ordinary hit, a fifth of that
- * (1 point). At most once every half second per Enderman.
+ * knocks out 2 or 3 points (evenly, 2.5 on average); an ordinary hit, 1 point. At most once
+ * every half second per Enderman.
  */
 public final class EndermanStrikeXp {
 
-    /** A typical Guardian Post strike gives about 25 points; a fifth of that. */
-    public static final int CRIT_POINTS = 5;
     /** A fifth of a fifth. */
     public static final int PLAIN_POINTS = 1;
     private static final int COOLDOWN = 10;
@@ -38,7 +36,7 @@ public final class EndermanStrikeXp {
         LAST.put(man, now);
         Entity direct = source.getSource();
         boolean projectile = direct != null && direct != player;
-        int points = projectile || critical(player) ? CRIT_POINTS : PLAIN_POINTS;
+        int points = projectile || critical(player) ? 2 + world.random.nextInt(2) : PLAIN_POINTS;
         ExperienceOrbEntity.spawn(world, man.getPos().add(0, man.getHeight() * 0.6, 0), points);
     }
 
