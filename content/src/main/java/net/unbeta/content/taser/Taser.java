@@ -358,16 +358,20 @@ public final class Taser {
             }
         }
         s.last = now;
-        if (e.getPos().y < s.anchor.y - 0.05) s.anchor = new Vec3d(s.anchor.x, e.getPos().y, s.anchor.z);   // it may fall
+        // Gravity still works: a stunned thing falls. Only walking and jumping are stopped.
+        if (e.getY() < s.anchor.y) s.anchor = new Vec3d(s.anchor.x, e.getY(), s.anchor.z);
         if (e instanceof CreeperEntity c) c.setFuseSpeed(-1);
         if (e instanceof ServerPlayerEntity p) {
-            // Held in place: no walking and no jumping (any step or hop is put straight back).
-            if (p.getPos().squaredDistanceTo(s.anchor) > 0.0025) p.networkHandler.requestTeleport(s.anchor.x, s.anchor.y, s.anchor.z, p.getYaw(), p.getPitch());
+            // Held in place: no walking and no jumping (any step or hop is put straight back), but free to fall.
+            double dx = p.getX() - s.anchor.x, dz = p.getZ() - s.anchor.z;
+            if (dx * dx + dz * dz > 0.0025 || p.getY() > s.anchor.y + 0.05) {
+                p.networkHandler.requestTeleport(s.anchor.x, Math.min(p.getY(), s.anchor.y), s.anchor.z, p.getYaw(), p.getPitch());
+            }
             if (now % 10 == 0) p.sendMessage(Text.literal("Stunned!").formatted(Formatting.YELLOW), true);
         } else {
             // Shake in place.
             double j = 0.045;
-            e.setVelocity(Vec3d.ZERO);
+            e.setVelocity(0, Math.min(0, e.getVelocity().y), 0);   // no walking or jumping, but gravity still pulls
             e.refreshPositionAfterTeleport(s.anchor.x + (w.random.nextDouble() - 0.5) * j * 2, e.getY(), s.anchor.z + (w.random.nextDouble() - 0.5) * j * 2);
             if (e instanceof MobEntity m) m.getNavigation().stop();
         }
