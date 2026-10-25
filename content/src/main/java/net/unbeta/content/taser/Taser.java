@@ -76,7 +76,7 @@ import java.util.function.Predicate;
  *       and so on outward.</li>
  * </ul>
  * Stunned things can't move or attack, shake, buzz and glow like a redstone torch. Nothing is
- * ever hurt. Water stops it all: if the holder or the target touches water, nothing happens, and
+ * ever hurt, and a stunned player can do nothing at all - not even let go of their own taser. Water stops it all: if the holder or the target touches water, nothing happens, and
  * anything standing in water can't be stunned. Skeletons are never stunned and don't pass it on.
  */
 public final class Taser {
@@ -149,12 +149,12 @@ public final class Taser {
             STUNNED.clear();
             LINES.clear();
         });
-        // A stunned player can't attack, mine, build or use things (except let go of their own taser).
+        // A stunned player can't attack, mine, build or use anything - their own taser included.
         AttackEntityCallback.EVENT.register((p, w, h, e, hit) -> isStunned(p) ? ActionResult.FAIL : ActionResult.PASS);
         AttackBlockCallback.EVENT.register((p, w, h, pos, dir) -> isStunned(p) ? ActionResult.FAIL : ActionResult.PASS);
         UseBlockCallback.EVENT.register((p, w, h, hit) -> isStunned(p) ? ActionResult.FAIL : ActionResult.PASS);
         UseEntityCallback.EVENT.register((p, w, h, e, hit) -> isStunned(p) ? ActionResult.FAIL : ActionResult.PASS);
-        UseItemCallback.EVENT.register((p, w, h) -> isStunned(p) && !p.getStackInHand(h).isOf(TASER)
+        UseItemCallback.EVENT.register((p, w, h) -> isStunned(p)
                 ? TypedActionResult.fail(p.getStackInHand(h)) : TypedActionResult.pass(p.getStackInHand(h)));
     }
 
@@ -167,6 +167,7 @@ public final class Taser {
 
     static void toggle(ServerPlayerEntity p, Hand hand) {
         ServerWorld world = p.getServerWorld();
+        if (isStunned(p)) return;   // a stunned holder can't let go: it runs until the battery's flat
         if (LINES.remove(p.getUuid()) != null) {
             world.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.BLOCK_LEVER_CLICK, SoundCategory.PLAYERS, 0.6F, 0.7F);
             return;
@@ -360,7 +361,8 @@ public final class Taser {
         if (e.getPos().y < s.anchor.y - 0.05) s.anchor = new Vec3d(s.anchor.x, e.getPos().y, s.anchor.z);   // it may fall
         if (e instanceof CreeperEntity c) c.setFuseSpeed(-1);
         if (e instanceof ServerPlayerEntity p) {
-            if (p.getPos().squaredDistanceTo(s.anchor) > 0.04) p.networkHandler.requestTeleport(s.anchor.x, s.anchor.y, s.anchor.z, p.getYaw(), p.getPitch());
+            // Held in place: no walking and no jumping (any step or hop is put straight back).
+            if (p.getPos().squaredDistanceTo(s.anchor) > 0.0025) p.networkHandler.requestTeleport(s.anchor.x, s.anchor.y, s.anchor.z, p.getYaw(), p.getPitch());
             if (now % 10 == 0) p.sendMessage(Text.literal("Stunned!").formatted(Formatting.YELLOW), true);
         } else {
             // Shake in place.

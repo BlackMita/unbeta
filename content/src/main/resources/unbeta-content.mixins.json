@@ -121,7 +121,8 @@
     "IceScreamFrozenMobMixin",
     "SmartLadderExtendMixin",
     "LadderBackClimbMixin",
-    "MobStunMixin"
+    "MobStunMixin",
+    "StunnedPlayerPacketsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
