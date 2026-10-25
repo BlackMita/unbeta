@@ -120,7 +120,8 @@
     "SpoiledMilkNameMixin",
     "IceScreamFrozenMobMixin",
     "SmartLadderExtendMixin",
-    "LadderBackClimbMixin"
+    "LadderBackClimbMixin",
+    "MobStunMixin"
   ],
   "injectors": {
     "defaultRequire": 1

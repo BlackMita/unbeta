@@ -291,5 +291,7 @@
   "block.unbeta-content.green_stripped_log": "Green Stripped Log",
   "block.unbeta-content.red_stripped_log": "Red Stripped Log",
   "block.unbeta-content.black_stripped_log": "Black Stripped Log",
-  "item.unbeta-content.heavens_arrow": "Heaven's Arrow"
+  "item.unbeta-content.heavens_arrow": "Heaven's Arrow",
+  "item.unbeta-content.taser": "Taser",
+  "subtitles.unbeta-content.taser_buzz": "Electricity buzzes"
 }

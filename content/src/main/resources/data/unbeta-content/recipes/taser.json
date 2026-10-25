@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "W",
+    "R",
+    "S"
+  ],
+  "key": {
+    "W": {
+      "item": "unbeta-content:copper_wire"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "unbeta-content:taser"
+  }
+}

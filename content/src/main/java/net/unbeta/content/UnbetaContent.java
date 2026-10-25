@@ -110,6 +110,8 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.skeleton.BonePileRespawn.register();
         // Empty-handed skeletons hold you in place instead of punching; hit them to break free.
         net.unbeta.content.skeleton.SkeletonGrip.register();
+        // Taser: darts on a line; stuns mobs and players (never skeletons), through touch and joined copper.
+        net.unbeta.content.taser.Taser.register();
         LOG.info("Registered Bone Pile.");
 
         // Sullied chunks: zombie death marks chunk, rising zombie spawns on next player entry.

@@ -116,5 +116,15 @@
         "stream": false
       }
     ]
+  },
+  "taser_buzz": {
+    "category": "neutral",
+    "subtitle": "subtitles.unbeta-content.taser_buzz",
+    "sounds": [
+      {
+        "name": "unbeta-content:taser_buzz",
+        "stream": false
+      }
+    ]
   }
 }
