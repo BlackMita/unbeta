@@ -25,6 +25,12 @@ public final class UnbetaContentClient implements ClientModInitializer {
                 net.unbeta.content.goldreath.GoldreathRegistry.BULLET,
                 net.unbeta.content.client.goldreath.GoldreathBulletRenderer::new);
         net.unbeta.content.client.skyhold.SkyholdFogClient.register();
+        // How worn each diamond block is, so mining cracks match the server.
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(net.unbeta.content.metal.DiamondRepair.SYNC, (client, handler, buf, sender) -> {
+            long pos = buf.readBlockPos().asLong();
+            int uses = buf.readVarInt();
+            client.execute(() -> net.unbeta.content.metal.DiamondRepair.CLIENT.put(pos, uses));
+        });
         for (net.minecraft.block.Block b : net.unbeta.content.dye.DyedBlocks.CUTOUT)
             BlockRenderLayerMap.INSTANCE.putBlock(b, RenderLayer.getCutout());
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(

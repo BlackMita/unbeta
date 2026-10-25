@@ -9,4 +9,6 @@ public interface FurnaceTimesAccessor {
     @Accessor("burnTime") int unbeta_getBurnTime();
     @Accessor("burnTime") void unbeta_setBurnTime(int ticks);
     @Accessor("fuelTime") void unbeta_setFuelTime(int ticks);
+    @Accessor("cookTime") int unbeta_getCookTime();
+    @Accessor("cookTime") void unbeta_setCookTime(int ticks);
 }

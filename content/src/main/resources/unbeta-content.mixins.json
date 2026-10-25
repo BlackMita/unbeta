@@ -122,7 +122,11 @@
     "SmartLadderExtendMixin",
     "LadderBackClimbMixin",
     "MobStunMixin",
-    "StunnedPlayerPacketsMixin"
+    "StunnedPlayerPacketsMixin",
+    "IronBlockAbsorbMixin",
+    "HeatedIronFurnaceMixin",
+    "MetalBlocksMixin",
+    "GoldGlowMixin"
   ],
   "injectors": {
     "defaultRequire": 1

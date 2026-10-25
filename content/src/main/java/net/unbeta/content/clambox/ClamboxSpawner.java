@@ -66,6 +66,11 @@ public final class ClamboxSpawner {
         if (isTallBase) {
             world.setBlockState(pos.up(), Blocks.WATER.getDefaultState());
         }
+        // One in four is a wet sponge instead (smelt it dry).
+        if (world.getRandom().nextInt(4) == 0) {
+            world.setBlockState(pos, Blocks.WET_SPONGE.getDefaultState());
+            return;
+        }
         world.setBlockState(pos, ClamboxRegistry.CLAMBOX_BLOCK.getDefaultState());
 
         if (world.getBlockEntity(pos) instanceof ClamboxBlockEntity be) {

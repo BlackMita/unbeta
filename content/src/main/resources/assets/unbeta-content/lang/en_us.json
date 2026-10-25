@@ -293,5 +293,6 @@
   "block.unbeta-content.black_stripped_log": "Black Stripped Log",
   "item.unbeta-content.heavens_arrow": "Heaven's Arrow",
   "item.unbeta-content.taser": "Taser",
-  "subtitles.unbeta-content.taser_buzz": "Electricity buzzes"
+  "subtitles.unbeta-content.taser_buzz": "Electricity buzzes",
+  "block.unbeta-content.heated_iron_block": "Heated Iron Block"
 }

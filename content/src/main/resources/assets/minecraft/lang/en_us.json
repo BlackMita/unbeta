@@ -9,5 +9,22 @@
   "block.minecraft.oak_button": "Wood Button",
   "block.minecraft.oak_pressure_plate": "Wood Pressure Plate",
   "block.minecraft.oak_sign": "Wood Sign",
-  "block.minecraft.oak_wall_sign": "Wood Wall Sign"
+  "block.minecraft.oak_wall_sign": "Wood Wall Sign",
+  "block.minecraft.iron_block": "Iron Block",
+  "block.minecraft.gold_block": "Gold Block",
+  "block.minecraft.diamond_block": "Diamond Block",
+  "block.minecraft.emerald_block": "Emerald Block",
+  "block.minecraft.netherite_block": "Netherite Block",
+  "block.minecraft.coal_block": "Coal Block",
+  "block.minecraft.redstone_block": "Redstone Block",
+  "block.minecraft.lapis_block": "Lapis Lazuli Block",
+  "block.minecraft.copper_block": "Copper Block",
+  "block.minecraft.waxed_copper_block": "Waxed Copper Block",
+  "block.minecraft.quartz_block": "Quartz Block",
+  "block.minecraft.amethyst_block": "Amethyst Block",
+  "block.minecraft.raw_iron_block": "Raw Iron Block",
+  "block.minecraft.raw_gold_block": "Raw Gold Block",
+  "block.minecraft.raw_copper_block": "Raw Copper Block",
+  "block.minecraft.bamboo_block": "Bamboo Block",
+  "block.minecraft.stripped_bamboo_block": "Stripped Bamboo Block"
 }
