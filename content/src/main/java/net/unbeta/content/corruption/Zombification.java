@@ -50,7 +50,7 @@ public final class Zombification {
         // Only on a fresh infection - not every time rotten flesh resets the timer.
         if (fresh && entity instanceof net.minecraft.entity.player.PlayerEntity player) {
             player.sendMessage(net.minecraft.text.Text.literal("You've been infected.")
-                    .formatted(net.minecraft.util.Formatting.RED), false);
+                    .formatted(net.minecraft.util.Formatting.RED), true);
         }
     }
 

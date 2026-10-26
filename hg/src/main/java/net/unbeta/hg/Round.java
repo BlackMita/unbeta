@@ -170,9 +170,9 @@ public final class Round {
                 names.putIfAbsent(player.getUuid(), player.getName().getString());
                 OutPlayers.makeSpectre(server, player.getName().getString());
                 OutPlayers.syncAll(server);
-                player.sendMessage(Text.literal("A round is under way - you're watching this one.").formatted(Formatting.GRAY));
+                player.sendMessage(Text.literal("A round is under way - you're watching this one.").formatted(Formatting.GRAY), true);
             } else if (wasIn(player) && !out.contains(player.getUuid())) {
-                player.sendMessage(Text.literal("Welcome back. Leaving cost you a heart; you're still in.").formatted(Formatting.YELLOW));
+                player.sendMessage(Text.literal("Welcome back. Leaving cost you a heart; you're still in.").formatted(Formatting.YELLOW), true);
             }
         }
         if (restricted(player)) restrict(player);
@@ -279,7 +279,6 @@ public final class Round {
             p.teleport(world, x, y, z, yaw, 0F);
             frozenAt.put(p.getUuid(), new Vec3d(x, y, z));
         }
-        broadcast(server, Text.literal("The game is about to begin. Everyone is held at spawn. Keeps are now locked in.").formatted(Formatting.GOLD));
         Keeps.lockAll(server);
     }
 
@@ -297,7 +296,7 @@ public final class Round {
         if (left % 20 == 0 && left > 0) {
             int s = left / 20;
             for (ServerPlayerEntity p : players) {
-                title(p, Text.literal(String.valueOf(s)).formatted(s <= 3 ? Formatting.RED : Formatting.GOLD), Text.empty());
+                title(p, Text.literal(String.valueOf(s)).formatted(s <= 3 ? Formatting.RED : Formatting.GOLD), Text.literal("Held at spawn - keeps are locked in").formatted(Formatting.GRAY));
                 p.playSound(SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), SoundCategory.MASTER, 1.0F, s <= 3 ? 1.4F : 1.0F);
             }
         }
@@ -323,12 +322,11 @@ public final class Round {
             Keeps.grant(p);        // (levels left after lobby keeps are yours to keep or spend)
             tookPart.add(p.getUuid());
             names.put(p.getUuid(), p.getName().getString());
-            title(p, Text.literal("GO!").formatted(Formatting.GREEN), Text.literal("1 minute of safety - gear up").formatted(Formatting.GRAY));
+            title(p, Text.literal("GO!").formatted(Formatting.GREEN), Text.literal("1 minute of safety - last one standing wins").formatted(Formatting.GRAY));
             p.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 1.0F, 1.0F);
         }
         startedWith = players.size();
         Keeps.syncAll(server);
-        broadcast(server, Text.literal("Go! You can't be hurt for 1 minute. Last one standing wins.").formatted(Formatting.GREEN));
     }
 
     private static void game(MinecraftServer server, List<ServerPlayerEntity> players) {
@@ -340,8 +338,10 @@ public final class Round {
         if (phase == Phase.GRACE && ticks >= GRACE_TICKS) {
             phase = Phase.GAME;
             ticks = 0;
-            broadcast(server, Text.literal("The grace minute is over. Fight!").formatted(Formatting.RED));
-            for (ServerPlayerEntity p : players) p.playSound(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.4F, 1.4F);
+            for (ServerPlayerEntity p : players) {
+                title(p, Text.literal("FIGHT!").formatted(Formatting.RED), Text.literal("The grace minute is over").formatted(Formatting.GRAY));
+                p.playSound(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.4F, 1.4F);
+            }
         }
         int left = Math.max(0, GAME_TICKS - clock);
         List<UUID> still = stillIn();

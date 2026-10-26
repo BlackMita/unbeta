@@ -62,7 +62,7 @@ public class ObsidianDoorBlock extends DoorBlock {
                             net.unbeta.content.lockey.LockeyRegistry.CHEST_DENY,
                             SoundCategory.BLOCKS, 0.8F, 1.0F);
                     player.sendMessage(Text.literal("This door needs at least level " + XP_LEVELS + " (" + XP_COST + " experience) to open.")
-                            .formatted(Formatting.GREEN), false);
+                            .formatted(Formatting.GREEN), true);
                     return ActionResult.SUCCESS;
                 }
                 pay((ServerWorld) world, player, pos);

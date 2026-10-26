@@ -272,7 +272,7 @@ public final class Cage {
                 if ((ph == Round.Phase.GRACE || ph == Round.Phase.GAME) && player instanceof ServerPlayerEntity sp) {
                     HGCommands.surrenderPrompt(sp);
                 } else if (player instanceof ServerPlayerEntity sp) {
-                    sp.sendMessage(Text.literal("The surrender button works once the round is under way.").formatted(Formatting.GRAY));
+                    sp.sendMessage(Text.literal("The surrender button works once the round is under way.").formatted(Formatting.GRAY), true);
                 }
                 return ActionResult.FAIL;
             }

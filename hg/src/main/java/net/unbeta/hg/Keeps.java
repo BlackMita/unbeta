@@ -41,6 +41,8 @@ public final class Keeps {
     public static final Identifier SYNC = new Identifier(UnbetaHG.MOD_ID, "keeps");
     public static final Identifier PICK = new Identifier(UnbetaHG.MOD_ID, "pick");
     public static final Identifier UNPICK = new Identifier(UnbetaHG.MOD_ID, "unpick");
+    /** A short reply shown inside the Keep screen (instead of in chat). */
+    public static final Identifier NOTICE = new Identifier(UnbetaHG.MOD_ID, "keep_notice");
 
     public static final int STEP = 3;
     private static final int START_LEVELS = 3;
@@ -215,7 +217,9 @@ public final class Keeps {
         if (p.getWorld().getGameRules().getBoolean(GameRules.KEEP_INVENTORY)) return;
         if (!keeps.containsKey(p.getUuid()) || keeps.get(p.getUuid()).isEmpty()) return;
         if (finalDeath(p)) {
-            tell(p, "Your last heart is gone - your keeps fall with you.", Formatting.RED);
+            p.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(5, 50, 15));
+            p.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(Text.literal("Your keeps fall with you").formatted(Formatting.GRAY)));
+            p.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(Text.literal("Last heart gone").formatted(Formatting.RED)));
             return;
         }
         PlayerInventory inv = p.getInventory();
@@ -272,7 +276,13 @@ public final class Keeps {
         return item.getName().getString();
     }
 
+    /** Shown for a few seconds at the top of the Keep screen, where the player is looking. */
     private static void tell(ServerPlayerEntity p, String text, Formatting colour) {
-        p.sendMessage(Text.literal(text).formatted(colour));
+        if (p instanceof DummyPlayer || !ServerPlayNetworking.canSend(p, NOTICE)) return;
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(text);
+        Integer rgb = colour.getColorValue();
+        buf.writeInt(rgb == null ? 0xFFFFFF : rgb);
+        ServerPlayNetworking.send(p, NOTICE, buf);
     }
 }

@@ -107,7 +107,7 @@ public final class Border {
             q.networkHandler.sendPacket(new TitleS2CPacket(title));
         }
         if (ph == Round.Phase.GRACE) {
-            p.sendMessage(Text.literal("(It starts moving when the grace minute ends.)").formatted(Formatting.GRAY), false);
+            p.sendMessage(Text.literal("The border starts moving when the grace minute ends.").formatted(Formatting.GRAY), true);
         }
     }
 

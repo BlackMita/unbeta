@@ -84,7 +84,6 @@ public final class UnlikeLikeTheft {
     }
 
     private static void sendMessage(PlayerEntity player, String msg) {
-        // false = chat message (more reliable than action bar for server-side)
-        player.sendMessage(Text.literal("§c" + msg), false);
+        player.sendMessage(Text.literal(msg).formatted(net.minecraft.util.Formatting.RED), true);
     }
 }

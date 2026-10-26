@@ -51,7 +51,7 @@ public abstract class ObsidianDoorGateMixin {
                         net.minecraft.sound.SoundCategory.BLOCKS, 0.8F, 1.0F);
                 nearest.sendMessage(net.minecraft.text.Text.literal(
                         "This door needs at least level 20 (550 experience) to open.")
-                        .formatted(net.minecraft.util.Formatting.GREEN), false);
+                        .formatted(net.minecraft.util.Formatting.GREEN), true);
                 ci.cancel();
                 return;
             }

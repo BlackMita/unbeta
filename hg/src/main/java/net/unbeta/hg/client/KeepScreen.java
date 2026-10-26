@@ -113,7 +113,10 @@ public final class KeepScreen extends Screen {
         this.renderBackground(ctx);
         ctx.fill(left - 6, 6, left + panelWidth + 6, this.height - 4, 0xC0101010);
         ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Keeps").formatted(Formatting.GREEN, Formatting.BOLD), this.width / 2, 10, 0xFFFFFF);
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(KeepsClient.status).formatted(Formatting.GRAY), this.width / 2, 22, 0xFFFFFF);
+        if (System.currentTimeMillis() < KeepsClient.noticeUntil)
+            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(KeepsClient.notice), this.width / 2, 22, KeepsClient.noticeColour);
+        else
+            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(KeepsClient.status).formatted(Formatting.GRAY), this.width / 2, 22, 0xFFFFFF);
 
         int level = this.client != null && this.client.player != null ? this.client.player.experienceLevel : 0;
         int cost = KeepsClient.nextCost;

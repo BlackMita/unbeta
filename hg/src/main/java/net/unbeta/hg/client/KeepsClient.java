@@ -26,6 +26,16 @@ public final class KeepsClient {
     public static boolean lobby;
     public static int nextCost = 3;
     public static String status = "";
+    /** The server's reply to the last pick, shown in place of the status line for a few seconds. */
+    public static String notice = "";
+    public static int noticeColour = 0xFFFFFF;
+    public static long noticeUntil;
+
+    public static void notice(String text, int colour) {
+        notice = text;
+        noticeColour = colour;
+        noticeUntil = System.currentTimeMillis() + 4000;
+    }
     public static List<Entry> entries = new ArrayList<>();
     private static Set<Item> kept = new HashSet<>();
 

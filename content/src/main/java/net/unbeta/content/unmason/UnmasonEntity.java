@@ -61,23 +61,13 @@ public class UnmasonEntity extends ZombieEntity {
         // blocks. The refresh interval is shorter than the duration, so the effect is
         // continuous while in range and lapses on its own shortly after leaving.
         //
-        // The chat notice fires only when the player does NOT already have the effect.
-        // That single check does all the anti-spam work: the refresh keeps it applied,
-        // so neither this Unmason nor any other will message again until it has lapsed.
+        // No message: the effect's icon and particles say it.
         if (this.age % 60 == 0) {
             for (net.minecraft.server.network.ServerPlayerEntity p
                     : ((net.minecraft.server.world.ServerWorld) this.getWorld()).getPlayers()) {
                 if (p.isSpectator() || p.isCreative()) continue;
                 if (p.squaredDistanceTo(this) > 16.0 * 16.0) continue;
 
-                if (!p.hasStatusEffect(net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE)) {
-                    p.sendMessage(net.minecraft.text.Text.literal("A nearby Unmason has inflicted ")
-                            .formatted(net.minecraft.util.Formatting.GRAY)
-                            .append(net.minecraft.text.Text.literal("Mining Fatigue II")
-                                    .formatted(net.minecraft.util.Formatting.RED))
-                            .append(net.minecraft.text.Text.literal(" upon you!")
-                                    .formatted(net.minecraft.util.Formatting.GRAY)), false);
-                }
                 p.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                         net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE,
                         100,    // 5 seconds
