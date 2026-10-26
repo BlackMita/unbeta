@@ -126,7 +126,8 @@
     "IronBlockAbsorbMixin",
     "HeatedIronFurnaceMixin",
     "MetalBlocksMixin",
-    "GoldGlowMixin"
+    "GoldGlowMixin",
+    "StoneToolNoticeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
