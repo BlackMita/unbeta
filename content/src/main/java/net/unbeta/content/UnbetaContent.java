@@ -112,6 +112,7 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.skeleton.SkeletonGrip.register();
         // Taser: darts on a line; stuns mobs and players (never skeletons), through touch and joined copper.
         net.unbeta.content.taser.Taser.register();
+        net.unbeta.content.taser.CopperLightning.register();
         // Iron blocks soak up lava and become Heated Iron Blocks that cool over 3 minutes.
         net.unbeta.content.heatediron.HeatedIron.register();
         // Gold blocks ward off zombies; diamond blocks mend diamond gear.
