@@ -127,7 +127,13 @@
     "HeatedIronFurnaceMixin",
     "MetalBlocksMixin",
     "GoldGlowMixin",
-    "StoneToolNoticeMixin"
+    "StoneToolNoticeMixin",
+    "ChunkLightProviderAccessor",
+    "GlowLightMixin",
+    "GlowBlockChangeMixin",
+    "GlowPistonMixin",
+    "GlowFallingMixin",
+    "GunpowderArrowMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -117,6 +117,8 @@ public final class UnbetaContent implements ModInitializer {
         // Gold blocks ward off zombies; diamond blocks mend diamond gear.
         net.unbeta.content.metal.GoldWard.register();
         net.unbeta.content.metal.DiamondRepair.register();
+        net.unbeta.content.gunpowder.Gunpowder.register();
+        net.unbeta.content.glow.Glow.register();
         LOG.info("Registered Bone Pile.");
 
         // Sullied chunks: zombie death marks chunk, rising zombie spawns on next player entry.

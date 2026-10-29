@@ -1,0 +1,79 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_dot"
+      }
+    },
+    {
+      "when": {
+        "north": "side|up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_side"
+      }
+    },
+    {
+      "when": {
+        "north": "up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_up"
+      }
+    },
+    {
+      "when": {
+        "east": "side|up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_side",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "east": "up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_up",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "south": "side|up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_side",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_up",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "west": "side|up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_side",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "up"
+      },
+      "apply": {
+        "model": "unbeta-content:block/gunpowder_trail_up",
+        "y": 270
+      }
+    }
+  ]
+}
