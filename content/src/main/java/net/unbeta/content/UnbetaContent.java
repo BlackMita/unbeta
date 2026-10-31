@@ -120,6 +120,7 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.metal.DiamondRepair.register();
         net.unbeta.content.gunpowder.Gunpowder.register();
         net.unbeta.content.glow.Glow.register();
+        net.unbeta.content.island.Island.register();
         LOG.info("Registered Bone Pile.");
 
         // Sullied chunks: zombie death marks chunk, rising zombie spawns on next player entry.

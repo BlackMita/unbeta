@@ -155,7 +155,7 @@ public final class Round {
         Cage.build(world, spawn);
         phase = Phase.LOBBY;
         ticks = 0;
-        UnbetaHG.LOG.info("Round ready: lobby open, border +-{} around {}", BORDER, spawn.toShortString());
+        UnbetaHG.LOG.info("Round ready: lobby open, border +-{} around {}", Border.startRadius(server), spawn.toShortString());
     }
 
     private static void joined(MinecraftServer server, ServerPlayerEntity player) {

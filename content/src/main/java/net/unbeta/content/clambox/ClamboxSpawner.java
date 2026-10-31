@@ -58,6 +58,8 @@ public final class ClamboxSpawner {
                    == net.minecraft.block.enums.DoubleBlockHalf.LOWER;
         if (!isSeagrass && !isTallBase) return;
         if (world.getRandom().nextInt(CONVERT_CHANCE) != 0) return;
+        // Island mode: out in the open sea, half as many.
+        if (net.unbeta.content.island.Island.atSea(world, pos) && world.getRandom().nextBoolean()) return;
         if (++attempts > MAX_ATTEMPTS) return;
 
         // Hard stop: don't convert if a clambox already exists within MIN_SPACING

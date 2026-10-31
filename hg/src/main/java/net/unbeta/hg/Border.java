@@ -33,6 +33,11 @@ public final class Border {
     private Border() {}
 
     public static final int START_RADIUS = 445;
+
+    /** On an island world, the border starts just far enough out to still see the island. */
+    public static int startRadius(net.minecraft.server.MinecraftServer server) {
+        return net.unbeta.content.island.Island.active() ? net.unbeta.content.island.Island.borderRadius(server) : START_RADIUS;
+    }
     public static final int COOLDOWN_TICKS = 30 * 20;
 
     public static Block SWITCH;
@@ -51,7 +56,7 @@ public final class Border {
     public static void setUp(ServerWorld world) {
         WorldBorder b = world.getWorldBorder();
         b.setCenter(0.5, 0.5);
-        b.setSize(START_RADIUS * 2 + 1);
+        b.setSize(startRadius(world.getServer()) * 2 + 1);
         shrinking = false;
         lastFlip = -1_000_000;
     }

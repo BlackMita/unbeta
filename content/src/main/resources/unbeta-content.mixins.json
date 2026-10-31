@@ -133,7 +133,14 @@
     "GlowBlockChangeMixin",
     "GlowPistonMixin",
     "GlowFallingMixin",
-    "GunpowderArrowMixin"
+    "GunpowderArrowMixin",
+    "IslandTerrainMixin",
+    "IslandCarveMixin",
+    "IslandFeatureMixin",
+    "IslandStructureMixin",
+    "IslandStrongholdMixin",
+    "IslandSpreadMixin",
+    "StructurePlacementAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

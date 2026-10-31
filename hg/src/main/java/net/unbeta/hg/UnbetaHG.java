@@ -30,6 +30,8 @@ public final class UnbetaHG implements ModInitializer {
     public void onInitialize() {
         Border.registerBlock();   // on both sides: players' games draw the border switch
         if (!ACTIVE) return;
+        // Every round's brand-new world is a 48-chunk island in an endless ocean.
+        net.unbeta.content.island.Island.forcedChunks = 48;
         // Spectres (out players) can never be tased.
         net.unbeta.content.taser.Taser.IMMUNE = e -> e instanceof net.minecraft.entity.player.PlayerEntity p && Round.isOut(p);
         Round.register();
