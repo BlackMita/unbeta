@@ -65,8 +65,6 @@ public final class Trains {
     public static final double CART = 0.98;
     /** End-to-end gap of two chained carts at rest (nearly touching). */
     public static final double GAP = 0.05;
-    /** Iron chain has a little give either way before it pulls or pushes. */
-    public static final double IRON_GIVE = 0.15;
     public static final double COPPER_SLACK = 0.5;
     /** Copper stretched past this (end to end) for half a second snaps. */
     public static final double COPPER_SNAP = GAP + COPPER_SLACK + 3.0;
@@ -364,6 +362,7 @@ public final class Trains {
                 }
             }
         }
+        TRAILS_USED.clear();
         Set<AbstractMinecartEntity> done = new HashSet<>();
         for (AbstractMinecartEntity cart : active) {
             if (cart.isRemoved() || done.contains(cart)) continue;
@@ -371,6 +370,7 @@ public final class Trains {
             done.addAll(carts);
             if (carts.size() >= 2) step(world, carts);
         }
+        TRAILS.keySet().removeIf(id -> !TRAILS_USED.contains(id) && world.getEntity(id) != null);
     }
 
     private static Vec3d flat(Vec3d v) {
@@ -382,8 +382,21 @@ public final class Trains {
         return t.unbeta_airborne() || t.unbeta_derailed();
     }
 
+    /**
+     * Iron-chained groups follow the leader's path: the front cart rolls normally (with the whole
+     * group's speed), and the carts behind are set down along the exact track it just covered, one
+     * cart-length apart. They can't overlap, pass each other or end up inside a block.
+     * Trails are kept per leading cart: most recent point first.
+     */
+    private static final Map<UUID, java.util.ArrayDeque<Vec3d>> TRAILS = new HashMap<>();
+    private static final Set<UUID> TRAILS_USED = new HashSet<>();
+    private static final double SPACING = CART + GAP;
+    /** Furthest a following cart is moved in one tick (more than a cart's top speed). */
+    private static final double FOLLOW_STEP = 0.6;
+
     private static void step(ServerWorld world, List<AbstractMinecartEntity> carts) {
         int n = carts.size();
+        double max = 0.52;      // Unbeta's minecart top speed
 
         // 1. Snapping. Copper: stretched ~3 blocks too far for half a second. Iron: only when a jump
         //    leaves part of the train off the track and that part pulls away from the rest.
@@ -409,47 +422,29 @@ public final class Trains {
                 return;
             }
         }
-        double max = 0.52;      // Unbeta's minecart top speed
 
-        // 2. Iron groups move as one: every cart gets the same speed along the train. If any cart in
-        //    the group is on a working powered rail, the whole group gets that cart's boosted speed.
-        //    Directions follow the train's own shape (towards cart 0), so nothing flips.
+        // The train's own direction at each cart (pointing towards cart 0), so a train bent round a
+        // curve or a U-turn still agrees with itself about which way is forwards.
         Vec3d[] along = new Vec3d[n];
         for (int i = 0; i < n; i++) {
             Vec3d front = carts.get(Math.max(0, i - 1)).getPos(), back = carts.get(Math.min(n - 1, i + 1)).getPos();
             Vec3d t = flat(front.subtract(back));
             along[i] = t.lengthSquared() < 1.0E-6 ? Vec3d.ZERO : t.normalize();
         }
+
+        // 2. Iron groups.
         int start = 0;
         while (start < n) {
             int end = start;
             while (end < n - 1 && linkTypeBetween(carts.get(end), carts.get(end + 1)) == TrainCart.IRON) end++;
-            if (end > start) {
-                double sum = 0, boost = 0;
-                for (int i = start; i <= end; i++) {
-                    double s = flat(carts.get(i).getVelocity()).dotProduct(along[i]);
-                    sum += s;
-                    if (onPoweredRail(world, carts.get(i)) && Math.abs(s) > Math.abs(boost)) boost = s;
-                }
-                double speed = sum / (end - start + 1);
-                if (boost != 0 && Math.abs(boost) > Math.abs(speed)) speed = Math.abs(boost) * (speed != 0 ? Math.signum(speed) : Math.signum(boost));
-                speed = MathHelper.clamp(speed, -max, max);
-                for (int i = start; i <= end; i++) {
-                    AbstractMinecartEntity c = carts.get(i);
-                    Vec3d v = c.getVelocity();
-                    c.setVelocity(along[i].x * speed, v.y, along[i].z * speed);
-                    c.velocityModified = true;
-                }
-            }
+            if (end > start) ironGroup(carts, along, start, end, max, world);
             start = end + 1;
         }
 
         // 3. Copper links: a rope. The cart behind is dragged once the slack is used up.
-        List<AbstractMinecartEntity> ordered = carts;
-        // Which end is the front: measured along the train's own shape, cart by cart, so a train
-        // bent round a U-turn (its two ends heading opposite ways) still agrees with itself.
         double heading = 0;
         for (int i = 0; i < n; i++) heading += flat(carts.get(i).getVelocity()).dotProduct(along[i]);
+        List<AbstractMinecartEntity> ordered = carts;
         if (heading < 0) {
             ordered = new ArrayList<>(carts);
             java.util.Collections.reverse(ordered);
@@ -470,53 +465,120 @@ public final class Trains {
             c.velocityModified = true;
         }
 
-        // 3b. Pushing: copper-chained carts that are touching push each other like unchained carts
-        //     do (vanilla's own bumping is off between chained carts), so a furnace cart can push.
+        // 4. Copper links, close up: touching carts push each other (so a furnace cart can push the
+        //    cart in front), and they're never allowed to overlap. Done with speed only.
         for (int i = 1; i < n; i++) {
             AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
             if (linkTypeBetween(a, b) != TrainCart.COPPER || offTrack(a) || offTrack(b)) continue;
-            if (endGap(a, b) > GAP + 0.05) continue;
+            double gap = endGap(a, b);
+            if (gap > GAP + 0.05) continue;
             Vec3d dir = flat(a.getPos().subtract(b.getPos()));
             if (dir.lengthSquared() < 1.0E-8) continue;
             dir = dir.normalize();                       // from b towards a
             double sa = flat(a.getVelocity()).dotProduct(dir), sb = flat(b.getVelocity()).dotProduct(dir);
-            if (sb > sa) {                               // b is driving into a: a goes at least as fast
+            if (sb > sa) {                               // b driving into a: both go at b's speed
                 a.setVelocity(a.getVelocity().add(dir.multiply(sb - sa)));
                 a.velocityModified = true;
-            } else if (sa < 0 && sa < sb) {              // a is backing into b: b goes at least as fast backwards
+            } else if (sa < 0 && sa < sb) {              // a backing into b: both go at a's speed
                 b.setVelocity(b.getVelocity().add(dir.multiply(sa - sb)));
                 b.velocityModified = true;
             }
-        }
-
-        // 4. Hard limits, by steering the carts' speed (never by moving them directly: a moved cart
-        //    can end up inside the block under a slope or a rail). Chained carts never overlap, so
-        //    never pass each other, and iron-chained carts never drift further apart than the give.
-        for (int i = 1; i < n; i++) {
-            AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
-            if (offTrack(a) || offTrack(b)) continue;
-            Vec3d dir = flat(a.getPos().subtract(b.getPos()));
-            if (dir.lengthSquared() < 1.0E-8) continue;
-            dir = dir.normalize();                                   // from b towards a
-            double gap = endGap(a, b);
-            double closing = flat(b.getVelocity()).dotProduct(dir) - flat(a.getVelocity()).dotProduct(dir);
-            double apart = 0;                                        // extra speed apart (negative: together)
-            if (gap < 0) {
-                apart = Math.max(0, closing) + Math.min(0.2, -gap * 0.5);
-            } else if (gap < 0.02 && closing > 0) {
-                apart = closing;                                     // touching and closing: stop closing
-            } else if (linkTypeBetween(a, b) == TrainCart.IRON && gap > GAP + IRON_GIVE) {
-                double opening = -closing;
-                double want = Math.min(0.2, (gap - GAP - IRON_GIVE) * 0.5);
-                apart = -(Math.max(0, opening) + want);
+            if (gap < 0) {                               // overlapping: ease apart
+                Vec3d half = dir.multiply(Math.min(0.1, -gap * 0.5) / 2);
+                a.setVelocity(a.getVelocity().add(half));
+                b.setVelocity(b.getVelocity().subtract(half));
             }
-            if (apart == 0) continue;
-            Vec3d half = dir.multiply(apart / 2);
-            a.setVelocity(a.getVelocity().add(half));
-            b.setVelocity(b.getVelocity().subtract(half));
-            a.velocityModified = true;
-            b.velocityModified = true;
         }
+    }
+
+    /** One iron-chained group, cart indices start..end of the train. */
+    private static void ironGroup(List<AbstractMinecartEntity> carts, Vec3d[] along, int start, int end, double max, ServerWorld world) {
+        for (int i = start; i <= end; i++) {
+            if (offTrack(carts.get(i))) {
+                // In the air (or derailed) the carts fly on their own; the trail starts afresh after.
+                for (int j = start; j <= end; j++) TRAILS.remove(carts.get(j).getUuid());
+                return;
+            }
+        }
+        // One speed for the whole group: the average, or a booster's speed if any cart is on one.
+        double sum = 0, boost = 0;
+        for (int i = start; i <= end; i++) {
+            double s = flat(carts.get(i).getVelocity()).dotProduct(along[i]);
+            sum += s;
+            if (onPoweredRail(world, carts.get(i)) && Math.abs(s) > Math.abs(boost)) boost = s;
+        }
+        double speed = sum / (end - start + 1);
+        if (boost != 0 && Math.abs(boost) > Math.abs(speed)) speed = Math.abs(boost) * (speed != 0 ? Math.signum(speed) : Math.signum(boost));
+        speed = MathHelper.clamp(speed, -max, max);
+
+        // The leader is the end the group is moving towards (if it's barely moving, keep the last one).
+        boolean towardStart;
+        if (speed > 0.002) towardStart = true;
+        else if (speed < -0.002) towardStart = false;
+        else towardStart = !TRAILS.containsKey(carts.get(end).getUuid());
+        int lead = towardStart ? start : end, stepDir = towardStart ? 1 : -1;
+        AbstractMinecartEntity leader = carts.get(lead);
+        Vec3d lv = leader.getVelocity();
+        leader.setVelocity(along[lead].x * speed, lv.y, along[lead].z * speed);
+        leader.velocityModified = true;
+
+        // The leader's trail: rebuilt from where the carts are if it's new, else extended.
+        UUID key = leader.getUuid();
+        java.util.ArrayDeque<Vec3d> trail = TRAILS.get(key);
+        for (int i = start; i <= end; i++) if (i != lead) TRAILS.remove(carts.get(i).getUuid());
+        if (trail == null) {
+            trail = new java.util.ArrayDeque<>();
+            for (int i = lead; i >= start && i <= end; i += stepDir) trail.addLast(carts.get(i).getPos());
+            TRAILS.put(key, trail);
+        } else if (trail.peekFirst() == null || trail.peekFirst().squaredDistanceTo(leader.getPos()) > 1.0E-6) {
+            trail.addFirst(leader.getPos());
+        }
+        TRAILS_USED.add(key);
+
+        // Set each following cart down along the trail, one cart-length apart.
+        int k = 0;
+        for (int i = lead + stepDir; i >= start && i <= end; i += stepDir) {
+            k++;
+            AbstractMinecartEntity c = carts.get(i);
+            Vec3d target = pointAlong(trail, k * SPACING);
+            if (target != null) {
+                Vec3d move = target.subtract(c.getPos());
+                double len = move.length();
+                if (len > FOLLOW_STEP) target = c.getPos().add(move.multiply(FOLLOW_STEP / len));
+                if (len > 1.0E-4) c.setPosition(target.x, target.y, target.z);
+            }
+            Vec3d v = c.getVelocity();
+            c.setVelocity(along[i].x * speed, v.y, along[i].z * speed);
+            c.velocityModified = true;
+        }
+        // Forget the trail further back than the last cart needs.
+        double keep = k * SPACING + 2.0, walked = 0;
+        Vec3d prev = null;
+        java.util.Iterator<Vec3d> it = trail.iterator();
+        int count = 0;
+        while (it.hasNext()) {
+            Vec3d p = it.next();
+            if (prev != null) walked += p.distanceTo(prev);
+            prev = p;
+            count++;
+            if (walked > keep) break;
+        }
+        while (trail.size() > count + 1) trail.removeLast();
+    }
+
+    /** The point this far back along a trail (most recent point first), or null if it's too short. */
+    private static Vec3d pointAlong(java.util.ArrayDeque<Vec3d> trail, double distance) {
+        Vec3d prev = null;
+        double walked = 0;
+        for (Vec3d p : trail) {
+            if (prev != null) {
+                double seg = p.distanceTo(prev);
+                if (walked + seg >= distance && seg > 1.0E-6) return prev.add(p.subtract(prev).multiply((distance - walked) / seg));
+                walked += seg;
+            }
+            prev = p;
+        }
+        return null;
     }
 
     /** One furnace cart was fuelled: every furnace cart in its train now pushes the same way along it. */
