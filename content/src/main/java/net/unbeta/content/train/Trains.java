@@ -391,9 +391,11 @@ public final class Trains {
 
         // 3. Copper links: a rope. The cart behind is dragged once the slack is used up.
         List<AbstractMinecartEntity> ordered = carts;
-        Vec3d total = Vec3d.ZERO;
-        for (AbstractMinecartEntity c : carts) total = total.add(flat(c.getVelocity()));
-        if (total.lengthSquared() > 1.0E-6 && total.dotProduct(flat(carts.get(0).getPos().subtract(carts.get(n - 1).getPos()))) < 0) {
+        // Which end is the front: measured along the train's own shape, cart by cart, so a train
+        // bent round a U-turn (its two ends heading opposite ways) still agrees with itself.
+        double heading = 0;
+        for (int i = 0; i < n; i++) heading += flat(carts.get(i).getVelocity()).dotProduct(along[i]);
+        if (heading < 0) {
             ordered = new ArrayList<>(carts);
             java.util.Collections.reverse(ordered);
         }
