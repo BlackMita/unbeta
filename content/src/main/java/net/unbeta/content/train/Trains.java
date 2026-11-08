@@ -14,6 +14,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
+import net.minecraft.entity.vehicle.FurnaceMinecartEntity;
+import net.unbeta.content.mixin.FurnaceMinecartAccessor;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
@@ -410,6 +412,25 @@ public final class Trains {
             c.velocityModified = true;
         }
 
+        // 3b. Pushing: copper-chained carts that are touching push each other like unchained carts
+        //     do (vanilla's own bumping is off between chained carts), so a furnace cart can push.
+        for (int i = 1; i < n; i++) {
+            AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
+            if (linkTypeBetween(a, b) != TrainCart.COPPER || offTrack(a) || offTrack(b)) continue;
+            if (endGap(a, b) > GAP + 0.05) continue;
+            Vec3d dir = flat(a.getPos().subtract(b.getPos()));
+            if (dir.lengthSquared() < 1.0E-8) continue;
+            dir = dir.normalize();                       // from b towards a
+            double sa = flat(a.getVelocity()).dotProduct(dir), sb = flat(b.getVelocity()).dotProduct(dir);
+            if (sb > sa) {                               // b is driving into a: a goes at least as fast
+                a.setVelocity(a.getVelocity().add(dir.multiply(sb - sa)));
+                a.velocityModified = true;
+            } else if (sa < 0 && sa < sb) {              // a is backing into b: b goes at least as fast backwards
+                b.setVelocity(b.getVelocity().add(dir.multiply(sa - sb)));
+                b.velocityModified = true;
+            }
+        }
+
         // 4. Hard limits, by moving the carts themselves: chained carts can never overlap (so never
         //    pass each other), and iron-chained carts never drift further apart than the give allows.
         for (int pass = 0; pass < 3; pass++) {
@@ -441,6 +462,33 @@ public final class Trains {
                 }
             }
         }
+    }
+
+    /** One furnace cart was fuelled: every furnace cart in its train now pushes the same way along it. */
+    public static void pointFurnaces(ServerWorld world, FurnaceMinecartEntity clicked) {
+        if (!((TrainCart) clicked).unbeta_hasLinks()) return;
+        List<AbstractMinecartEntity> carts = train(world, clicked);
+        int n = carts.size(), at = carts.indexOf(clicked);
+        if (n < 2 || at < 0) return;
+        FurnaceMinecartAccessor fc = (FurnaceMinecartAccessor) clicked;
+        Vec3d push = new Vec3d(fc.unbeta_pushX(), 0, fc.unbeta_pushZ());
+        if (push.lengthSquared() < 1.0E-8) return;
+        double way = Math.signum(push.dotProduct(along(carts, at)));
+        if (way == 0) return;
+        for (int i = 0; i < n; i++) {
+            if (i == at || !(carts.get(i) instanceof FurnaceMinecartEntity f)) continue;
+            Vec3d t = along(carts, i).multiply(way);
+            FurnaceMinecartAccessor fa = (FurnaceMinecartAccessor) f;
+            fa.unbeta_setPushX(t.x);
+            fa.unbeta_setPushZ(t.z);
+        }
+    }
+
+    /** The direction along the train at cart i, pointing towards cart 0. */
+    private static Vec3d along(List<AbstractMinecartEntity> carts, int i) {
+        int n = carts.size();
+        Vec3d t = flat(carts.get(Math.max(0, i - 1)).getPos().subtract(carts.get(Math.min(n - 1, i + 1)).getPos()));
+        return t.lengthSquared() < 1.0E-8 ? Vec3d.ZERO : t.normalize();
     }
 
     private static BlockPos railPos(AbstractMinecartEntity c) {

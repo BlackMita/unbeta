@@ -143,7 +143,9 @@
     "StructurePlacementAccessor",
     "TrainCartMixin",
     "LivingEntityJumpAccessor",
-    "DetectorRailAirMixin"
+    "DetectorRailAirMixin",
+    "FurnaceMinecartAccessor",
+    "FurnaceMinecartSyncMixin"
   ],
   "injectors": {
     "defaultRequire": 1
