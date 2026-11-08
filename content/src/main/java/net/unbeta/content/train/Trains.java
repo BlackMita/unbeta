@@ -498,6 +498,41 @@ public final class Trains {
             c.velocityModified = true;
         }
 
+        // 3b. A booster under any normal cart in a stretch of copper-chained carts speeds up the
+        //     whole stretch at once ("whole train goes zoom"), furnace carts included. Carts in iron
+        //     groups keep their own pace.
+        if (Math.abs(heading) > 1.0E-4) {
+            double sign = Math.signum(heading);
+            int from = 0;
+            while (from < n) {
+                int to = from;
+                while (to < n - 1 && linkTypeBetween(carts.get(to), carts.get(to + 1)) == TrainCart.COPPER) to++;
+                if (to > from) {
+                    double boosted = 0;
+                    for (int i = from; i <= to; i++) {
+                        AbstractMinecartEntity c = carts.get(i);
+                        if (inIron[i] || c instanceof FurnaceMinecartEntity || !onPoweredRail(world, c)) continue;
+                        double sp = flat(c.getVelocity()).dotProduct(along[i]) * sign;
+                        if (sp > boosted) boosted = sp;
+                    }
+                    if (boosted > 0) {
+                        boosted = Math.min(boosted, max);
+                        for (int i = from; i <= to; i++) {
+                            AbstractMinecartEntity c = carts.get(i);
+                            if (inIron[i] || offTrack(c)) continue;
+                            double sp = flat(c.getVelocity()).dotProduct(along[i]) * sign;
+                            if (sp >= boosted) continue;
+                            Vec3d v = c.getVelocity();
+                            c.setVelocity(along[i].x * sign * boosted, v.y, along[i].z * sign * boosted);
+                            c.velocityModified = true;
+                            ((TrainCart) c).unbeta_setDragged(5);
+                        }
+                    }
+                }
+                from = to + 1;
+            }
+        }
+
         // 4. Copper links, close up: touching carts push each other (so a furnace cart can push the
         //    cart in front), and they're never allowed to overlap. Done with speed only.
         for (int i = 1; i < n; i++) {
