@@ -8,14 +8,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * A furnace minecart keeps its own (slow) top speed, except while a copper chain drags it along
- * behind a faster cart: then it can keep up with the cart pulling it.
+ * A furnace minecart keeps its own (slow) top speed, except while a copper-chained cart drags or
+ * pushes it faster: then it keeps up, and afterwards coasts back down to its own pace.
  */
 @Mixin(FurnaceMinecartEntity.class)
 public abstract class FurnaceMinecartSpeedMixin {
 
     @Inject(method = "getMaxSpeed", at = @At("RETURN"), cancellable = true)
     private void unbeta_draggedFaster(CallbackInfoReturnable<Double> cir) {
-        if (((TrainCart) (Object) this).unbeta_dragged() > 0) cir.setReturnValue(Math.max(cir.getReturnValueD(), 0.52));
+        TrainCart t = (TrainCart) (Object) this;
+        if (t.unbeta_dragged() > 0) cir.setReturnValue(Math.max(cir.getReturnValueD(), 0.52));
+        else if (t.unbeta_coast() > cir.getReturnValueD()) cir.setReturnValue(t.unbeta_coast());
     }
 }

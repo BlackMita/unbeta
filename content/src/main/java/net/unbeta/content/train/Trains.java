@@ -74,7 +74,7 @@ public final class Trains {
     /** How far apart (end to end) two carts can be to chain them. */
     public static final double LINK_REACH = 3.0;
     private static final double PULL = 0.3, MAX_CORRECTION = 0.15;
-    private static final double COPPER_KEEP = 0.9;
+    private static final double COPPER_KEEP = 1.0;     // once taut, a copper chain matches the cart pulling it
     private static final double JUMP = 1.25, FEATHER_JUMP = 2.5;
     private static final Identifier FEATHER = new Identifier("cloudboots", "golden_feather");
 
@@ -441,7 +441,14 @@ public final class Trains {
             start = end + 1;
         }
 
-        // 3. Copper links: a rope. The cart behind is dragged once the slack is used up.
+        // Carts in iron-chained groups go at their group's own pace: copper never speeds them up
+        // (so a fast cart on copper pulling an iron group can stretch its chain until it snaps).
+        boolean[] inIron = new boolean[n];
+        for (int i = 1; i < n; i++) {
+            if (linkTypeBetween(carts.get(i - 1), carts.get(i)) == TrainCart.IRON) inIron[i - 1] = inIron[i] = true;
+        }
+
+        // 3. Copper links: a rope. Once the slack is used up, the cart behind keeps up exactly.
         double heading = 0;
         for (int i = 0; i < n; i++) heading += flat(carts.get(i).getVelocity()).dotProduct(along[i]);
         List<AbstractMinecartEntity> ordered = carts;
@@ -452,6 +459,7 @@ public final class Trains {
         for (int i = 1; i < n; i++) {
             AbstractMinecartEntity ahead = ordered.get(i - 1), c = ordered.get(i);
             if (linkTypeBetween(ahead, c) != TrainCart.COPPER) continue;
+            if (inIron[carts.indexOf(c)]) continue;
             Vec3d toward = flat(ahead.getPos().subtract(c.getPos()));
             if (toward.lengthSquared() < 1.0E-8) continue;
             toward = toward.normalize();
@@ -460,7 +468,8 @@ public final class Trains {
             Vec3d v = c.getVelocity();
             double own = flat(v).dotProduct(toward);
             double sp = MathHelper.clamp(Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()) + correction(d - GAP - COPPER_SLACK), -max, max);
-            if (sp > own) ((TrainCart) c).unbeta_setDragged(5);     // being dragged: a furnace cart may go faster than its own top speed
+            // Dragged by a normal cart: a furnace cart may go faster than its own top speed.
+            if (sp > own && !(ahead instanceof FurnaceMinecartEntity && ((TrainCart) ahead).unbeta_dragged() == 0)) ((TrainCart) c).unbeta_setDragged(5);
             c.setVelocity(toward.x * sp, v.y, toward.z * sp);
             c.velocityModified = true;
         }
@@ -476,12 +485,14 @@ public final class Trains {
             if (dir.lengthSquared() < 1.0E-8) continue;
             dir = dir.normalize();                       // from b towards a
             double sa = flat(a.getVelocity()).dotProduct(dir), sb = flat(b.getVelocity()).dotProduct(dir);
-            if (sb > sa) {                               // b driving into a: both go at b's speed
+            if (sb > sa && !inIron[i - 1]) {             // b driving into a: a keeps up (a furnace cart too)
                 a.setVelocity(a.getVelocity().add(dir.multiply(sb - sa)));
                 a.velocityModified = true;
-            } else if (sa < 0 && sa < sb) {              // a backing into b: both go at a's speed
+                if (!(b instanceof FurnaceMinecartEntity) || ((TrainCart) b).unbeta_dragged() > 0) ((TrainCart) a).unbeta_setDragged(5);
+            } else if (sa < 0 && sa < sb && !inIron[i]) { // a backing into b: b keeps up
                 b.setVelocity(b.getVelocity().add(dir.multiply(sa - sb)));
                 b.velocityModified = true;
+                if (!(a instanceof FurnaceMinecartEntity) || ((TrainCart) a).unbeta_dragged() > 0) ((TrainCart) b).unbeta_setDragged(5);
             }
             if (gap < 0) {                               // overlapping: ease apart
                 Vec3d half = dir.multiply(Math.min(0.1, -gap * 0.5) / 2);

@@ -47,6 +47,9 @@ public interface TrainCart {
 
     void unbeta_setDragged(int ticks);
 
+    /** After being dragged: the speed it's coasting down from (a furnace cart slows back to its own pace). */
+    double unbeta_coast();
+
     default boolean unbeta_hasLinks() {
         return unbeta_link(0) != null || unbeta_link(1) != null;
     }
