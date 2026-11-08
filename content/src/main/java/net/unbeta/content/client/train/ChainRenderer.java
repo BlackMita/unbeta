@@ -26,7 +26,7 @@ public final class ChainRenderer {
     private ChainRenderer() {}
 
     /** Half a cart's length: the chain runs between the carts' ends, not their middles. */
-    private static final double HALF_CART = 0.45, HEIGHT = 0.4;
+    private static final double HALF_CART = 0.49, HEIGHT = 0.4;
 
     public static void register() {
         BlockRenderLayerMap.INSTANCE.putBlock(Trains.COPPER_CHAIN, RenderLayer.getCutout());

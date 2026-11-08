@@ -21,6 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.UUID;
 
@@ -33,6 +35,8 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
 
     @Unique private static final TrackedData<Integer> UNBETA_LINK0 = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.INTEGER);
     @Unique private static final TrackedData<Integer> UNBETA_LINK1 = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    /** Off the rails (jumping or derailed): tells the client to draw the cart where it really is. */
+    @Unique private static final TrackedData<Boolean> UNBETA_OFF_RAILS = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
 
     @Shadow private boolean onRail;
 
@@ -76,10 +80,21 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
     public void unbeta_setAirborne(boolean airborne) {
         unbeta_airborne = airborne;
         unbeta_airTicks = 0;
+        unbeta_syncOffRails();
+    }
+
+    @Unique
+    private void unbeta_syncOffRails() {
+        boolean off = unbeta_airborne || unbeta_derailed;
+        if (this.dataTracker.get(UNBETA_OFF_RAILS) != off) this.dataTracker.set(UNBETA_OFF_RAILS, off);
     }
 
     @Override public boolean unbeta_derailed() { return unbeta_derailed; }
-    @Override public void unbeta_setDerailed(boolean derailed) { unbeta_derailed = derailed; }
+    @Override
+    public void unbeta_setDerailed(boolean derailed) {
+        unbeta_derailed = derailed;
+        unbeta_syncOffRails();
+    }
 
     // ------------------------------------------------------------------ saving and syncing
 
@@ -87,6 +102,7 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
     private void unbeta_trackLinks(CallbackInfo ci) {
         this.dataTracker.startTracking(UNBETA_LINK0, 0);
         this.dataTracker.startTracking(UNBETA_LINK1, 0);
+        this.dataTracker.startTracking(UNBETA_OFF_RAILS, false);
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
@@ -133,11 +149,21 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
         AbstractMinecartEntity self = (AbstractMinecartEntity) (Object) this;
         if (unbeta_airborne) {
             unbeta_airTicks++;
+            Trains.airTick(self);
             Trains.checkLanding(self, unbeta_airTicks);
         } else if (unbeta_derailed) {
             Trains.checkRerail(self);
         }
         if (unbeta_hasLinks()) Trains.track(world, self);
+    }
+
+    /**
+     * The renderer draws a cart sitting on the rail under it, wherever the cart really is. In the
+     * air (or derailed) there's no rail to sit on, so the cart is drawn where it is: hopping.
+     */
+    @Inject(method = {"snapPositionToRail", "snapPositionToRailWithOffset"}, at = @At("HEAD"), cancellable = true)
+    private void unbeta_drawInAir(CallbackInfoReturnable<Vec3d> cir) {
+        if (this.getWorld().isClient && this.dataTracker.get(UNBETA_OFF_RAILS)) cir.setReturnValue(null);
     }
 
     /** Chained carts don't bump each other apart: the chain decides their spacing. */

@@ -59,13 +59,19 @@ public final class Trains {
     public static Item COPPER_CHAIN_ITEM;
 
     public static final int MAX_CARTS = 9;
-    /** Centre-to-centre distance of two chained carts: nose to tail. */
-    public static final double GAP = 1.0;
+    /** A minecart's length: distances between carts are measured end to end, not middle to middle. */
+    public static final double CART = 0.98;
+    /** End-to-end gap of two chained carts at rest (nearly touching). */
+    public static final double GAP = 0.05;
+    /** Iron chain has a little give either way before it pulls or pushes. */
+    public static final double IRON_GIVE = 0.15;
     public static final double COPPER_SLACK = 0.5;
-    /** Past these, the chain snaps. */
-    public static final double COPPER_SNAP = GAP + COPPER_SLACK + 1.5, IRON_SNAP = GAP + 2.0;
-    public static final double LINK_REACH = 2.5;
-    private static final double PULL = 0.5;
+    /** Stretched past these (end to end) for half a second, the chain snaps. */
+    public static final double COPPER_SNAP = GAP + COPPER_SLACK + 3.0, IRON_SNAP = GAP + 3.0;
+    private static final int SNAP_TICKS = 10;
+    /** How far apart (end to end) two carts can be to chain them. */
+    public static final double LINK_REACH = 3.0;
+    private static final double PULL = 0.3, MAX_CORRECTION = 0.15;
     private static final double COPPER_KEEP = 0.9;
     private static final double JUMP = 1.25, FEATHER_JUMP = 2.5;
     private static final Identifier FEATHER = new Identifier("cloudboots", "golden_feather");
@@ -76,6 +82,16 @@ public final class Trains {
     private record Pending(UUID cart, int type, long time) {}
 
     private static final Map<UUID, Pending> PENDING = new HashMap<>();
+    /** How long each over-stretched chain has been over-stretched, by the pair of carts. */
+    private static final Map<String, Integer> STRETCHED = new HashMap<>();
+
+    private static double endGap(Entity a, Entity b) {
+        return a.getPos().distanceTo(b.getPos()) - CART;
+    }
+
+    private static double correction(double x) {
+        return MathHelper.clamp(PULL * x, -MAX_CORRECTION, MAX_CORRECTION);
+    }
 
     // ------------------------------------------------------------------ setting up
 
@@ -133,8 +149,8 @@ public final class Trains {
         PENDING.remove(player.getUuid());
         AbstractMinecartEntity a = (AbstractMinecartEntity) first;
         TrainCart ta = (TrainCart) a, tb = (TrainCart) cart;
-        if (a.distanceTo(cart) > LINK_REACH) {
-            say(player, "Too far apart - bring the carts within 2.5 blocks", Formatting.RED);
+        if (endGap(a, cart) > LINK_REACH) {
+            say(player, "Too far apart - bring the carts within 3 blocks of each other", Formatting.RED);
             return;
         }
         if (ta.unbeta_slotOf(cart.getUuid()) >= 0) {
@@ -308,8 +324,15 @@ public final class Trains {
         for (int i = 1; i < n; i++) {
             AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
             int type = linkTypeBetween(a, b);
-            double d = a.getPos().distanceTo(b.getPos());
-            if (d > (type == TrainCart.COPPER ? COPPER_SNAP : IRON_SNAP)) {
+            double d = endGap(a, b);
+            String key = a.getUuid().compareTo(b.getUuid()) < 0 ? a.getUuid() + "|" + b.getUuid() : b.getUuid() + "|" + a.getUuid();
+            if (d <= (type == TrainCart.COPPER ? COPPER_SNAP : IRON_SNAP)) {
+                STRETCHED.remove(key);
+                continue;
+            }
+            int over = STRETCHED.merge(key, 1, Integer::sum);
+            if (over >= SNAP_TICKS) {
+                STRETCHED.remove(key);
                 int slot = ((TrainCart) a).unbeta_slotOf(b.getUuid());
                 unlink(world, a, slot, true);
                 world.playSound(null, a.getBlockPos(), SoundEvents.BLOCK_CHAIN_BREAK, SoundCategory.NEUTRAL, 1.0F, 0.8F);
@@ -362,24 +385,27 @@ public final class Trains {
             }
             AbstractMinecartEntity ahead = carts.get(i - 1);
             Vec3d toward = flat(ahead.getPos().subtract(c.getPos()));
-            double d = toward.length();
-            if (d < 1.0E-4) continue;
-            toward = toward.multiply(1 / d);
+            double centres = toward.length();
+            if (centres < 1.0E-4) continue;
+            toward = toward.multiply(1 / centres);
+            double d = endGap(ahead, c);
             int type = linkTypeBetween(ahead, c);
             double sp;
             if (type == TrainCart.IRON) {
-                // Glued: the group's speed, nudged to hold the gap exactly.
-                sp = groupSpeed.get(group[i]) + PULL * (d - GAP);
+                // Glued, with a little give: the group's speed, nudged back once the gap drifts too far.
+                double off = d - GAP;
+                double fix = off > IRON_GIVE ? off - IRON_GIVE : off < -IRON_GIVE ? off + IRON_GIVE : 0;
+                sp = groupSpeed.get(group[i]) + correction(fix);
             } else {
                 double own = flat(v).dotProduct(toward);
                 if (d > GAP + COPPER_SLACK) {
                     // Rope pulled tight: carried along with most of the cart ahead's speed.
-                    sp = Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()) + PULL * (d - GAP - COPPER_SLACK);
+                    sp = Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()) + correction(d - GAP - COPPER_SLACK);
                 } else if (d < GAP) {
                     // Bumped up close: shove apart.
-                    sp = own - PULL * (GAP - d);
+                    sp = own - correction(GAP - d);
                     Vec3d av = ahead.getVelocity();
-                    ahead.setVelocity(av.add(toward.multiply(0.5 * PULL * (GAP - d))));
+                    ahead.setVelocity(av.add(toward.multiply(0.5 * correction(GAP - d))));
                     ahead.velocityModified = true;
                 } else {
                     continue;   // slack: each cart rolls on its own
@@ -448,8 +474,11 @@ public final class Trains {
     }
 
     /** Upward speed that tops out at this height under minecart gravity and air drag. */
+    /** Extra pull downwards in the air, on top of a minecart's own: a short, snappy hop. */
+    public static final double AIR_GRAVITY = 0.06;
+
     private static double launchSpeed(double height) {
-        double lo = 0, hi = 2;
+        double lo = 0, hi = 3;
         for (int it = 0; it < 40; it++) {
             double mid = (lo + hi) / 2;
             if (apex(mid) < height) lo = mid;
@@ -458,16 +487,27 @@ public final class Trains {
         return hi;
     }
 
+    /** The same steps the cart takes each tick in the air (vanilla gravity, move, drag, then ours). */
     private static double apex(double v0) {
         double y = 0, v = v0, top = 0;
         for (int t = 0; t < 200; t++) {
-            v -= 0.04;          // a minecart's gravity, applied before it moves
+            v -= 0.04;
             y += v;
-            v *= 0.95;          // its drag while off the rails
+            v *= 0.95;
+            v -= AIR_GRAVITY;
             if (y > top) top = y;
             if (v < 0 && y < top) break;
         }
         return top;
+    }
+
+    /** Each tick in the air: fall faster, and keep the speed the cart took off with. */
+    public static void airTick(AbstractMinecartEntity cart) {
+        Vec3d v = cart.getVelocity();
+        double max = 0.52;
+        double x = MathHelper.clamp(v.x / 0.95, -max, max), z = MathHelper.clamp(v.z / 0.95, -max, max);
+        cart.setVelocity(x, v.y - AIR_GRAVITY, z);
+        cart.velocityModified = true;
     }
 
     /** After moving through the air: has it come down yet, and how? */
