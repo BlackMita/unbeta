@@ -173,7 +173,17 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
     /** Chained carts don't bump each other apart: the chain decides their spacing. */
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
     private void unbeta_noBumpWhenChained(Entity entity, CallbackInfo ci) {
-        if (entity instanceof TrainCart other && unbeta_slotOf(entity.getUuid()) >= 0) ci.cancel();
+        if (!(entity instanceof TrainCart)) return;
+        if (unbeta_slotOf(entity.getUuid()) >= 0) {
+            ci.cancel();
+            return;
+        }
+        // Unchained carts only ever push each other. Vanilla's bump also hands a cart the other
+        // cart's speed while they're merely touching, so a furnace cart pulling away would tow
+        // the cart behind it: no pulling without a chain.
+        Vec3d apart = entity.getPos().subtract(this.getPos());
+        double closing = this.getVelocity().subtract(entity.getVelocity()).dotProduct(new Vec3d(apart.x, 0, apart.z));
+        if (closing <= 0) ci.cancel();
     }
 
     /** A broken cart drops its chains and lets go of its neighbours. */
