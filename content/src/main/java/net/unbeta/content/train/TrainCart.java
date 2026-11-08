@@ -37,6 +37,11 @@ public interface TrainCart {
 
     void unbeta_setDerailed(boolean derailed);
 
+    /** Ticks left of being dragged along by a copper chain (lets a furnace cart exceed its own top speed). */
+    int unbeta_dragged();
+
+    void unbeta_setDragged(int ticks);
+
     default boolean unbeta_hasLinks() {
         return unbeta_link(0) != null || unbeta_link(1) != null;
     }

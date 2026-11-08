@@ -408,6 +408,7 @@ public final class Trains {
             Vec3d v = c.getVelocity();
             double own = flat(v).dotProduct(toward);
             double sp = MathHelper.clamp(Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()) + correction(d - GAP - COPPER_SLACK), -max, max);
+            if (sp > own) ((TrainCart) c).unbeta_setDragged(5);     // being dragged: a furnace cart may go faster than its own top speed
             c.setVelocity(toward.x * sp, v.y, toward.z * sp);
             c.velocityModified = true;
         }

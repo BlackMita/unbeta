@@ -45,6 +45,7 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
     @Unique private final int[] unbeta_missing = new int[2];
     @Unique private boolean unbeta_airborne, unbeta_derailed, unbeta_lastJump;
     @Unique private int unbeta_airTicks;
+    @Unique private int unbeta_dragged;
 
     protected TrainCartMixin(EntityType<?> type, World world) {
         super(type, world);
@@ -90,6 +91,8 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
     }
 
     @Override public boolean unbeta_derailed() { return unbeta_derailed; }
+    @Override public int unbeta_dragged() { return unbeta_dragged; }
+    @Override public void unbeta_setDragged(int ticks) { unbeta_dragged = ticks; }
     @Override
     public void unbeta_setDerailed(boolean derailed) {
         unbeta_derailed = derailed;
@@ -154,6 +157,7 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
         } else if (unbeta_derailed) {
             Trains.checkRerail(self);
         }
+        if (unbeta_dragged > 0) unbeta_dragged--;
         if (unbeta_hasLinks()) Trains.track(world, self);
     }
 

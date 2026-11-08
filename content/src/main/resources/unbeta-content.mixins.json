@@ -145,7 +145,8 @@
     "LivingEntityJumpAccessor",
     "DetectorRailAirMixin",
     "FurnaceMinecartAccessor",
-    "FurnaceMinecartSyncMixin"
+    "FurnaceMinecartSyncMixin",
+    "FurnaceMinecartSpeedMixin"
   ],
   "injectors": {
     "defaultRequire": 1
