@@ -85,6 +85,9 @@ public final class Trains {
 
     private record Pending(UUID cart, int type, long time) {}
 
+    /** How far you can walk from a cart you're holding by its chain before it starts to follow. */
+    public static final double HOLD_SLACK = 3.0, HOLD_LIMIT = 12.0;
+
     private static final Map<UUID, Pending> PENDING = new HashMap<>();
     /** How long each over-stretched chain has been over-stretched, by the pair of carts. */
     private static final Map<String, Integer> STRETCHED = new HashMap<>();
@@ -123,6 +126,52 @@ public final class Trains {
         });
 
         ServerTickEvents.END_WORLD_TICK.register(Trains::tick);
+        ServerTickEvents.END_SERVER_TICK.register(server -> holding(server));
+    }
+
+    /** Stop holding whatever cart this player had by its chain. */
+    private static void letGo(ServerWorld world, UUID player) {
+        Pending p = PENDING.remove(player);
+        if (p == null) return;
+        for (ServerWorld w : world.getServer().getWorlds()) {
+            if (w.getEntity(p.cart()) instanceof TrainCart t) t.unbeta_setHeldData(0);
+        }
+    }
+
+    /** Carts held by a chain: shown hanging from your hand, and dragged along when you walk off. */
+    private static void holding(net.minecraft.server.MinecraftServer server) {
+        if (PENDING.isEmpty()) return;
+        for (UUID id : new ArrayList<>(PENDING.keySet())) {
+            Pending p = PENDING.get(id);
+            PlayerEntity player = server.getPlayerManager().getPlayer(id);
+            ServerWorld world = player == null ? null : (ServerWorld) player.getWorld();
+            Entity e = world == null ? null : world.getEntity(p.cart());
+            if (player == null || !(e instanceof AbstractMinecartEntity cart) || cart.isRemoved() || player.isSpectator()) {
+                PENDING.remove(id);
+                if (e instanceof TrainCart t) t.unbeta_setHeldData(0);
+                continue;
+            }
+            boolean stillHolding = chainType(player.getMainHandStack()) == p.type() || chainType(player.getOffHandStack()) == p.type();
+            double dist = cart.getPos().add(0, 0.4, 0).distanceTo(player.getPos().add(0, 1.0, 0));
+            if (!stillHolding || dist > HOLD_LIMIT) {
+                letGo(world, id);
+                world.playSound(null, cart.getBlockPos(), SoundEvents.BLOCK_CHAIN_FALL, SoundCategory.PLAYERS, 0.8F, 1.0F);
+                continue;
+            }
+            ((TrainCart) cart).unbeta_setHeldData(player.getId() * 4 + p.type());
+            if (dist > HOLD_SLACK) {
+                // Dragged by the chain: like copper, the cart is pulled towards you once it's taut.
+                Vec3d toward = flat(player.getPos().subtract(cart.getPos()));
+                if (toward.lengthSquared() < 1.0E-6) continue;
+                toward = toward.normalize();
+                Vec3d v = cart.getVelocity();
+                double own = flat(v).dotProduct(toward);
+                double sp = MathHelper.clamp(Math.max(own, 0.08 + 0.12 * (dist - HOLD_SLACK)), -0.52, 0.52);
+                cart.setVelocity(toward.x * sp, v.y, toward.z * sp);
+                cart.velocityModified = true;
+                if (cart instanceof FurnaceMinecartEntity) ((TrainCart) cart).unbeta_setDragged(5);
+            }
+        }
     }
 
     public static int chainType(ItemStack s) {
@@ -142,15 +191,21 @@ public final class Trains {
     private static void clickWithChain(ServerWorld world, PlayerEntity player, AbstractMinecartEntity cart, ItemStack stack, int type) {
         Pending pending = PENDING.get(player.getUuid());
         Entity first = pending == null ? null : world.getEntity(pending.cart());
-        boolean fresh = pending == null || pending.type() != type || world.getTime() - pending.time() > 200
-                || !(first instanceof AbstractMinecartEntity) || first.isRemoved() || first == cart;
-        if (fresh) {
-            PENDING.put(player.getUuid(), new Pending(cart.getUuid(), type, world.getTime()));
-            world.playSound(null, cart.getBlockPos(), SoundEvents.BLOCK_CHAIN_HIT, SoundCategory.PLAYERS, 0.8F, 1.0F);
-            say(player, "Now right-click the cart to chain it to", Formatting.GRAY);
+        if (first == cart) {                    // clicked the cart you're already holding: let go
+            letGo(world, player.getUuid());
+            world.playSound(null, cart.getBlockPos(), SoundEvents.BLOCK_CHAIN_STEP, SoundCategory.PLAYERS, 0.8F, 1.0F);
+            say(player, "Let go of the cart", Formatting.GRAY);
             return;
         }
-        PENDING.remove(player.getUuid());
+        boolean fresh = pending == null || pending.type() != type || !(first instanceof AbstractMinecartEntity) || first.isRemoved();
+        if (fresh) {
+            letGo(world, player.getUuid());
+            PENDING.put(player.getUuid(), new Pending(cart.getUuid(), type, world.getTime()));
+            world.playSound(null, cart.getBlockPos(), SoundEvents.BLOCK_CHAIN_HIT, SoundCategory.PLAYERS, 0.8F, 1.0F);
+            say(player, "Holding the cart by its chain - right-click another cart to link them", Formatting.GRAY);
+            return;
+        }
+        letGo(world, player.getUuid());
         AbstractMinecartEntity a = (AbstractMinecartEntity) first;
         TrainCart ta = (TrainCart) a, tb = (TrainCart) cart;
         if (endGap(a, cart) > LINK_REACH) {
@@ -440,7 +495,12 @@ public final class Trains {
             for (int i = 1; i < n; i++) {
                 AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
                 if (offTrack(a) || offTrack(b)) continue;
-                Vec3d ab = flat(a.getPos().subtract(b.getPos()));
+                // Only between carts that are both sitting on rails: nudging a cart that's between
+                // rails (say, at the lip of a slope) could push it into the slope's block.
+                if (!((TrainCart) a).unbeta_onRail() || !((TrainCart) b).unbeta_onRail()) continue;
+                // Along the straight line between them, slopes included, so a cart nudged on a
+                // slope stays on the slope.
+                Vec3d ab = a.getPos().subtract(b.getPos());
                 double centres = ab.length();
                 if (centres < 1.0E-4) continue;
                 Vec3d dir = ab.multiply(1 / centres);
@@ -449,14 +509,17 @@ public final class Trains {
                 if (gap < 0) fix = -gap;                                         // overlapping: push apart
                 else if (linkTypeBetween(a, b) == TrainCart.IRON && gap > GAP + IRON_GIVE) fix = Math.max(-0.1, (GAP + IRON_GIVE) - gap);   // pull together, a little at a time
                 if (fix == 0) continue;
-                Vec3d half = dir.multiply(fix / 2);
-                a.setPosition(a.getX() + half.x, a.getY(), a.getZ() + half.z);
-                b.setPosition(b.getX() - half.x, b.getY(), b.getZ() - half.z);
+                Vec3d half = dir.multiply(MathHelper.clamp(fix, -0.3, 0.3) / 2);
+                a.setPosition(a.getX() + half.x, a.getY() + half.y, a.getZ() + half.z);
+                b.setPosition(b.getX() - half.x, b.getY() - half.y, b.getZ() - half.z);
                 if (gap < 0) {
                     // and stop them closing any further
-                    double closing = flat(b.getVelocity()).dotProduct(dir) - flat(a.getVelocity()).dotProduct(dir);
+                    Vec3d flatDir = flat(dir);
+                    if (flatDir.lengthSquared() < 1.0E-8) continue;
+                    flatDir = flatDir.normalize();
+                    double closing = flat(b.getVelocity()).dotProduct(flatDir) - flat(a.getVelocity()).dotProduct(flatDir);
                     if (closing > 0) {
-                        Vec3d push = dir.multiply(closing / 2);
+                        Vec3d push = flatDir.multiply(closing / 2);
                         a.setVelocity(a.getVelocity().add(push));
                         b.setVelocity(b.getVelocity().subtract(push));
                         a.velocityModified = true;

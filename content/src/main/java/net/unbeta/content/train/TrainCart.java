@@ -21,6 +21,11 @@ public interface TrainCart {
 
     void unbeta_setLinkData(int slot, int data);
 
+    /** For the client: the player holding this cart by a chain (their entity id * 4 + chain type), or 0. */
+    int unbeta_heldData();
+
+    void unbeta_setHeldData(int data);
+
     int unbeta_missing(int slot);
 
     void unbeta_setMissing(int slot, int ticks);

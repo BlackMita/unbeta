@@ -9,6 +9,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
+import net.minecraft.entity.vehicle.FurnaceMinecartEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
@@ -35,6 +36,7 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
 
     @Unique private static final TrackedData<Integer> UNBETA_LINK0 = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.INTEGER);
     @Unique private static final TrackedData<Integer> UNBETA_LINK1 = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    @Unique private static final TrackedData<Integer> UNBETA_HELD = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.INTEGER);
     /** Off the rails (jumping or derailed): tells the client to draw the cart where it really is. */
     @Unique private static final TrackedData<Boolean> UNBETA_OFF_RAILS = DataTracker.registerData(AbstractMinecartEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
 
@@ -72,6 +74,13 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
         if (this.dataTracker.get(key) != data) this.dataTracker.set(key, data);
     }
 
+    @Override public int unbeta_heldData() { return this.dataTracker.get(UNBETA_HELD); }
+
+    @Override
+    public void unbeta_setHeldData(int data) {
+        if (this.dataTracker.get(UNBETA_HELD) != data) this.dataTracker.set(UNBETA_HELD, data);
+    }
+
     @Override public int unbeta_missing(int slot) { return unbeta_missing[slot]; }
     @Override public void unbeta_setMissing(int slot, int ticks) { unbeta_missing[slot] = ticks; }
     @Override public boolean unbeta_onRail() { return onRail; }
@@ -106,6 +115,7 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
         this.dataTracker.startTracking(UNBETA_LINK0, 0);
         this.dataTracker.startTracking(UNBETA_LINK1, 0);
         this.dataTracker.startTracking(UNBETA_OFF_RAILS, false);
+        this.dataTracker.startTracking(UNBETA_HELD, 0);
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
@@ -178,12 +188,13 @@ public abstract class TrainCartMixin extends Entity implements TrainCart {
             ci.cancel();
             return;
         }
-        // Unchained carts only ever push each other. Vanilla's bump also hands a cart the other
-        // cart's speed while they're merely touching, so a furnace cart pulling away would tow
-        // the cart behind it: no pulling without a chain.
+        // Vanilla's bump hands a cart a furnace cart's speed while they're merely touching, so a
+        // furnace cart pulling away would tow the cart behind it: no towing without a chain.
+        // (Every other bump is left alone, so carts still nudge apart and get pushed as normal.)
+        if (!((Object) this instanceof FurnaceMinecartEntity) && !(entity instanceof FurnaceMinecartEntity)) return;
         Vec3d apart = entity.getPos().subtract(this.getPos());
         double closing = this.getVelocity().subtract(entity.getVelocity()).dotProduct(new Vec3d(apart.x, 0, apart.z));
-        if (closing <= 0) ci.cancel();
+        if (closing < -0.005) ci.cancel();
     }
 
     /** A broken cart drops its chains and lets go of its neighbours. */
