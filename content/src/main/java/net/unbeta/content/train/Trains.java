@@ -65,16 +65,13 @@ public final class Trains {
     public static final double CART = 0.98;
     /** End-to-end gap of two chained carts at rest (nearly touching). */
     public static final double GAP = 0.05;
-    public static final double COPPER_SLACK = 0.5;
-    /** Copper stretched past this (end to end) for half a second snaps. */
-    public static final double COPPER_SNAP = GAP + COPPER_SLACK + 3.0;
-    /** Iron only breaks when part of the train is off the track and this far from the rest. */
-    public static final double IRON_BREAK = 1.0;
+    /** A cart that's off the track (jumping, derailed) breaks away once it's this far from the next. */
+    public static final double BREAK_AWAY = 1.0;
+    /** Where an iron stretch meets a copper stretch, the link breaks once they're this far apart for half a second. */
+    public static final double JUNCTION_BREAK = 1.0;
     private static final int SNAP_TICKS = 10;
     /** How far apart (end to end) two carts can be to chain them. */
     public static final double LINK_REACH = 3.0;
-    private static final double PULL = 0.3, MAX_CORRECTION = 0.15;
-    private static final double COPPER_KEEP = 1.0;     // once taut, a copper chain matches the cart pulling it
     private static final double JUMP = 1.25, FEATHER_JUMP = 2.5;
     private static final Identifier FEATHER = new Identifier("cloudboots", "golden_feather");
 
@@ -94,9 +91,6 @@ public final class Trains {
         return a.getPos().distanceTo(b.getPos()) - CART;
     }
 
-    private static double correction(double x) {
-        return MathHelper.clamp(PULL * x, -MAX_CORRECTION, MAX_CORRECTION);
-    }
 
     // ------------------------------------------------------------------ setting up
 
@@ -371,7 +365,6 @@ public final class Trains {
             if (carts.size() >= 2) step(world, carts);
         }
         TRAILS.keySet().removeIf(id -> !TRAILS_USED.contains(id) && world.getEntity(id) != null);
-        OWN_TRAILS.keySet().removeIf(id -> !TRAILS_USED.contains(id) && world.getEntity(id) != null);
     }
 
     private static Vec3d flat(Vec3d v) {
@@ -384,57 +377,41 @@ public final class Trains {
     }
 
     /**
-     * Iron-chained groups follow the leader's path: the front cart rolls normally (with the whole
-     * group's speed), and the carts behind are set down along the exact track it just covered, one
-     * cart-length apart. They can't overlap, pass each other or end up inside a block.
-     * Trails are kept per leading cart: most recent point first.
+     * How a train moves.
+     *
+     * A train is split into stretches: runs of carts chained with the same kind of chain. Each
+     * stretch moves as one solid piece. Its front cart rolls normally, with the stretch's speed, and
+     * the carts behind are set down along the exact track the front cart just covered, one
+     * cart-length apart, so they can't overlap, pass each other or end up inside a block.
+     *
+     *  - Iron stretch: its speed is the average of its carts' (a furnace cart holds it back).
+     *  - Copper stretch: the same, but a working powered rail under any of its carts speeds the
+     *    whole stretch up, furnace carts included.
+     *
+     * Where an iron stretch meets a copper stretch, nothing pulls: if the front stretch runs away
+     * from the one behind (say a boosted copper front and a furnace-slowed iron back), the link
+     * between them breaks. A stretch running into the one ahead pushes it along.
      */
     private static final Map<UUID, java.util.ArrayDeque<Vec3d>> TRAILS = new HashMap<>();
     private static final Set<UUID> TRAILS_USED = new HashSet<>();
-    /** Each chained cart's own recent track, most recent point first. */
-    private static final Map<UUID, java.util.ArrayDeque<Vec3d>> OWN_TRAILS = new HashMap<>();
     private static final double SPACING = CART + GAP;
     /** Furthest a following cart is moved in one tick (more than a cart's top speed). */
     private static final double FOLLOW_STEP = 0.6;
+    private static final double TOP_SPEED = 0.52;     // Unbeta's minecart top speed
+    private static final double FURNACE_SPEED = 0.2;  // a furnace minecart's own top speed
+
+    private static String pairKey(AbstractMinecartEntity a, AbstractMinecartEntity b) {
+        return a.getUuid().compareTo(b.getUuid()) < 0 ? a.getUuid() + "|" + b.getUuid() : b.getUuid() + "|" + a.getUuid();
+    }
+
+    private static void snap(ServerWorld world, AbstractMinecartEntity a, AbstractMinecartEntity b) {
+        STRETCHED.remove(pairKey(a, b));
+        unlink(world, a, ((TrainCart) a).unbeta_slotOf(b.getUuid()), true);
+        world.playSound(null, a.getBlockPos(), SoundEvents.BLOCK_CHAIN_BREAK, SoundCategory.NEUTRAL, 1.0F, 0.8F);
+    }
 
     private static void step(ServerWorld world, List<AbstractMinecartEntity> carts) {
         int n = carts.size();
-        double max = 0.52;      // Unbeta's minecart top speed
-
-        // Every chained cart remembers the last few blocks of track it covered (for copper chains
-        // to draw the next cart along). Forgotten in the air, so it never leads anyone through it.
-        for (AbstractMinecartEntity c : carts) {
-            java.util.ArrayDeque<Vec3d> own = OWN_TRAILS.computeIfAbsent(c.getUuid(), u -> new java.util.ArrayDeque<>());
-            if (offTrack(c)) own.clear();
-            if (own.isEmpty() || own.peekFirst().squaredDistanceTo(c.getPos()) > 1.0E-6) own.addFirst(c.getPos());
-            trim(own, CART + GAP + COPPER_SLACK + 2.0);
-            TRAILS_USED.add(c.getUuid());
-        }
-
-        // 1. Snapping. Copper: stretched ~3 blocks too far for half a second. Iron: only when a jump
-        //    leaves part of the train off the track and that part pulls away from the rest.
-        for (int i = 1; i < n; i++) {
-            AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
-            int type = linkTypeBetween(a, b);
-            double d = endGap(a, b);
-            String key = a.getUuid().compareTo(b.getUuid()) < 0 ? a.getUuid() + "|" + b.getUuid() : b.getUuid() + "|" + a.getUuid();
-            boolean snap;
-            if (type == TrainCart.IRON) {
-                snap = offTrack(a) != offTrack(b) && d > IRON_BREAK;
-            } else {
-                if (d <= COPPER_SNAP) {
-                    STRETCHED.remove(key);
-                    continue;
-                }
-                snap = STRETCHED.merge(key, 1, Integer::sum) >= SNAP_TICKS;
-            }
-            if (snap) {
-                STRETCHED.remove(key);
-                unlink(world, a, ((TrainCart) a).unbeta_slotOf(b.getUuid()), true);
-                world.playSound(null, a.getBlockPos(), SoundEvents.BLOCK_CHAIN_BREAK, SoundCategory.NEUTRAL, 1.0F, 0.8F);
-                return;
-            }
-        }
 
         // The train's own direction at each cart (pointing towards cart 0), so a train bent round a
         // curve or a U-turn still agrees with itself about which way is forwards.
@@ -444,161 +421,118 @@ public final class Trains {
             Vec3d t = flat(front.subtract(back));
             along[i] = t.lengthSquared() < 1.0E-6 ? Vec3d.ZERO : t.normalize();
         }
-
-        // 2. Iron groups.
-        int start = 0;
-        while (start < n) {
-            int end = start;
-            while (end < n - 1 && linkTypeBetween(carts.get(end), carts.get(end + 1)) == TrainCart.IRON) end++;
-            if (end > start) ironGroup(carts, along, start, end, max, world);
-            start = end + 1;
-        }
-
-        // Carts in iron-chained groups go at their group's own pace: copper never speeds them up
-        // (so a fast cart on copper pulling an iron group can stretch its chain until it snaps).
-        boolean[] inIron = new boolean[n];
-        for (int i = 1; i < n; i++) {
-            if (linkTypeBetween(carts.get(i - 1), carts.get(i)) == TrainCart.IRON) inIron[i - 1] = inIron[i] = true;
-        }
-
-        // 3. Copper links: a rope. Once the slack is used up, the cart behind keeps up exactly.
+        double[] speed = new double[n];         // each cart's speed along the train (+ = towards cart 0)
         double heading = 0;
-        for (int i = 0; i < n; i++) heading += flat(carts.get(i).getVelocity()).dotProduct(along[i]);
-        List<AbstractMinecartEntity> ordered = carts;
-        if (heading < 0) {
-            ordered = new ArrayList<>(carts);
-            java.util.Collections.reverse(ordered);
+        for (int i = 0; i < n; i++) {
+            speed[i] = flat(carts.get(i).getVelocity()).dotProduct(along[i]);
+            heading += speed[i];
         }
-        for (int i = 1; i < n; i++) {
-            AbstractMinecartEntity ahead = ordered.get(i - 1), c = ordered.get(i);
-            if (linkTypeBetween(ahead, c) != TrainCart.COPPER) continue;
-            if (inIron[carts.indexOf(c)]) continue;
-            Vec3d toward = flat(ahead.getPos().subtract(c.getPos()));
-            if (toward.lengthSquared() < 1.0E-8) continue;
-            toward = toward.normalize();
-            double d = endGap(ahead, c);
-            if (d <= GAP + COPPER_SLACK) continue;      // slack: each cart rolls on its own
-            Vec3d v = c.getVelocity();
-            double own = flat(v).dotProduct(toward);
-            double sp = MathHelper.clamp(Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()), -max, max);
-            // Dragged by a normal cart: a furnace cart may go faster than its own top speed.
-            if (sp > own && !(ahead instanceof FurnaceMinecartEntity && ((TrainCart) ahead).unbeta_dragged() == 0)) ((TrainCart) c).unbeta_setDragged(5);
-            // Taut: the cart is drawn along the exact track the cart ahead took (the same way iron
-            // trains follow), so it can't get stuck at the lip of a slope or on a bend.
-            Vec3d target = offTrack(c) || offTrack(ahead) ? null : pointAlong(OWN_TRAILS.get(ahead.getUuid()), CART + GAP + COPPER_SLACK);
-            if (target != null) {
-                Vec3d move = target.subtract(c.getPos());
-                double len = move.length();
-                if (len > FOLLOW_STEP) target = c.getPos().add(move.multiply(FOLLOW_STEP / len));
-                if (len > 1.0E-4) c.setPosition(target.x, target.y, target.z);
-            } else {
-                sp = MathHelper.clamp(sp + correction(d - GAP - COPPER_SLACK), -max, max);
-            }
-            c.setVelocity(toward.x * sp, v.y, toward.z * sp);
-            c.velocityModified = true;
-        }
+        // Front to back, in the direction of travel (if it's barely moving, keep last tick's front).
+        boolean towardZero;
+        if (heading > 0.002) towardZero = true;
+        else if (heading < -0.002) towardZero = false;
+        else towardZero = !TRAILS.containsKey(carts.get(n - 1).getUuid());
+        int[] order = new int[n];
+        for (int k = 0; k < n; k++) order[k] = towardZero ? k : n - 1 - k;
 
-        // 3b. A booster under any normal cart in a stretch of copper-chained carts speeds up the
-        //     whole stretch at once ("whole train goes zoom"), furnace carts included. Carts in iron
-        //     groups keep their own pace.
-        if (Math.abs(heading) > 1.0E-4) {
-            double sign = Math.signum(heading);
-            int from = 0;
-            while (from < n) {
-                int to = from;
-                while (to < n - 1 && linkTypeBetween(carts.get(to), carts.get(to + 1)) == TrainCart.COPPER) to++;
-                if (to > from) {
-                    double boosted = 0;
-                    for (int i = from; i <= to; i++) {
-                        AbstractMinecartEntity c = carts.get(i);
-                        if (inIron[i] || c instanceof FurnaceMinecartEntity || !onPoweredRail(world, c)) continue;
-                        double sp = flat(c.getVelocity()).dotProduct(along[i]) * sign;
-                        if (sp > boosted) boosted = sp;
-                    }
-                    if (boosted > 0) {
-                        boosted = Math.min(boosted, max);
-                        for (int i = from; i <= to; i++) {
-                            AbstractMinecartEntity c = carts.get(i);
-                            if (inIron[i] || offTrack(c)) continue;
-                            double sp = flat(c.getVelocity()).dotProduct(along[i]) * sign;
-                            if (sp >= boosted) continue;
-                            Vec3d v = c.getVelocity();
-                            c.setVelocity(along[i].x * sign * boosted, v.y, along[i].z * sign * boosted);
-                            c.velocityModified = true;
-                            ((TrainCart) c).unbeta_setDragged(5);
-                        }
-                    }
-                }
-                from = to + 1;
-            }
+        // Stretches: split wherever the kind of chain changes.
+        List<int[]> stretches = new ArrayList<>();      // {first k, last k} in travel order
+        List<Integer> kinds = new ArrayList<>();
+        // (The link where the kind changes is where two stretches meet; the stretch behind it takes
+        // its kind from the links behind that.)
+        int[] link = new int[n];                     // link[k]: the chain between travel positions k-1 and k
+        for (int k = 1; k < n; k++) link[k] = linkTypeBetween(carts.get(order[k - 1]), carts.get(order[k]));
+        int startK = 0, kind = link[1];
+        for (int k = 2; k < n; k++) {
+            if (link[k] == kind) continue;
+            stretches.add(new int[]{startK, k - 1});
+            kinds.add(kind);
+            startK = k;
+            kind = k + 1 < n ? link[k + 1] : link[k];
         }
+        stretches.add(new int[]{startK, n - 1});
+        kinds.add(kind);
 
-        // 4. Copper links, close up: touching carts push each other (so a furnace cart can push the
-        //    cart in front), and they're never allowed to overlap. Done with speed only.
-        for (int i = 1; i < n; i++) {
-            AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
-            if (linkTypeBetween(a, b) != TrainCart.COPPER || offTrack(a) || offTrack(b)) continue;
-            double gap = endGap(a, b);
-            if (gap > GAP + 0.05) continue;
-            Vec3d dir = flat(a.getPos().subtract(b.getPos()));
-            if (dir.lengthSquared() < 1.0E-8) continue;
-            dir = dir.normalize();                       // from b towards a
-            double sa = flat(a.getVelocity()).dotProduct(dir), sb = flat(b.getVelocity()).dotProduct(dir);
-            if (sb > sa && !inIron[i - 1]) {             // b driving into a: a keeps up (a furnace cart too)
-                a.setVelocity(a.getVelocity().add(dir.multiply(sb - sa)));
-                a.velocityModified = true;
-                if (!(b instanceof FurnaceMinecartEntity) || ((TrainCart) b).unbeta_dragged() > 0) ((TrainCart) a).unbeta_setDragged(5);
-            } else if (sa < 0 && sa < sb && !inIron[i]) { // a backing into b: b keeps up
-                b.setVelocity(b.getVelocity().add(dir.multiply(sa - sb)));
-                b.velocityModified = true;
-                if (!(a instanceof FurnaceMinecartEntity) || ((TrainCart) a).unbeta_dragged() > 0) ((TrainCart) b).unbeta_setDragged(5);
-            }
-            if (gap < 0) {                               // overlapping: ease apart
-                Vec3d half = dir.multiply(Math.min(0.1, -gap * 0.5) / 2);
-                a.setVelocity(a.getVelocity().add(half));
-                b.setVelocity(b.getVelocity().subtract(half));
-            }
-        }
-    }
-
-    /** One iron-chained group, cart indices start..end of the train. */
-    private static void ironGroup(List<AbstractMinecartEntity> carts, Vec3d[] along, int start, int end, double max, ServerWorld world) {
-        for (int i = start; i <= end; i++) {
-            if (offTrack(carts.get(i))) {
-                // In the air (or derailed) the carts fly on their own; the trail starts afresh after.
-                for (int j = start; j <= end; j++) TRAILS.remove(carts.get(j).getUuid());
+        // 1. Breaking away.
+        for (int k = 1; k < n; k++) {
+            AbstractMinecartEntity a = carts.get(order[k - 1]), b = carts.get(order[k]);
+            if (offTrack(a) != offTrack(b) && endGap(a, b) > BREAK_AWAY) {
+                snap(world, a, b);
                 return;
             }
         }
-        // One speed for the whole group: the average, or a booster's speed if any cart is on one.
-        double sum = 0, boost = 0;
-        for (int i = start; i <= end; i++) {
-            double s = flat(carts.get(i).getVelocity()).dotProduct(along[i]);
-            sum += s;
-            if (onPoweredRail(world, carts.get(i)) && Math.abs(s) > Math.abs(boost)) boost = s;
+        for (int g = 1; g < stretches.size(); g++) {
+            AbstractMinecartEntity a = carts.get(order[stretches.get(g - 1)[1]]), b = carts.get(order[stretches.get(g)[0]]);
+            String key = pairKey(a, b);
+            if (endGap(a, b) <= JUNCTION_BREAK) {
+                STRETCHED.remove(key);
+            } else if (STRETCHED.merge(key, 1, Integer::sum) >= SNAP_TICKS) {
+                snap(world, a, b);
+                return;
+            }
         }
-        double speed = sum / (end - start + 1);
-        if (boost != 0 && Math.abs(boost) > Math.abs(speed)) speed = Math.abs(boost) * (speed != 0 ? Math.signum(speed) : Math.signum(boost));
-        speed = MathHelper.clamp(speed, -max, max);
 
-        // The leader is the end the group is moving towards (if it's barely moving, keep the last one).
-        boolean towardStart;
-        if (speed > 0.002) towardStart = true;
-        else if (speed < -0.002) towardStart = false;
-        else towardStart = !TRAILS.containsKey(carts.get(end).getUuid());
-        int lead = towardStart ? start : end, stepDir = towardStart ? 1 : -1;
-        AbstractMinecartEntity leader = carts.get(lead);
-        Vec3d lv = leader.getVelocity();
-        leader.setVelocity(along[lead].x * speed, lv.y, along[lead].z * speed);
-        leader.velocityModified = true;
+        // 2. Each stretch's speed (signed along the train).
+        double sign = towardZero ? 1 : -1;
+        double[] stretchSpeed = new double[stretches.size()];
+        for (int g = 0; g < stretches.size(); g++) {
+            int[] st = stretches.get(g);
+            double sum = 0, boost = 0;
+            for (int k = st[0]; k <= st[1]; k++) {
+                int i = order[k];
+                sum += speed[i];
+                if (kinds.get(g) == TrainCart.COPPER && onPoweredRail(world, carts.get(i)) && speed[i] * sign > boost) boost = speed[i] * sign;
+            }
+            double sp = sum / (st[1] - st[0] + 1);
+            if (boost > sp * sign) sp = boost * sign;
+            double cap = TOP_SPEED;
+            if (kinds.get(g) == TrainCart.IRON) {
+                // An iron stretch with a furnace cart in it never goes faster than the furnace cart can.
+                for (int k = st[0]; k <= st[1]; k++) if (carts.get(order[k]) instanceof FurnaceMinecartEntity) cap = FURNACE_SPEED;
+            }
+            stretchSpeed[g] = MathHelper.clamp(sp, -cap, cap);
+        }
+        // A stretch running into the one ahead of it pushes it along (back to front).
+        for (int g = stretches.size() - 1; g >= 1; g--) {
+            AbstractMinecartEntity a = carts.get(order[stretches.get(g - 1)[1]]), b = carts.get(order[stretches.get(g)[0]]);
+            if (endGap(a, b) <= GAP + 0.05 && stretchSpeed[g] * sign > stretchSpeed[g - 1] * sign) stretchSpeed[g - 1] = stretchSpeed[g];
+        }
 
-        // The leader's trail: rebuilt from where the carts are if it's new, else extended.
+        // 3. Move each stretch as one piece.
+        for (int g = 0; g < stretches.size(); g++) {
+            int[] st = stretches.get(g);
+            moveStretch(carts, along, order, st[0], st[1], stretchSpeed[g]);
+        }
+    }
+
+    /** One stretch, travel-order positions first..last, all going at this speed (+ = towards cart 0). */
+    private static void moveStretch(List<AbstractMinecartEntity> carts, Vec3d[] along, int[] order, int first, int last, double sp) {
+        for (int k = first; k <= last; k++) {
+            if (offTrack(carts.get(order[k]))) {
+                // In the air (or derailed) the carts fly on their own; the trail starts afresh after.
+                for (int j = first; j <= last; j++) TRAILS.remove(carts.get(order[j]).getUuid());
+                return;
+            }
+        }
+        for (int k = first; k <= last; k++) {
+            AbstractMinecartEntity c = carts.get(order[k]);
+            // Going faster than a furnace cart can by itself: it's being carried along.
+            if (c instanceof FurnaceMinecartEntity && Math.abs(sp) > FURNACE_SPEED) ((TrainCart) c).unbeta_setDragged(5);
+            Vec3d v = c.getVelocity();
+            Vec3d a = along[order[k]];
+            c.setVelocity(a.x * sp, v.y, a.z * sp);
+            c.velocityModified = true;
+        }
+        if (last == first) return;
+
+        // The front cart's trail: rebuilt from where the carts are if it's new, else extended.
+        AbstractMinecartEntity leader = carts.get(order[first]);
         UUID key = leader.getUuid();
         java.util.ArrayDeque<Vec3d> trail = TRAILS.get(key);
-        for (int i = start; i <= end; i++) if (i != lead) TRAILS.remove(carts.get(i).getUuid());
+        for (int k = first + 1; k <= last; k++) TRAILS.remove(carts.get(order[k]).getUuid());
         if (trail == null) {
             trail = new java.util.ArrayDeque<>();
-            for (int i = lead; i >= start && i <= end; i += stepDir) trail.addLast(carts.get(i).getPos());
+            for (int k = first; k <= last; k++) trail.addLast(carts.get(order[k]).getPos());
             TRAILS.put(key, trail);
         } else if (trail.peekFirst() == null || trail.peekFirst().squaredDistanceTo(leader.getPos()) > 1.0E-6) {
             trail.addFirst(leader.getPos());
@@ -606,34 +540,16 @@ public final class Trains {
         TRAILS_USED.add(key);
 
         // Set each following cart down along the trail, one cart-length apart.
-        int k = 0;
-        for (int i = lead + stepDir; i >= start && i <= end; i += stepDir) {
-            k++;
-            AbstractMinecartEntity c = carts.get(i);
-            Vec3d target = pointAlong(trail, k * SPACING);
-            if (target != null) {
-                Vec3d move = target.subtract(c.getPos());
-                double len = move.length();
-                if (len > FOLLOW_STEP) target = c.getPos().add(move.multiply(FOLLOW_STEP / len));
-                if (len > 1.0E-4) c.setPosition(target.x, target.y, target.z);
-            }
-            Vec3d v = c.getVelocity();
-            c.setVelocity(along[i].x * speed, v.y, along[i].z * speed);
-            c.velocityModified = true;
+        for (int k = first + 1; k <= last; k++) {
+            AbstractMinecartEntity c = carts.get(order[k]);
+            Vec3d target = pointAlong(trail, (k - first) * SPACING);
+            if (target == null) continue;
+            Vec3d move = target.subtract(c.getPos());
+            double len = move.length();
+            if (len > FOLLOW_STEP) target = c.getPos().add(move.multiply(FOLLOW_STEP / len));
+            if (len > 1.0E-4) c.setPosition(target.x, target.y, target.z);
         }
-        // Forget the trail further back than the last cart needs.
-        double keep = k * SPACING + 2.0, walked = 0;
-        Vec3d prev = null;
-        java.util.Iterator<Vec3d> it = trail.iterator();
-        int count = 0;
-        while (it.hasNext()) {
-            Vec3d p = it.next();
-            if (prev != null) walked += p.distanceTo(prev);
-            prev = p;
-            count++;
-            if (walked > keep) break;
-        }
-        while (trail.size() > count + 1) trail.removeLast();
+        trim(trail, (last - first) * SPACING + 2.0);
     }
 
     /** Drops the end of a trail beyond this length. */
