@@ -489,44 +489,33 @@ public final class Trains {
             }
         }
 
-        // 4. Hard limits, by moving the carts themselves: chained carts can never overlap (so never
-        //    pass each other), and iron-chained carts never drift further apart than the give allows.
-        for (int pass = 0; pass < 3; pass++) {
-            for (int i = 1; i < n; i++) {
-                AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
-                if (offTrack(a) || offTrack(b)) continue;
-                // Only between carts that are both sitting on rails: nudging a cart that's between
-                // rails (say, at the lip of a slope) could push it into the slope's block.
-                if (!((TrainCart) a).unbeta_onRail() || !((TrainCart) b).unbeta_onRail()) continue;
-                // Along the straight line between them, slopes included, so a cart nudged on a
-                // slope stays on the slope.
-                Vec3d ab = a.getPos().subtract(b.getPos());
-                double centres = ab.length();
-                if (centres < 1.0E-4) continue;
-                Vec3d dir = ab.multiply(1 / centres);
-                double gap = centres - CART;
-                double fix = 0;
-                if (gap < 0) fix = -gap;                                         // overlapping: push apart
-                else if (linkTypeBetween(a, b) == TrainCart.IRON && gap > GAP + IRON_GIVE) fix = Math.max(-0.1, (GAP + IRON_GIVE) - gap);   // pull together, a little at a time
-                if (fix == 0) continue;
-                Vec3d half = dir.multiply(MathHelper.clamp(fix, -0.3, 0.3) / 2);
-                a.setPosition(a.getX() + half.x, a.getY() + half.y, a.getZ() + half.z);
-                b.setPosition(b.getX() - half.x, b.getY() - half.y, b.getZ() - half.z);
-                if (gap < 0) {
-                    // and stop them closing any further
-                    Vec3d flatDir = flat(dir);
-                    if (flatDir.lengthSquared() < 1.0E-8) continue;
-                    flatDir = flatDir.normalize();
-                    double closing = flat(b.getVelocity()).dotProduct(flatDir) - flat(a.getVelocity()).dotProduct(flatDir);
-                    if (closing > 0) {
-                        Vec3d push = flatDir.multiply(closing / 2);
-                        a.setVelocity(a.getVelocity().add(push));
-                        b.setVelocity(b.getVelocity().subtract(push));
-                        a.velocityModified = true;
-                        b.velocityModified = true;
-                    }
-                }
+        // 4. Hard limits, by steering the carts' speed (never by moving them directly: a moved cart
+        //    can end up inside the block under a slope or a rail). Chained carts never overlap, so
+        //    never pass each other, and iron-chained carts never drift further apart than the give.
+        for (int i = 1; i < n; i++) {
+            AbstractMinecartEntity a = carts.get(i - 1), b = carts.get(i);
+            if (offTrack(a) || offTrack(b)) continue;
+            Vec3d dir = flat(a.getPos().subtract(b.getPos()));
+            if (dir.lengthSquared() < 1.0E-8) continue;
+            dir = dir.normalize();                                   // from b towards a
+            double gap = endGap(a, b);
+            double closing = flat(b.getVelocity()).dotProduct(dir) - flat(a.getVelocity()).dotProduct(dir);
+            double apart = 0;                                        // extra speed apart (negative: together)
+            if (gap < 0) {
+                apart = Math.max(0, closing) + Math.min(0.2, -gap * 0.5);
+            } else if (gap < 0.02 && closing > 0) {
+                apart = closing;                                     // touching and closing: stop closing
+            } else if (linkTypeBetween(a, b) == TrainCart.IRON && gap > GAP + IRON_GIVE) {
+                double opening = -closing;
+                double want = Math.min(0.2, (gap - GAP - IRON_GIVE) * 0.5);
+                apart = -(Math.max(0, opening) + want);
             }
+            if (apart == 0) continue;
+            Vec3d half = dir.multiply(apart / 2);
+            a.setVelocity(a.getVelocity().add(half));
+            b.setVelocity(b.getVelocity().subtract(half));
+            a.velocityModified = true;
+            b.velocityModified = true;
         }
     }
 
