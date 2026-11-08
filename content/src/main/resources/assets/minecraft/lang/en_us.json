@@ -26,5 +26,6 @@
   "block.minecraft.raw_gold_block": "Raw Gold Block",
   "block.minecraft.raw_copper_block": "Raw Copper Block",
   "block.minecraft.bamboo_block": "Bamboo Block",
-  "block.minecraft.stripped_bamboo_block": "Stripped Bamboo Block"
+  "block.minecraft.stripped_bamboo_block": "Stripped Bamboo Block",
+  "block.minecraft.chain": "Iron Chain"
 }

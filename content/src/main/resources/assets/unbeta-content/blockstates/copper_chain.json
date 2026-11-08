@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "axis=x": { "model": "unbeta-content:block/copper_chain", "x": 90, "y": 90 },
+    "axis=y": { "model": "unbeta-content:block/copper_chain" },
+    "axis=z": { "model": "unbeta-content:block/copper_chain", "x": 90 }
+  }
+}

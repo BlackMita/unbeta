@@ -140,7 +140,10 @@
     "IslandStructureMixin",
     "IslandStrongholdMixin",
     "IslandSpreadMixin",
-    "StructurePlacementAccessor"
+    "StructurePlacementAccessor",
+    "TrainCartMixin",
+    "LivingEntityJumpAccessor",
+    "DetectorRailAirMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -57,6 +57,7 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.torch.TorchDousing.register();
         net.unbeta.content.worldgen.CaveMinecarts.register();
         net.unbeta.content.copper.CopperItems.register();
+        net.unbeta.content.train.Trains.register();
         net.unbeta.content.bucket.BucketItems.register();
         net.unbeta.content.creative.CreativeTrims.register();
         net.unbeta.content.burntchest.BurntChests.register();

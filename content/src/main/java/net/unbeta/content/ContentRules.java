@@ -181,6 +181,11 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(tool)), true);
         }
 
+        // Chains (they link minecarts into trains) and detector and activator rails are back.
+        for (String id : new String[]{"chain", "detector_rail", "activator_rail"}) {
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
+            ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
+        }
         // Hay bales and grass paths are back (villages and farms read better with them; a
         // shovel on grass makes a path again, and hay is crafted from 9 wheat).
         for (String id : new String[]{"hay_block", "dirt_path"}) {

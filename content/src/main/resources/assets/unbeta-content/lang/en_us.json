@@ -299,5 +299,6 @@
   "unbeta-content.island": "Island Size (chunks)",
   "unbeta-content.island.tooltip": "One Beta island %s chunks (%s blocks) across, in an endless ocean, with the world border just far enough out to still see it.",
   "unbeta-content.island.tooltip.off": "Off: the normal, endless Unbeta world.",
-  "gamerule.unbetaIslandChunks": "Island size in chunks (0 = off)"
+  "gamerule.unbetaIslandChunks": "Island size in chunks (0 = off)",
+  "block.unbeta-content.copper_chain": "Copper Chain"
 }
