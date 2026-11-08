@@ -371,6 +371,7 @@ public final class Trains {
             if (carts.size() >= 2) step(world, carts);
         }
         TRAILS.keySet().removeIf(id -> !TRAILS_USED.contains(id) && world.getEntity(id) != null);
+        OWN_TRAILS.keySet().removeIf(id -> !TRAILS_USED.contains(id) && world.getEntity(id) != null);
     }
 
     private static Vec3d flat(Vec3d v) {
@@ -390,6 +391,8 @@ public final class Trains {
      */
     private static final Map<UUID, java.util.ArrayDeque<Vec3d>> TRAILS = new HashMap<>();
     private static final Set<UUID> TRAILS_USED = new HashSet<>();
+    /** Each chained cart's own recent track, most recent point first. */
+    private static final Map<UUID, java.util.ArrayDeque<Vec3d>> OWN_TRAILS = new HashMap<>();
     private static final double SPACING = CART + GAP;
     /** Furthest a following cart is moved in one tick (more than a cart's top speed). */
     private static final double FOLLOW_STEP = 0.6;
@@ -397,6 +400,16 @@ public final class Trains {
     private static void step(ServerWorld world, List<AbstractMinecartEntity> carts) {
         int n = carts.size();
         double max = 0.52;      // Unbeta's minecart top speed
+
+        // Every chained cart remembers the last few blocks of track it covered (for copper chains
+        // to draw the next cart along). Forgotten in the air, so it never leads anyone through it.
+        for (AbstractMinecartEntity c : carts) {
+            java.util.ArrayDeque<Vec3d> own = OWN_TRAILS.computeIfAbsent(c.getUuid(), u -> new java.util.ArrayDeque<>());
+            if (offTrack(c)) own.clear();
+            if (own.isEmpty() || own.peekFirst().squaredDistanceTo(c.getPos()) > 1.0E-6) own.addFirst(c.getPos());
+            trim(own, CART + GAP + COPPER_SLACK + 2.0);
+            TRAILS_USED.add(c.getUuid());
+        }
 
         // 1. Snapping. Copper: stretched ~3 blocks too far for half a second. Iron: only when a jump
         //    leaves part of the train off the track and that part pulls away from the rest.
@@ -467,9 +480,20 @@ public final class Trains {
             if (d <= GAP + COPPER_SLACK) continue;      // slack: each cart rolls on its own
             Vec3d v = c.getVelocity();
             double own = flat(v).dotProduct(toward);
-            double sp = MathHelper.clamp(Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()) + correction(d - GAP - COPPER_SLACK), -max, max);
+            double sp = MathHelper.clamp(Math.max(own, COPPER_KEEP * ahead.getVelocity().horizontalLength()), -max, max);
             // Dragged by a normal cart: a furnace cart may go faster than its own top speed.
             if (sp > own && !(ahead instanceof FurnaceMinecartEntity && ((TrainCart) ahead).unbeta_dragged() == 0)) ((TrainCart) c).unbeta_setDragged(5);
+            // Taut: the cart is drawn along the exact track the cart ahead took (the same way iron
+            // trains follow), so it can't get stuck at the lip of a slope or on a bend.
+            Vec3d target = offTrack(c) || offTrack(ahead) ? null : pointAlong(OWN_TRAILS.get(ahead.getUuid()), CART + GAP + COPPER_SLACK);
+            if (target != null) {
+                Vec3d move = target.subtract(c.getPos());
+                double len = move.length();
+                if (len > FOLLOW_STEP) target = c.getPos().add(move.multiply(FOLLOW_STEP / len));
+                if (len > 1.0E-4) c.setPosition(target.x, target.y, target.z);
+            } else {
+                sp = MathHelper.clamp(sp + correction(d - GAP - COPPER_SLACK), -max, max);
+            }
             c.setVelocity(toward.x * sp, v.y, toward.z * sp);
             c.velocityModified = true;
         }
@@ -577,8 +601,23 @@ public final class Trains {
         while (trail.size() > count + 1) trail.removeLast();
     }
 
+    /** Drops the end of a trail beyond this length. */
+    private static void trim(java.util.ArrayDeque<Vec3d> trail, double keep) {
+        double walked = 0;
+        Vec3d prev = null;
+        int count = 0;
+        for (Vec3d p : trail) {
+            if (prev != null) walked += p.distanceTo(prev);
+            prev = p;
+            count++;
+            if (walked > keep) break;
+        }
+        while (trail.size() > count) trail.removeLast();
+    }
+
     /** The point this far back along a trail (most recent point first), or null if it's too short. */
     private static Vec3d pointAlong(java.util.ArrayDeque<Vec3d> trail, double distance) {
+        if (trail == null) return null;
         Vec3d prev = null;
         double walked = 0;
         for (Vec3d p : trail) {
