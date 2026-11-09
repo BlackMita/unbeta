@@ -5,7 +5,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.WorldSavePath;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -41,12 +40,18 @@ public final class BundledDatapackInstaller {
         for (String packName : PACKS) {
             if (!wanted(packName)) continue;
             Path dest = datapacksDir.resolve(packName);
-            if (Files.exists(dest)) continue;
             String resource = "/unbeta_bundled_datapacks/" + packName;
             try (InputStream in = BundledDatapackInstaller.class.getResourceAsStream(resource)) {
                 if (in == null) continue;
-                try (OutputStream out = Files.newOutputStream(dest)) { in.transferTo(out); }
-                net.unbeta.content.UnbetaContent.LOG.info("[Unbeta] Installed datapack: {}", packName);
+                byte[] bundled = in.readAllBytes();
+                boolean existed = Files.exists(dest);
+                // Already there and up to date: leave it. An older copy (from an earlier Unbeta) is replaced.
+                if (existed && java.util.Arrays.equals(Files.readAllBytes(dest), bundled)) continue;
+                // Written beside it, then swapped in, so the copy the game has open is never half-written.
+                Path tmp = datapacksDir.resolve(packName + ".unbeta-tmp");
+                Files.write(tmp, bundled);
+                Files.move(tmp, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                net.unbeta.content.UnbetaContent.LOG.info("[Unbeta] {} datapack: {}", existed ? "Updated" : "Installed", packName);
                 installedAny = true;
             } catch (Exception e) {
                 net.unbeta.content.UnbetaContent.LOG.error("[Unbeta] Failed to install datapack: {}", packName, e);

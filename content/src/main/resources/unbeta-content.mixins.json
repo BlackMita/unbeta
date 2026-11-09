@@ -146,12 +146,14 @@
     "DetectorRailAirMixin",
     "FurnaceMinecartAccessor",
     "FurnaceMinecartSyncMixin",
-    "FurnaceMinecartSpeedMixin"
+    "FurnaceMinecartSpeedMixin",
+    "BoatPaintMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
+    "BoatPaintTextureMixin",
     "IslandWorldTabMixin",
     "EndermanDreadMixin",
     "PortalOverlaySuppressMixin",

@@ -110,6 +110,10 @@ public final class DyedBlocks {
             LOOKUP.put(PLAIN.get(s), new Entry(s, null));
         }
         // One set of dyed stripped logs for every kind: stripped birch and spruce paint too.
+        // Anstone, Stonerite and Stonite are Stone in all but looks: they paint like Stone.
+        LOOKUP.put(Blocks.GRANITE, new Entry(Shape.STONE, null));
+        LOOKUP.put(Blocks.DIORITE, new Entry(Shape.STONE, null));
+        LOOKUP.put(Blocks.ANDESITE, new Entry(Shape.STONE, null));
         LOOKUP.put(Blocks.STRIPPED_BIRCH_LOG, new Entry(Shape.STRIPPED_LOG, null));
         LOOKUP.put(Blocks.STRIPPED_SPRUCE_LOG, new Entry(Shape.STRIPPED_LOG, null));
 

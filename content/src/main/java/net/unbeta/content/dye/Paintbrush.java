@@ -1,6 +1,8 @@
 package net.unbeta.content.dye;
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -59,18 +61,20 @@ public final class Paintbrush {
             if (!DyedBlocks.paint(world, pos, color)) return ActionResult.PASS;
             if (!world.isClient) {
                 world.playSound(null, pos, SoundEvents.ITEM_DYE_USE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                PlayerEntity player = context.getPlayer();
-                ItemStack stack = context.getStack();
-                if (player == null || !player.getAbilities().creativeMode) {
-                    if (stack.getDamage() + 1 >= stack.getMaxDamage()) {
-                        if (player != null) player.setStackInHand(context.getHand(), new ItemStack(PLAIN));
-                        world.playSound(null, pos, SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.PLAYERS, 0.5F, 1.4F);
-                    } else {
-                        stack.setDamage(stack.getDamage() + 1);
-                    }
-                }
+                useStroke(context.getPlayer(), context.getHand(), context.getStack(), world, pos);
             }
             return ActionResult.success(world.isClient);
+        }
+    }
+
+    /** One stroke off the brush; an empty brush goes back to a plain one. */
+    static void useStroke(PlayerEntity player, net.minecraft.util.Hand hand, ItemStack stack, World world, BlockPos pos) {
+        if (player != null && player.getAbilities().creativeMode) return;
+        if (stack.getDamage() + 1 >= stack.getMaxDamage()) {
+            if (player != null) player.setStackInHand(hand, new ItemStack(PLAIN));
+            world.playSound(null, pos, SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.PLAYERS, 0.5F, 1.4F);
+        } else {
+            stack.setDamage(stack.getDamage() + 1);
         }
     }
 
@@ -84,6 +88,32 @@ public final class Paintbrush {
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(entries -> {
             entries.add(PLAIN);
             for (DyeColor c : DyeColor.values()) entries.add(LOADED.get(c));
+        });
+
+        // Boats are wood too: a loaded brush paints one, flint and steel takes the paint off.
+        UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
+            if (!(entity instanceof BoatEntity boat) || boat.getVariant() == BoatEntity.Type.BAMBOO || player.isSpectator()) return ActionResult.PASS;
+            ItemStack held = player.getStackInHand(hand);
+            PaintedBoat painted = (PaintedBoat) boat;
+            if (held.getItem() instanceof LoadedItem brush) {
+                if (painted.unbeta_paint() == brush.color().getId()) return ActionResult.PASS;
+                if (!world.isClient) {
+                    painted.unbeta_setPaint(brush.color().getId());
+                    world.playSound(null, boat.getBlockPos(), SoundEvents.ITEM_DYE_USE, SoundCategory.NEUTRAL, 1.0F, 1.0F);
+                    useStroke(player, hand, held, world, boat.getBlockPos());
+                }
+                return ActionResult.SUCCESS;
+            }
+            if (held.isOf(Items.FLINT_AND_STEEL) && painted.unbeta_paint() >= 0) {
+                if (!world.isClient) {
+                    painted.unbeta_setPaint(-1);
+                    world.playSound(null, boat.getBlockPos(), SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.NEUTRAL, 1.0F, 1.2F);
+                    world.playSound(null, boat.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.NEUTRAL, 0.4F, 1.6F);
+                    held.damage(1, player, p -> p.sendToolBreakStatus(hand));
+                }
+                return ActionResult.SUCCESS;
+            }
+            return ActionResult.PASS;
         });
 
         // Flint and steel strips the dye from a dyed block instead of lighting it.
