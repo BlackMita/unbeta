@@ -59,9 +59,12 @@ public final class Island {
         return chunks * 8.0;
     }
 
-    /** How far inside the edge the land starts to slope down into the sea. */
+    /**
+     * How wide the band is where the land gives way to the sea (centred on the shore). Kept narrow,
+     * so everything inside it is untouched Beta terrain.
+     */
     public static double falloff() {
-        return Math.max(24.0, Math.min(128.0, radius() * 0.3));
+        return Math.max(32.0, Math.min(96.0, radius() * 0.25));
     }
 
     /** The shore's distance from 0, 0 in this direction: roughly round, but wobbly. */
@@ -87,25 +90,20 @@ public final class Island {
     public static double oceanAmount(double x, double z) {
         double d = Math.sqrt(x * x + z * z);
         double e = edge(x, z);
-        double t = (d - (e - 0.4 * falloff())) / falloff();
+        double t = (d - (e - 0.5 * falloff())) / falloff();
         return t <= 0 ? 0 : t >= 1 ? 1 : t;
     }
 
     /**
-     * What Moderner Beta adds to its terrain density here: a gentle rise in the middle (so the
-     * island isn't swallowed by a Beta ocean that happened to sit at 0, 0) and a fall into the sea
-     * around the edge (-200 is Moderner Beta's own "nothing but ocean").
+     * What Moderner Beta adds to its terrain density here. Nothing at all on the island itself
+     * (pure Beta terrain, plains and all), and a smooth fall into the sea in the band around the
+     * shore (-200 is Moderner Beta's own "nothing but ocean").
      */
     public static double densityOffset(double x, double z) {
         double t = oceanAmount(x, z);
-        if (t > 0) return -200.0 * t * t;
-        double inner = edge(x, z) - 0.4 * falloff();
-        double k = Math.sqrt(x * x + z * z) / Math.max(1.0, inner);
-        return k >= 1 ? 0 : LAND_LIFT * (1 - k * k);
+        if (t <= 0) return 0;
+        return -200.0 * t * t * (3 - 2 * t);
     }
-
-    /** About 10 blocks of extra height in the very middle of the island. */
-    private static final double LAND_LIFT = 16.0;
 
     /** True when this whole chunk is well out to sea: nothing but ocean is made there. */
     public static boolean deadChunk(ChunkPos pos) {
