@@ -37,6 +37,8 @@ public final class Body {
     /** Its head: everything that points its eyes goes through here. */
     final Gaze gaze;
     final java.util.Random random = new java.util.Random();
+    /** Crafting tables it has put down (it takes them along when it moves on, as players do). */
+    final java.util.Set<BlockPos> myTables = new java.util.HashSet<>();
     /** Blocks it has broken (the watchdog reads this as "getting something done"). */
     int dug;
     /** Its brain (Phase 2): runs whenever no order from /hg bot is running. */
@@ -65,6 +67,11 @@ public final class Body {
     }
 
     // ------------------------------------------------------------------ running orders
+
+    /** Is it following an order from /hg bot (its brain waits meanwhile)? */
+    boolean underOrders() {
+        return action != null;
+    }
 
     public void tick() {
         if (action == null) {
@@ -647,6 +654,7 @@ public final class Body {
         BlockPos at = placeBeside(item, block);
         if (at != null) {
             relocations = 0;
+            if (block == net.minecraft.block.Blocks.CRAFTING_TABLE) myTables.add(at.toImmutable());
             return new Placed(at, false);
         }
         if (!Crafting.has(bot, item) || ++relocations > 3) {

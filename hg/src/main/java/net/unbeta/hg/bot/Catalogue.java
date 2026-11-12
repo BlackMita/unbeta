@@ -29,7 +29,7 @@ final class Catalogue {
             new Combat.OthersFighting(), new Combat.Pile(), new Opportunity.Orbs(Reaction.Tier.COMBAT),
             // Need: the gear ladder, and Unbeta know-how
             new Needs.Full(), new Know.Boat(), new Keeping.Regear(), new Needs.Forage(), new Needs.Planks(),
-            new Needs.Table(), new Needs.WoodTools(), new Needs.Furnace(), new Needs.IronTools(), new Needs.Armour(),
+            new Needs.Table(), new Needs.TakeTable(), new Needs.WoodTools(), new Needs.Furnace(), new Needs.IronTools(), new Needs.Armour(),
             new Needs.Smelt(), new Know.LavaFurnace(), new Know.LavaFire(), new Know.Juggle(), new Needs.Torches(),
             new Needs.LightTorches(), new Know.Charcoal(), new Know.Flint(), new Know.Lantern(), new Know.MakeBoat(),
             new Needs.WornTool(), new Needs.Water(), new Needs.Bed(), new Needs.NightHide(), new Keeping.Stash(),

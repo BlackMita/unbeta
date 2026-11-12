@@ -197,6 +197,74 @@ final class Needs {
         }
     }
 
+    // ------------------------------------------------------------------ N3b take the table along
+
+    /**
+     * Done making things for now and about to move on: it breaks its crafting table and takes it
+     * along, as players do, rather than leaving it and making a new one at the next stop. (When
+     * it next needs a table it puts the one it carries down.)
+     */
+    static final class TakeTable extends Reaction {
+        TakeTable() { super("N3b", "Take my table along", NEED, 12, false); }
+        public Reaction fresh() { return new TakeTable(); }
+
+        private BlockPos table;
+        private boolean broken;
+        private int waited;
+
+        public boolean trigger(Brain br) {
+            Body b = br.body;
+            if (b.myTables.isEmpty() || b.has(s -> s.isOf(Items.CRAFTING_TABLE))) return false;
+            if (br.now() - br.lastCraftAt < 300 || br.nearestFoe(16) != null) return false;
+            BlockPos at = br.bot().getBlockPos();
+            table = null;
+            double best = 49;
+            for (java.util.Iterator<BlockPos> it = b.myTables.iterator(); it.hasNext(); ) {
+                BlockPos p = it.next();
+                double d = p.getSquaredDistance(at);
+                if (d > 64 * 64 || !br.world().getBlockState(p).isOf(Blocks.CRAFTING_TABLE)) {
+                    it.remove();
+                    continue;
+                }
+                if (d < best && Math.abs(p.getY() - at.getY()) <= 3) {
+                    best = d;
+                    table = p;
+                }
+            }
+            if (table == null) return false;
+            because = "done crafting here: taking my table along";
+            return true;
+        }
+
+        public Outcome tick(Brain br) {
+            Body b = br.body;
+            if (b.has(s -> s.isOf(Items.CRAFTING_TABLE))) return DONE;
+            if (!broken) {
+                if (!br.world().getBlockState(table).isOf(Blocks.CRAFTING_TABLE)) {
+                    b.myTables.remove(table);
+                    return DONE;                      // someone else took it
+                }
+                if (br.bot().getEyePos().distanceTo(Vec3d.ofCenter(table)) > 4.0) {
+                    return b.walkTo(table, 2.5) == Body.Walk.FAILED ? FAILED : RUNNING;
+                }
+                b.stopMoving();
+                b.lookAt(Vec3d.ofCenter(table));
+                Body.Dig d = b.dig(table);
+                if (d == Body.Dig.FAILED) return FAILED;
+                if (d == Body.Dig.DONE) {
+                    broken = true;
+                    b.myTables.remove(table);
+                    br.notebook.forget(Notebook.Kind.TABLE, table);
+                }
+                return RUNNING;
+            }
+            // Pick it up where it fell.
+            if (++waited > 60) return DONE;
+            b.walkTo(table, 0.4);
+            return RUNNING;
+        }
+    }
+
     // ------------------------------------------------------------------ N4 wood tools / N6 iron tools
 
     /** Crafts a list of tools in turn, skipping any it has or can't make. */

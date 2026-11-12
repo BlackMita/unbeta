@@ -20,7 +20,9 @@ final class Watch {
         STUCK("stuck", "kept trying to walk but went nowhere"),
         PACING("pacing", "walked back and forth over the same few blocks"),
         FROZEN("frozen", "stood doing nothing at all"),
-        NO_WAY("no way there", "gave up on a walk it couldn't finish");
+        NO_WAY("no way there", "gave up on a walk it couldn't finish"),
+        REPEAT("repeating", "finished the same job again and again (a fourth crafting table in four minutes, say)"),
+        UNRESPONSIVE("unresponsive", "its brain stopped running for half a minute or more");
 
         final String word;
         final String meaning;
@@ -54,8 +56,8 @@ final class Watch {
     private record Begin(long at, double x, double y, double z, int sig) {}
     private final Map<String, Deque<Begin>> begins = new HashMap<>();
 
-    // Tallies for the report
-    int samples, stillSamples;
+    // Tallies for the report (still: of the samples where it had no good reason to be still)
+    int samples, stillSamples, freeSamples;
     double walked;
     private double lastX, lastY, lastZ;
     private boolean hasLast;
@@ -71,7 +73,10 @@ final class Watch {
         samples++;
         if (hasLast) {
             double step = Math.sqrt((x - lastX) * (x - lastX) + (z - lastZ) * (z - lastZ));
-            if (step < 0.3 && Math.abs(y - lastY) < 0.3) stillSamples++;
+            if (!excused) {
+                freeSamples++;
+                if (step < 0.3 && Math.abs(y - lastY) < 0.3) stillSamples++;
+            }
             if (step < 12) walked += step;       // a bigger jump is a respawn or a teleport
             else forget();
         }
@@ -150,9 +155,9 @@ final class Watch {
         frozenSet = false;
     }
 
-    /** The share of its time it has spent not moving at all, 0 to 1. */
+    /** The share of its free time (not asleep, hiding or out) it has spent not moving at all, 0 to 1. */
     double stillShare() {
-        return samples == 0 ? 0 : stillSamples / (double) samples;
+        return freeSamples == 0 ? 0 : stillSamples / (double) freeSamples;
     }
 
     private static double dist(double x, double y, double z, double a, double b, double c) {

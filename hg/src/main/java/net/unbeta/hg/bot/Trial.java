@@ -61,6 +61,44 @@ public final class Trial {
             endsAt = -1;
             tellEveryone(server);
         }
+        if (ticks % 20 == 0) checkResponsive(server, phase);
+    }
+
+    private static final Map<java.util.UUID, int[]> ages = new java.util.HashMap<>();          // last age seen, ticks unchanged
+    private static final Map<java.util.UUID, Long> warned = new java.util.HashMap<>();
+
+    /**
+     * Once a second: has any bot that's in the round stopped thinking for 30 s or more? Says why
+     * (the game isn't running it, its brain is off, it's under orders, it's asleep).
+     */
+    private static void checkResponsive(MinecraftServer server, Round.Phase phase) {
+        boolean playing = phase == Round.Phase.GRACE || phase == Round.Phase.GAME;
+        for (Body b : Bots.all(server)) {
+            java.util.UUID id = b.bot.getUuid();
+            int[] a = ages.computeIfAbsent(id, k -> new int[]{b.bot.age, 0});
+            if (a[0] != b.bot.age) {
+                a[0] = b.bot.age;
+                a[1] = 0;
+            } else {
+                a[1] += 20;
+            }
+            if (!playing || Round.isOut(b.bot) || b.bot.isDead()) continue;
+            long now = b.brain.now();
+            String why = null;
+            if (a[1] >= 600) why = "the game hasn't moved it for " + a[1] / 20 + " s (it isn't being ticked)";
+            else if (now - b.brain.lastThought >= 600) {
+                if (!b.brain.enabled() || !Bots.brainsOn) why = "its brain is switched off";
+                else if (b.underOrders()) why = "it's following an order from /hg bot";
+                else if (b.bot.isSleeping()) why = "it's asleep in a bed";
+                else why = "its brain hasn't run for " + (now - b.brain.lastThought) / 20 + " s";
+            }
+            if (why == null) continue;
+            Long last = warned.get(id);
+            if (last != null && ticks - last < 1200) continue;
+            warned.put(id, ticks);
+            note(b.brain, Watch.Tell.UNRESPONSIVE, why + " (at " + b.bot.getBlockPos().toShortString() + ", in "
+                    + b.bot.getWorld().getRegistryKey().getValue() + ")");
+        }
     }
 
     private static void tellEveryone(MinecraftServer server) {
@@ -85,7 +123,7 @@ public final class Trial {
         lines.clear();
         errors.clear();
         dropped = 0;
-        for (Body b : Bots.all(server)) b.brain.watch.samples = b.brain.watch.stillSamples = 0;
+        for (Body b : Bots.all(server)) b.brain.watch.samples = b.brain.watch.stillSamples = b.brain.watch.freeSamples = 0;
         for (Body b : Bots.all(server)) b.brain.watch.walked = 0;
         ticks = server.getTicks();
         startedAt = ticks;
@@ -190,7 +228,8 @@ public final class Trial {
             int[] t = tells.get(name);
             out.add("  " + name + " (" + b.hands.title() + "; " + b.traits.title() + "): " + l[0] + " deaths, " + l[1] + " kills, "
                     + l[2] + " Reactions, walked " + Math.round(b.brain.watch.walked) + " blocks, standing still "
-                    + Math.round(b.brain.watch.stillShare() * 100) + "% of the time; "
+                    + Math.round(b.brain.watch.stillShare() * 100) + "% of its free time ("
+                    + Math.round(b.brain.watch.freeSamples * 100.0 / Math.max(1, b.brain.watch.samples)) + "% of the time was free); "
                     + (t == null ? "nothing caught" : counts(t)));
             out.add("      now: " + b.brain.doing());
         }

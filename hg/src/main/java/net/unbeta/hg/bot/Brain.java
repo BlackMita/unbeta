@@ -90,6 +90,16 @@ public final class Brain {
     /** How many times running each Reaction has given up (each time it rests longer before trying again). */
     private final Map<String, Integer> failStreak = new HashMap<>();
     private final Map<String, Integer> loops = new HashMap<>();
+    /** The last tick its brain ran right through (the trial watches for brains that stop). */
+    long lastThought;
+    private int sleptFor;
+    /** The last tick it finished making something (taking its table along waits a while after). */
+    long lastCraftAt;
+    /** When each job last finished well, the last few times (to catch it doing the same job over and over). */
+    private final Map<String, java.util.ArrayDeque<Long>> doneAt = new HashMap<>();
+    /** Jobs that are meant to come round again and again: chopping, planks, foraging, picking things up. */
+    private static final java.util.Set<String> REPEATABLE = java.util.Set.of("N1", "N2", "N7", "O1");
+
     /** Its body found no way to anywhere from where it stands (set mid-walk, dealt with at the next tick). */
     boolean boxedIn;
     private long breakOutRest;
@@ -140,7 +150,16 @@ public final class Brain {
             body.stopMoving();
             return;
         }
-        if (bot.isSleeping()) return;
+        if (bot.isSleeping()) {
+            // In a bed: it gets up when day comes, or after half a minute (a night only passes if everyone sleeps).
+            if (world().isDay() || bot.getSleepTimer() >= 100 && ++sleptFor > 600) {
+                bot.wakeUp(false, true);
+                sleptFor = 0;
+            }
+            return;
+        }
+        sleptFor = 0;
+        lastThought = now;
         if (bot.isOnGround() && !bot.isInLava() && !bot.isTouchingWater()) lastSafe = bot.getBlockPos();
         if (bot.isOnGround()) fallRolled = false;
         swimTicks = bot.isTouchingWater() && !bot.isOnGround() && !bot.hasVehicle() ? swimTicks + 1 : 0;
@@ -493,6 +512,20 @@ public final class Brain {
             if (how == Reaction.Outcome.DONE && why == null) failStreak.remove(r.id);
             if (r.tier == Reaction.Tier.SURVIVAL) cd = Math.min(cd, 20);
         }
+        if (r.tags.contains(Reaction.Tag.CRAFTING)) lastCraftAt = now;
+        // The same job finished a fourth time in four minutes: it's going round in circles. Rest it 3 min.
+        if (how == Reaction.Outcome.DONE && why == null && !REPEATABLE.contains(r.id)
+                && (r.tier == Reaction.Tier.NEED || r.tier == Reaction.Tier.OPPORTUNITY)) {
+            java.util.ArrayDeque<Long> times = doneAt.computeIfAbsent(r.id, k -> new java.util.ArrayDeque<>());
+            times.addLast(now);
+            while (!times.isEmpty() && now - times.peekFirst() > 4800) times.pollFirst();
+            if (times.size() >= 4) {
+                times.clear();
+                cd = Math.max(cd, 3600);
+                Trial.note(this, Watch.Tell.REPEAT, r.label() + " done 4 times in 4 minutes; resting it 3 min");
+                record("REPEATING: resting " + r.label() + " for 3 min");
+            }
+        }
         Long had = cooldown.get(r.id);
         if (had == null || had < now + cd) cooldown.put(r.id, now + cd);
         // A breath before the next job (not when something cut this one short).
@@ -728,7 +761,7 @@ public final class Brain {
     public List<String> why() {
         List<String> out = new ArrayList<>();
         long now = now();
-        out.add(body.hands.title() + String.format(" (aim wanders %.1f deg, reacts x%.2f, footwork %.0f%%%s). Standing still %d%% of the time.",
+        out.add(body.hands.title() + String.format(" (aim wanders %.1f deg, reacts x%.2f, footwork %.0f%%%s). Standing still %d%% of its free time.",
                 body.hands.aimError, body.hands.react, body.hands.footwork * 100, body.hands.hopper ? ", a hopper" : "",
                 Math.round(watch.stillShare() * 100)));
         out.add("Now: " + doing() + (current != null && !current.because.isEmpty() ? " - because " + current.because : ""));
