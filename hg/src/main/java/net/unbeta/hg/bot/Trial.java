@@ -82,10 +82,12 @@ public final class Trial {
             } else {
                 a[1] += 20;
             }
-            if (!playing || Round.isOut(b.bot) || b.bot.isDead()) continue;
+            if (!playing || Round.isOut(b.bot)) continue;
             long now = b.brain.now();
             String why = null;
-            if (a[1] >= 600) why = "the game hasn't moved it for " + a[1] / 20 + " s (it isn't being ticked)";
+            if (b.bot.isRemoved()) why = "it has been taken out of the world, but is still on the list of bots";
+            else if (b.bot.isDead() && now - b.brain.lastThought >= 600) why = "it died and never got back up";
+            else if (a[1] >= 600) why = "the game hasn't moved it for " + a[1] / 20 + " s (it isn't being ticked)";
             else if (now - b.brain.lastThought >= 600) {
                 if (!b.brain.enabled() || !Bots.brainsOn) why = "its brain is switched off";
                 else if (b.underOrders()) why = "it's following an order from /hg bot";
