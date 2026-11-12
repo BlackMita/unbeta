@@ -32,6 +32,13 @@ public final class Body {
 
     public final DummyPlayer bot;
     public final Traits traits;
+    /** How good it is with its hands, and its habits. */
+    public final Hands hands;
+    /** Its head: everything that points its eyes goes through here. */
+    final Gaze gaze;
+    final java.util.Random random = new java.util.Random();
+    /** Blocks it has broken (the watchdog reads this as "getting something done"). */
+    int dug;
     /** Its brain (Phase 2): runs whenever no order from /hg bot is running. */
     public final Brain brain;
     private Action action;
@@ -40,9 +47,11 @@ public final class Body {
     /** The last thing it would have said while quiet (shown by /hg bot why). */
     String lastSaid = "";
 
-    public Body(DummyPlayer bot, Traits traits) {
+    public Body(DummyPlayer bot, Traits traits, Hands hands) {
         this.bot = bot;
         this.traits = traits;
+        this.hands = hands;
+        this.gaze = new Gaze(this);
         this.brain = new Brain(this);
     }
 
@@ -59,7 +68,14 @@ public final class Body {
 
     public void tick() {
         if (action == null) {
-            brain.tick();
+            try {
+                brain.tick();
+            } catch (Exception e) {
+                // Nothing a bot thinks may ever take the server down with it.
+                Trial.error(brain, "thinking", e);
+                stopMoving();
+                stopBreaking();
+            }
             return;
         }
         boolean done;
@@ -115,22 +131,24 @@ public final class Body {
 
     // ------------------------------------------------------------------ looking
 
-    /** Turns its head toward a point, no faster than the tuning file allows. True once facing it. */
+    /** Turns its head toward a point as a person does (quick, then easing in). True once facing it. */
     public boolean lookAt(Vec3d point) {
-        Vec3d eye = bot.getEyePos();
-        double dx = point.x - eye.x, dy = point.y - eye.y, dz = point.z - eye.z;
-        double flat = Math.sqrt(dx * dx + dz * dz);
-        float yaw = (float) (MathHelper.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
-        float pitch = (float) -(MathHelper.atan2(dy, flat) * (180.0 / Math.PI));
-        float step = BotConfig.get().turn();
-        float dYaw = MathHelper.clamp(MathHelper.wrapDegrees(yaw - bot.getYaw()), -step, step);
-        float dPitch = MathHelper.clamp(pitch - bot.getPitch(), -step, step);
-        float newYaw = bot.getYaw() + dYaw;
-        bot.setYaw(newYaw);
-        bot.setHeadYaw(newYaw);
-        bot.setBodyYaw(newYaw);
-        bot.setPitch(MathHelper.clamp(bot.getPitch() + dPitch, -90F, 90F));
-        return Math.abs(MathHelper.wrapDegrees(yaw - newYaw)) < 10F && Math.abs(pitch - bot.getPitch()) < 10F;
+        return gaze.look(point);
+    }
+
+    /** Stops to take a place in: a handful of glances all around. Call every tick while it should. */
+    public void lookAround() {
+        gaze.lookAround();
+    }
+
+    /** Looks straight down (to build under itself). */
+    public void lookDown() {
+        gaze.turnTo(bot.getYaw(), 90F, 0, 1.0, false);
+    }
+
+    /** Aims at something alive: its aim wanders by its Hands. True once facing it. */
+    public boolean aimAt(net.minecraft.entity.Entity target) {
+        return gaze.aim(target);
     }
 
     // ------------------------------------------------------------------ walking
@@ -145,10 +163,25 @@ public final class Body {
     private Vec3d lastProgressAt;
     private int noProgress;
     private int replans;
+    /** The furthest node of this path it has reached, and ticks since it last reached a new one. */
+    private int lastNode;
+    private int nodeStall;
+    /** Ticks spent on this walk, and how many it may take before the bot calls it off. */
+    private int walkTicks;
+    private int walkBudget;
+    private int lastStep;
+    /** A little hop and sidestep to get off whatever it's caught on. */
+    private int wiggle;
+    private float wiggleSide;
+    /** Places it couldn't get to: until when it won't try again, and where it was standing when it gave up. */
+    private record NoWay(long until, Vec3d from) {}
+    private final java.util.Map<BlockPos, NoWay> noWay = new java.util.HashMap<>();
 
     /**
      * Walks toward a spot until within the given distance of its centre. Call every tick; it
-     * answers WALKING, ARRIVED or FAILED (no way there, or stuck after 5 tries).
+     * answers WALKING, ARRIVED or FAILED. It fails when there's no way there, when it stays stuck
+     * (after a hop and sidestep, then two fresh routes), or when the walk takes far longer than
+     * the distance should. A place it gave up on, it won't try again from the same spot for a while.
      */
     public Walk walkTo(BlockPos target, double withinBlocks) {
         Vec3d centre = Vec3d.ofBottomCenter(target);
@@ -156,28 +189,117 @@ public final class Body {
             stopMoving();
             return Walk.ARRIVED;
         }
+        long now = world().getTime();
         if (goal == null || !goal.equals(target)) {
+            if (knownNoWay(target, now)) return fail();
             goal = target.toImmutable();
             within = withinBlocks;
             replans = 0;
             noProgress = 0;
+            nodeStall = 0;
+            lastNode = 0;
+            wiggle = 0;
+            walkTicks = 0;
+            lastStep = 0;
+            walkBudget = 100 + (int) (bot.getPos().distanceTo(centre) * 16);
             lastProgressAt = bot.getPos();
-            if (!plan()) return fail();
+            if (!plan()) {
+                noWay.put(goal, new NoWay(now + 200, bot.getPos()));
+                deadEnd(now);
+                return fail();
+            }
         }
+        if (++walkTicks > walkBudget) return giveUp(now, "taking far too long");
         if (path == null || node >= path.getLength()) {
+            double hx = centre.x - bot.getX(), hz = centre.z - bot.getZ();
+            if (path != null && hx * hx + hz * hz < 2.6 && Math.abs(centre.y - bot.getY()) < 1.3) {
+                // Its path has brought it to the very block: the last step it just takes (for a second or so).
+                if (++lastStep > 30) return giveUp(now, "no way on");
+                move(hx, hz, 0.6F);
+                bot.setJumping(bot.horizontalCollision);
+                bot.setSprinting(false);
+                return Walk.WALKING;
+            }
             // End of a leg (or a partial path): plan the next one from here.
-            if (!plan()) return fail();
+            if (!plan() || goesNowhere()) return giveUp(now, "no way on");
+            lastNode = 0;
         }
-        // Stuck?
+        // Stuck? First a hop and a sidestep; then a fresh route; then it gives up.
+        if (node > lastNode) {
+            lastNode = node;
+            nodeStall = 0;
+        } else if ((++nodeStall == 14 || nodeStall == 30) && !bot.isTouchingWater()) {
+            wiggle = 4 + random.nextInt(3);
+            wiggleSide = random.nextBoolean() ? 1F : -1F;
+        }
         if (bot.getPos().squaredDistanceTo(lastProgressAt) > 1.0) {
             lastProgressAt = bot.getPos();
             noProgress = 0;
-        } else if (++noProgress > BotConfig.get().stuckTicks) {
+        } else if (++noProgress > Math.min(45, BotConfig.get().stuckTicks)) {
             noProgress = 0;
-            if (++replans > 5 || !plan()) return fail();
+            nodeStall = 0;
+            if (++replans > 2 || !plan() || goesNowhere()) return giveUp(now, "stuck");
+            lastNode = 0;
         }
         follow(centre);
         return Walk.WALKING;
+    }
+
+    /** The route it just worked out ends right where it stands: this is as near as it can get. */
+    private boolean goesNowhere() {
+        if (path == null || goal == null) return false;
+        BlockPos end = path.getNodePos(path.getLength() - 1);
+        return end.getSquaredDistance(bot.getBlockPos()) <= 2.0 && Math.sqrt(end.getSquaredDistance(goal)) > within + 1.5;
+    }
+
+    /** Calls a walk off, and remembers not to try that place again from here for 40 s. */
+    private Walk giveUp(long now, String why) {
+        if (goal != null) {
+            noWay.put(goal, new NoWay(now + 800, bot.getPos()));
+            if (noWay.size() > 32) noWay.values().removeIf(n -> n.until() < now);
+            if (noWay.size() > 32) noWay.clear();
+            if (why.startsWith("no way")) deadEnd(now);
+            else brain.walkGivenUp(goal, why);
+        }
+        return fail();
+    }
+
+    private BlockPos deadEndAt;
+    private int deadEnds;
+    private long deadEndSince;
+
+    /**
+     * It tried to walk somewhere and there was no way even to start. Five of those from the very
+     * same block inside 20 s, each to a different place, and it's boxed in: its brain is told.
+     */
+    private void deadEnd(long now) {
+        BlockPos at = bot.getBlockPos();
+        if (!at.equals(deadEndAt) || now - deadEndSince > 400) {
+            deadEndAt = at;
+            deadEndSince = now;
+            deadEnds = 0;
+        }
+        if (++deadEnds >= 5) {
+            deadEnds = 0;
+            deadEndAt = null;
+            brain.boxedIn = true;
+        }
+    }
+
+    /** Did it give up on this place (or one right by it) a moment ago, from about where it stands now? */
+    private boolean knownNoWay(BlockPos target, long now) {
+        if (noWay.isEmpty()) return false;
+        for (java.util.Map.Entry<BlockPos, NoWay> e : noWay.entrySet()) {
+            NoWay n = e.getValue();
+            if (n.until() < now) continue;
+            if (e.getKey().getSquaredDistance(target) <= 2.0 && n.from().squaredDistanceTo(bot.getPos()) <= 36.0) return true;
+        }
+        return false;
+    }
+
+    /** The watchdog found it going nowhere: whatever it was walking to is struck off for a while. */
+    void strikeOffGoal() {
+        if (goal != null) noWay.put(goal, new NoWay(world().getTime() + 800, bot.getPos()));
     }
 
     private Walk fail() {
@@ -215,30 +337,130 @@ public final class Body {
         return true;
     }
 
+    private int hopWait;
+    private int hopUntil, hopAgain;
+
     private void follow(Vec3d finalCentre) {
         // Skip the nodes we're already on or past.
         while (node < path.getLength()) {
             BlockPos n = path.getNodePos(node);
             double ndx = n.getX() + 0.5 - bot.getX(), ndz = n.getZ() + 0.5 - bot.getZ();
-            if (ndx * ndx + ndz * ndz < 0.35 && Math.abs(bot.getY() - n.getY()) < 1.2) node++;
-            else break;
+            boolean level = Math.abs(bot.getY() - n.getY()) < 1.2;
+            if (ndx * ndx + ndz * ndz < 0.35 && level) {
+                node++;
+                continue;
+            }
+            // Already past it on the way to the next one (it cut the corner): no turning back for it.
+            if (level && node + 1 < path.getLength()) {
+                BlockPos m = path.getNodePos(node + 1);
+                double sx = m.getX() - n.getX(), sz = m.getZ() - n.getZ();
+                double slen = Math.sqrt(sx * sx + sz * sz);
+                if (slen > 0.5) {
+                    double along = -(ndx * sx + ndz * sz) / slen;
+                    double side = Math.abs(ndx * sz - ndz * sx) / slen;
+                    if (along > 0.15 && side < 0.45) {
+                        node++;
+                        continue;
+                    }
+                }
+            }
+            break;
         }
         if (node >= path.getLength()) {
             halt();
             return;
         }
         BlockPos n = path.getNodePos(node);
-        Vec3d aim = new Vec3d(n.getX() + 0.5, n.getY() + bot.getStandingEyeHeight(), n.getZ() + 0.5);
-        lookAt(aim);
-        double ndx = aim.x - bot.getX(), ndz = aim.z - bot.getZ();
+        boolean wet = bot.isTouchingWater() || bot.isInLava();
+        // Its eyes: a couple of steps further along than its feet, as a person looks where they're going.
+        BlockPos f = path.getNodePos(Math.min(path.getLength() - 1, node + 2));
+        boolean flat = f.getY() == n.getY() && n.getY() == bot.getBlockY();
+        Vec3d ahead = new Vec3d(f.getX() + 0.5, f.getY() + bot.getStandingEyeHeight() - (flat ? 0.25 : 0.0), f.getZ() + 0.5);
+        if (ahead.squaredDistanceTo(bot.getEyePos()) < 1.0) {
+            ahead = new Vec3d(n.getX() + 0.5, n.getY() + bot.getStandingEyeHeight(), n.getZ() + 0.5);
+        }
+        gaze.walking(ahead, flat && !wet && bot.isOnGround() && wiggle == 0 && !brain.eyesBusy());
+        // Its legs: toward the next step of the path, whichever way its head is turned.
+        double ndx = n.getX() + 0.5 - bot.getX(), ndz = n.getZ() + 0.5 - bot.getZ();
         float want = (float) (MathHelper.atan2(ndz, ndx) * (180.0 / Math.PI)) - 90.0F;
         float off = Math.abs(MathHelper.wrapDegrees(want - bot.getYaw()));
-        bot.forwardSpeed = off > 60F ? 0.2F : 1.0F;
-        bot.sidewaysSpeed = 0F;
-        boolean wet = bot.isTouchingWater() || bot.isInLava();
-        bot.setJumping(n.getY() > bot.getBlockY() || bot.horizontalCollision || wet);
+        float forward = move(ndx, ndz, off > 120F ? 0.5F : 1.0F);
+        if (wiggle > 0) {
+            wiggle--;
+            bot.sidewaysSpeed += wiggleSide * 0.5F;
+        }
+        boolean jump = n.getY() > bot.getBlockY() || bot.horizontalCollision || wet || wiggle > 0;
         double left = bot.getPos().distanceTo(finalCentre);
-        bot.setSprinting(!noSprint && left > BotConfig.get().sprintOver && !wet && bot.getHungerManager().getFoodLevel() > 6 && off < 30F);
+        int food = bot.getHungerManager().getFoodLevel();
+        boolean sprint = !noSprint && left > BotConfig.get().sprintOver && !wet && food > 6
+                && forward > 0.5F && off < (bot.isSprinting() ? 75F : 30F);
+        // Hoppers sprint-jump in bursts over open, level ground (it's quicker, and hungrier).
+        if (sprint && hands.hopper && flat && bot.isOnGround() && left > 10 && food > 14 && straightAhead(4)) {
+            if (bot.age > hopAgain) {
+                hopUntil = bot.age + 50 + random.nextInt(80);
+                hopAgain = hopUntil + 100 + random.nextInt(240);
+            }
+            if (bot.age < hopUntil && --hopWait <= 0) {
+                jump = true;
+                hopWait = 2 + random.nextInt(6);
+            }
+        }
+        bot.setJumping(jump);
+        bot.setSprinting(sprint);
+    }
+
+    /** Are the next few steps of its path level and in one straight line? */
+    private boolean straightAhead(int steps) {
+        if (path == null || node + steps >= path.getLength()) return false;
+        BlockPos a = path.getNodePos(node), b = path.getNodePos(node + 1);
+        int dx = b.getX() - a.getX(), dz = b.getZ() - a.getZ();
+        for (int i = 1; i <= steps; i++) {
+            BlockPos p = path.getNodePos(node + i - 1), q = path.getNodePos(node + i);
+            if (q.getY() != a.getY() || q.getX() - p.getX() != dx || q.getZ() - p.getZ() != dz) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Points its legs along a direction on the ground, whichever way its head is turned: forward
+     * and sideways keys together, as a player strafes. Returns how much of it is forward (-1 to 1).
+     */
+    private float move(double dx, double dz, float pace) {
+        double len = Math.sqrt(dx * dx + dz * dz);
+        if (len < 1.0E-4) {
+            bot.forwardSpeed = 0F;
+            bot.sidewaysSpeed = 0F;
+            return 0F;
+        }
+        float rad = bot.getYaw() * 0.017453292F;
+        double fx = -MathHelper.sin(rad), fz = MathHelper.cos(rad);
+        float forward = (float) ((dx * fx + dz * fz) / len);
+        float sideways = (float) ((dx * fz - dz * fx) / len);
+        bot.forwardSpeed = forward * pace;
+        bot.sidewaysSpeed = sideways * pace;
+        return forward;
+    }
+
+    /**
+     * Heads straight for a point without a path, whichever way its head is turned: for the last
+     * few blocks to something it can see, as a player just runs at it.
+     */
+    public void steer(Vec3d point, boolean sprint) {
+        path = null;
+        goal = null;
+        float forward = move(point.x - bot.getX(), point.z - bot.getZ(), 1.0F);
+        bot.setJumping(bot.horizontalCollision || bot.isTouchingWater());
+        bot.setSprinting(sprint && forward > 0.5F && bot.getHungerManager().getFoodLevel() > 6);
+    }
+
+    /** Stops its legs for a moment, keeping the walk it is on. */
+    public void pause() {
+        halt();
+    }
+
+    /** Are its legs trying to take it somewhere? (The watchdog asks.) */
+    boolean wantsToMove() {
+        return goal != null || Math.abs(bot.forwardSpeed) > 0.3F;
     }
 
     public void stopMoving() {
@@ -338,6 +560,7 @@ public final class Body {
         }
         if (breakProgress >= 1F) {
             boolean ok = bot.interactionManager.tryBreakBlock(pos);
+            if (ok) dug++;
             stopBreaking();
             return ok ? Dig.DONE : Dig.FAILED;
         }
@@ -567,13 +790,80 @@ public final class Body {
         bot.setJumping(bot.horizontalCollision || bot.isTouchingWater());
     }
 
-    /** Heads away from a point: turns its back on it and runs. */
+    // Footwork in a fight (Fight.melee): which way it's circling and until when; ticks of letting go of forward.
+    int strafeUntil;
+    float strafeSide = 1F;
+    int letGo;
+    boolean sprintHit;
+
+    private float fleeYaw;
+    private int fleeAge = -100;
+
+    /**
+     * Heads away from a point: turns its back on it and runs, picking the clearest way that is
+     * still away (not straight into a wall, a pit or lava), and sticking with it for a moment.
+     */
     public void flee(Vec3d from) {
         Vec3d away = bot.getPos().subtract(from);
         if (away.horizontalLengthSquared() < 0.01) away = bot.getRotationVector().multiply(-1);
-        Vec3d aim = bot.getEyePos().add(new Vec3d(away.x, 0, away.z).normalize().multiply(8));
-        lookAt(aim);
-        run();
+        float straight = (float) (MathHelper.atan2(away.z, away.x) * (180.0 / Math.PI)) - 90.0F;
+        int since = bot.age - fleeAge;
+        if (since > 8 || since < 0 || (bot.horizontalCollision && since > 3)
+                || Math.abs(MathHelper.wrapDegrees(straight - fleeYaw)) > 135F) {
+            fleeYaw = openWay(straight);
+            fleeAge = bot.age;
+        }
+        Vec3d dir = Vec3d.fromPolar(0F, fleeYaw);
+        lookAt(bot.getEyePos().add(dir.multiply(8)));
+        // Its legs are off at once, even while its head is still coming round.
+        steer(bot.getPos().add(dir.multiply(8)), true);
+    }
+
+    /** The clearest heading near the one it wants: that way if it can run there, else the nearest way round. */
+    private float openWay(float want) {
+        float[] turns = {0F, 30F, -30F, 60F, -60F, 90F, -90F, 130F, -130F};
+        float best = want;
+        double bestScore = -1.0E9;
+        for (float turn : turns) {
+            double score = Math.cos(Math.toRadians(turn)) * 2.0 + clearAhead(want + turn) * 0.75;
+            if (score > bestScore) {
+                bestScore = score;
+                best = want + turn;
+            }
+        }
+        return best;
+    }
+
+    /** How many of the next 4 blocks that way it could run over (up or down a step), 0 to 4. Lava or a long drop ends the count. */
+    private int clearAhead(float yaw) {
+        ServerWorld world = world();
+        Vec3d dir = Vec3d.fromPolar(0F, yaw);
+        int y = MathHelper.floor(bot.getY() + 0.2);
+        int ok = 0;
+        for (int k = 1; k <= 4; k++) {
+            int x = MathHelper.floor(bot.getX() + dir.x * k), z = MathHelper.floor(bot.getZ() + dir.z * k);
+            if (!passable(world, new BlockPos(x, y, z)) || !passable(world, new BlockPos(x, y + 1, z))) {
+                // A step up?
+                if (!passable(world, new BlockPos(x, y + 1, z)) || !passable(world, new BlockPos(x, y + 2, z))) break;
+                y++;
+            } else {
+                int drop = 0;
+                while (drop < 4 && passable(world, new BlockPos(x, y - 1, z))
+                        && world.getFluidState(new BlockPos(x, y - 1, z)).isEmpty()) {
+                    y--;
+                    drop++;
+                }
+                if (drop >= 4) break;
+            }
+            if (world.getFluidState(new BlockPos(x, y, z)).isIn(net.minecraft.registry.tag.FluidTags.LAVA)
+                    || world.getFluidState(new BlockPos(x, y - 1, z)).isIn(net.minecraft.registry.tag.FluidTags.LAVA)) break;
+            ok++;
+        }
+        return ok;
+    }
+
+    private static boolean passable(ServerWorld world, BlockPos pos) {
+        return world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
     }
 
     /** Swings at something: walks into reach, faces it, hits when its swing has charged. True once dead or gone. */

@@ -22,7 +22,8 @@ import java.util.UUID;
 /**
  * Adds bots: dummies with a body and three traits. Each gets a short name (Minecraft caps names
  * at 16 letters) and its traits after it on its nametag and in the tab list ("Maple the Middling
- * Survivor Hog"), via a one-player team. No two bots in a round share all three traits.
+ * Survivor Hog"), via a one-player team. No two bots in a round share all three traits. Each also
+ * gets its Hands: how good it is, from Rookie to Ace (rolled, or named: /hg bot add 2 ace).
  */
 public final class Bots {
 
@@ -56,12 +57,13 @@ public final class Bots {
             GameProfile profile = new GameProfile(
                     UUID.nameUUIDFromBytes(("unbeta-bot:" + name).getBytes(StandardCharsets.UTF_8)), name);
             DummyPlayer bot = new DummyPlayer(server, server.getOverworld(), profile);
-            bot.body = new Body(bot, traits);
+            Hands hands = Hands.roll(traitWords, BotConfig.get().handsShares, RANDOM);
+            bot.body = new Body(bot, traits, hands);
             DummyConnection connection = new DummyConnection();
             server.getPlayerManager().onPlayerConnect(connection, bot);
             new DummyNetHandler(server, connection, bot);
             title(server, name, traits);
-            added.add(name + " " + traits.title());
+            added.add(name + " " + traits.title() + " (" + hands.title() + ")");
         }
         return added;
     }

@@ -94,6 +94,13 @@ public final class BotConfig {
     /** Chance a chat-worthy moment (iron, a kill, a death) gets a line in chat. */
     public double chatChance = 0.25;
 
+    // ---- Hands and the watchdog ----
+    /** How many bots in a hundred get each grade of Hands: Rookie, Casual, Steady, Sharp, Ace. */
+    public int[] handsShares = {15, 25, 30, 20, 10};
+    /** Standing this many ticks doing nothing at all counts as frozen (longer while crafting or smelting). */
+    public int frozenTicks = 300;
+    public int frozenCraftingTicks = 2400;
+
     private static BotConfig current = new BotConfig();
 
     public static BotConfig get() {

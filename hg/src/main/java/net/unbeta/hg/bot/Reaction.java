@@ -34,6 +34,8 @@ public abstract class Reaction {
 
     /** Set by the brain when it starts: the tick it must stop by. */
     long endsAt;
+    /** Set by the brain: the tick it started. */
+    long startedAt;
     /** Why it fired, for /hg bot why. */
     public String because = "";
     /** Set off by something seen (Middling contagion): runs without its trigger. */

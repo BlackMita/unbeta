@@ -85,6 +85,24 @@ public final class Brain {
     boolean fallRolled;
     boolean fallSave;
 
+    /** Its watchdog: catches it looping, stuck, pacing or frozen, so it can snap out of it. */
+    final Watch watch = new Watch();
+    /** How many times running each Reaction has given up (each time it rests longer before trying again). */
+    private final Map<String, Integer> failStreak = new HashMap<>();
+    private final Map<String, Integer> loops = new HashMap<>();
+    /** Its body found no way to anywhere from where it stands (set mid-walk, dealt with at the next tick). */
+    boolean boxedIn;
+    private long breakOutRest;
+    /** A breath between one job and the next: until then it just stands and looks about. */
+    private long settleUntil;
+    /** Its errand broke: until then it does nothing clever. */
+    private long errandRestUntil;
+    /** Half-hearts above or below its Win Method's usual at which this one bot runs. */
+    private final float nerve = (random.nextFloat() - 0.5F) * 3F;
+    // Fidgeting (Errands.fidget)
+    int fidgetNext, fidgetUntil, fidgetKind;
+    float fidgetSide;
+
     private final List<String> history = new ArrayList<>();
     private String lastStatus = "";
 
@@ -139,10 +157,31 @@ public final class Brain {
         }
         boolean thinkTick = (bot.age + bot.getId()) % cfg.thinkTicks == 0;
         if (thinkTick) {
-            senses.look(current != null && current.eyesBusy());
-            notebook.fade(now);
-            for (Entity e : senses.visible()) if (isFoe(e)) lastFoeSeen = now;
-            if (playing) think(now);
+            try {
+                senses.look(current != null && current.eyesBusy());
+                notebook.fade(now);
+                for (Entity e : senses.visible()) if (isFoe(e)) lastFoeSeen = now;
+                if (playing) think(now);
+            } catch (Exception e) {
+                Trial.error(this, "looking and thinking", e);
+            }
+        }
+        if ((bot.age + bot.getId()) % Watch.EVERY == 0) watchdog(now, playing);
+        if (boxedIn) {
+            boxedIn = false;
+            if (playing && now >= breakOutRest && !(current instanceof Errands.BreakOut) && !bot.hasVehicle() && !bot.isTouchingWater()) {
+                breakOutRest = now + 600;
+                Trial.note(this, Watch.Tell.STUCK, "boxed in (no way to anywhere from here) while " + doing() + ": getting itself out");
+                record("WATCHDOG: boxed in - getting out");
+                if (current != null) finish(current, Reaction.Outcome.FAILED, "watchdog: boxed in");
+                queue.clear();
+                watch.forget();
+                settleUntil = 0;
+                Reaction escape = new Errands.BreakOut();
+                escape.because = "no way to anywhere from here";
+                escape.forced = true;
+                begin(escape, now);
+            }
         }
         if (!playing && current != null) finish(current, Reaction.Outcome.DONE, "the round isn't on");
 
@@ -150,26 +189,56 @@ public final class Brain {
         try {
             if (current != null) {
                 Reaction.Outcome o;
-                if (now >= current.endsAt) o = null;
-                else o = current.tick(this);
+                boolean broke = false;
+                if (now >= current.endsAt) {
+                    o = null;
+                } else {
+                    try {
+                        o = current.tick(this);
+                    } catch (Exception e) {
+                        Trial.error(this, "doing " + current.label(), e);
+                        o = Reaction.Outcome.FAILED;
+                        broke = true;
+                    }
+                }
                 if (o == null) finish(current, Reaction.Outcome.DONE, "out of time");
+                else if (broke) finish(current, o, "error (see the server log)");
                 else if (o != Reaction.Outcome.RUNNING) finish(current, o, null);
             }
-            if (current == null && playing) {
+            boolean settling = playing && now < settleUntil;
+            if (current == null && playing && !settling) {
                 while (current == null && !queue.isEmpty()) {
                     Reaction next = queue.poll();
-                    if (next.forced || next.trigger(this)) begin(next, now);
+                    boolean fires;
+                    try {
+                        fires = next.forced || next.trigger(this);
+                    } catch (Exception e) {
+                        Trial.error(this, "checking " + next.label(), e);
+                        fires = false;
+                    }
+                    if (fires) begin(next, now);
                 }
             }
             if (current == null) {
-                Reaction want = Errands.pick(this, phase, out, errand);
-                if (want != errand) {
-                    if (errand != null) errand.stopped(this);
-                    errand = want;
-                }
-                if (errand.tick(this) != Reaction.Outcome.RUNNING) {
-                    errand.stopped(this);
-                    errand = null;
+                if (settling || now < errandRestUntil) {
+                    body.pause();     // a breath between jobs: it stands and looks about
+                } else {
+                    try {
+                        Reaction want = Errands.pick(this, phase, out, errand);
+                        if (want != errand) {
+                            if (errand != null) errand.stopped(this);
+                            errand = want;
+                        }
+                        if (errand.tick(this) != Reaction.Outcome.RUNNING) {
+                            errand.stopped(this);
+                            errand = null;
+                        }
+                    } catch (Exception e) {
+                        Trial.error(this, "on its errand" + (errand == null ? "" : " (" + errand.name + ")"), e);
+                        errand = null;
+                        errandRestUntil = now + 100;
+                        body.stopMoving();
+                    }
                 }
             } else if (errand != null) {
                 errand.stopped(this);
@@ -179,7 +248,103 @@ public final class Brain {
             body.quiet = false;
         }
         if (playing) lightReflexes();
+        // Nothing pointed its eyes this tick: it looks about, as people do.
+        if (!bot.hasVehicle() && body.gaze.commandedAge != bot.age
+                && Math.abs(bot.forwardSpeed) < 0.05F && Math.abs(bot.sidewaysSpeed) < 0.05F) body.gaze.idle(this);
+        waitingFidget(playing && watch.frozenFor() >= 60 && !body.wantsToMove() && bot.isOnGround() && !bot.hasVehicle());
         if (bot.age % 20 == 0) status();
+    }
+
+    private int waitNext, waitUntil;
+    private boolean waitHeld;
+
+    /**
+     * Standing about with nothing changing for a few seconds (waiting on a furnace, watching
+     * someone): now and then, at no set beat, it hops, ducks or swings its arm, on the spot.
+     */
+    private void waitingFidget(boolean waiting) {
+        DummyPlayer bot = bot();
+        int age = bot.age;
+        if (waitHeld && (age >= waitUntil || !waiting)) {
+            bot.setJumping(false);
+            bot.setSneaking(false);
+            waitHeld = false;
+        }
+        if (!waiting || waitHeld || age < waitNext) return;
+        waitNext = age + (int) ((60 + random.nextInt(200)) * (1.5 - body.hands.restless));
+        int kind = random.nextInt(3);
+        if (kind == 0) {
+            bot.setJumping(true);
+            waitUntil = age + 2;
+            waitHeld = true;
+        } else if (kind == 1 && !bot.isSneaking()) {
+            bot.setSneaking(true);
+            waitUntil = age + 3 + random.nextInt(5);
+            waitHeld = true;
+        } else {
+            bot.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+        }
+    }
+
+    // ------------------------------------------------------------------ the watchdog
+
+    /** A number that changes whenever it gets something done: its things, its health, hits landed, blocks broken. */
+    private int signature() {
+        DummyPlayer bot = bot();
+        int h = 17;
+        for (int i = 0; i < 36; i++) {
+            net.minecraft.item.ItemStack st = bot.getInventory().getStack(i);
+            if (!st.isEmpty()) h = h * 31 + System.identityHashCode(st.getItem()) + st.getCount() * 7 + st.getDamage() * 13 + i;
+        }
+        h = h * 31 + body.dug;
+        h = h * 31 + (int) bot.getHealth();
+        h = h * 31 + bot.getHungerManager().getFoodLevel();
+        h = h * 31 + bot.totalExperience;
+        for (int n : notebook.hits.values()) h += n * 101;
+        return h;
+    }
+
+    /** Twice a second: is it stuck, pacing or frozen? If so it shakes itself loose. */
+    private void watchdog(long now, boolean playing) {
+        DummyPlayer bot = bot();
+        BotConfig cfg = BotConfig.get();
+        boolean crafting = current != null && current.tags.contains(Reaction.Tag.CRAFTING);
+        boolean excused = !playing || bot.isSleeping() || bot.hasVehicle() || now - respawnedAt < 100
+                || (current != null && current.tags.contains(Reaction.Tag.HIDING));
+        Watch.Tell tell = watch.sample(bot.getX(), bot.getY(), bot.getZ(), body.wantsToMove(), signature(), excused,
+                crafting ? cfg.frozenCraftingTicks : cfg.frozenTicks);
+        if (tell == null) return;
+        Trial.note(this, tell, "while " + doing() + (body.goal() == null ? "" : ", walking to " + body.goal().toShortString()));
+        body.strikeOffGoal();
+        shakeLoose(now, tell.word);
+    }
+
+    /** Drops whatever it's doing (resting it a while) and walks off a little way, to start afresh. */
+    private void shakeLoose(long now, String why) {
+        record("WATCHDOG: " + why + " - shaking loose");
+        if (current != null) finish(current, Reaction.Outcome.FAILED, "watchdog: " + why);
+        queue.clear();
+        if (errand != null) {
+            errand.stopped(this);
+            errand = null;
+        }
+        watch.forget();
+        settleUntil = 0;
+        Reaction shake = new Errands.Shake();
+        shake.because = why;
+        shake.forced = true;
+        begin(shake, now);
+    }
+
+    /** Mining, crafting, fighting: its eyes stay on the job (no glancing about). */
+    boolean eyesBusy() {
+        return current != null && current.eyesBusy();
+    }
+
+    /** Its body called a walk off after getting stuck or taking far too long. */
+    void walkGivenUp(BlockPos goal, String why) {
+        Trial.note(this, Watch.Tell.NO_WAY, why + " on the way to " + goal.toShortString() + " while " + doing());
+        record("gave up walking to " + goal.toShortString() + ": " + why);
     }
 
     /**
@@ -222,7 +387,13 @@ public final class Brain {
             if (current != null && r.tier.ordinal() < current.tier.ordinal()) continue;
             if (r.tier == Reaction.Tier.COMBAT && Round.phase() != Round.Phase.GAME) continue;   // nobody can be hurt yet
             Reaction trial = r.fresh();
-            if (!trial.trigger(this)) continue;
+            try {
+                if (!trial.trigger(this)) continue;
+            } catch (Exception e) {
+                Trial.error(this, "checking " + r.label(), e);
+                cooldown.put(r.id, now + 1200);
+                continue;
+            }
             nowTrue.add(r.id);
             if (pick == null) pick = trial;
         }
@@ -233,7 +404,8 @@ public final class Brain {
             return;
         }
         if (current == null) {
-            begin(pick, now);
+            // A breath between jobs: only something pressing cuts it short.
+            if (now >= settleUntil || pick.tier.ordinal() > Reaction.Tier.NEED.ordinal()) begin(pick, now);
         } else if (pick.tier.ordinal() > current.tier.ordinal()) {
             interrupted(current, now);
             finish(current, Reaction.Outcome.FAILED, "interrupted by " + pick.label());
@@ -258,6 +430,22 @@ public final class Brain {
 
     private void begin(Reaction r, long now) {
         BotConfig cfg = BotConfig.get();
+        // The same thing begun again and again from the same spot, with nothing to show for it: a loop.
+        if (!(r instanceof Errands.Shake) && !(r instanceof Errands.BreakOut)
+                && watch.began(r.id, now, bot().getX(), bot().getY(), bot().getZ(), signature())) {
+            int n = loops.merge(r.id, 1, Integer::sum);
+            long rest = r.tier == Reaction.Tier.SURVIVAL ? 100 : Math.min(4800L, 600L << Math.min(3, n - 1));
+            cooldown.put(r.id, now + rest);
+            Trial.note(this, Watch.Tell.LOOP, r.label() + " begun 4 times running here with nothing to show for it; resting it " + rest / 20 + " s");
+            record("LOOP: resting " + r.label() + " for " + rest / 20 + "s");
+            if (current != null) finish(current, Reaction.Outcome.DONE, "caught in a loop");
+            Reaction shake = new Errands.Shake();
+            shake.because = "kept starting " + r.label();
+            shake.forced = true;
+            r = shake;
+        }
+        r.startedAt = now;
+        Trial.began(this, r);
         double mult = switch (win()) {
             case LOWER -> cfg.lowerLength;
             case MIDDLING -> cfg.middlingLength;
@@ -293,9 +481,25 @@ public final class Brain {
         record("ended " + r.label() + ": " + note);
         body.lastSaid = "";
         BotConfig cfg = BotConfig.get();
-        long cd = how == Reaction.Outcome.FAILED ? cfg.failCooldownTicks : cfg.doneCooldownTicks;
-        if (r.tier == Reaction.Tier.SURVIVAL) cd = Math.min(cd, 20);
-        cooldown.put(r.id, now + cd);
+        long cd;
+        boolean gaveUp = how == Reaction.Outcome.FAILED && (why == null || why.startsWith("watchdog") || why.startsWith("error"));
+        if (gaveUp) {
+            // Each time running it gives up on the same thing, it leaves it longer: 15 s, 30 s, 1 min, 2 min.
+            int streak = Math.min(4, failStreak.merge(r.id, 1, Integer::sum));
+            cd = (long) cfg.failCooldownTicks << (streak - 1);
+            if (r.tier == Reaction.Tier.SURVIVAL) cd = streak >= 3 || why != null ? 100 : 20;
+        } else {
+            cd = how == Reaction.Outcome.FAILED ? cfg.failCooldownTicks : cfg.doneCooldownTicks;
+            if (how == Reaction.Outcome.DONE && why == null) failStreak.remove(r.id);
+            if (r.tier == Reaction.Tier.SURVIVAL) cd = Math.min(cd, 20);
+        }
+        Long had = cooldown.get(r.id);
+        if (had == null || had < now + cd) cooldown.put(r.id, now + cd);
+        // A breath before the next job (not when something cut this one short).
+        if (why == null && r.tier.ordinal() <= Reaction.Tier.NEED.ordinal() && now - r.startedAt >= 40
+                && !(r instanceof Errands.Shake) && !(r instanceof Errands.BreakOut)) {
+            settleUntil = now + body.hands.hesitate(random);
+        }
         if (current == r) current = null;
     }
 
@@ -354,12 +558,14 @@ public final class Brain {
         if (world().isNight() && source.getAttacker() instanceof Monster) nightDeaths++;
         if (current != null) finish(current, Reaction.Outcome.FAILED, "died");
         queue.clear();
+        Trial.died(this);
         record("died: " + source.getName());
         if (Round.phase() == Round.Phase.GAME) chat(pickLine("rip", "ugh", "really?", "nooo"));
     }
 
     public void onRespawn() {
         respawnedAt = now();
+        watch.forget();
         lastSafe = bot().getBlockPos();
         regeared = false;
         hogMark = null;
@@ -369,6 +575,7 @@ public final class Brain {
     void onKill(net.minecraft.entity.LivingEntity dead) {
         if (!(dead instanceof PlayerEntity)) return;
         lastKillAt = now();
+        Trial.killed(this);
         record("killed " + dead.getName().getString());
         chat(pickLine("gg", "ez", "got em", "rip"));
     }
@@ -467,11 +674,12 @@ public final class Brain {
     /** Health at which it retreats (Lower 3 hearts, Middling 5, Higher 4 until fight scores arrive). */
     public float retreatHealth() {
         BotConfig cfg = BotConfig.get();
-        return (float) switch (win()) {
+        double usual = switch (win()) {
             case LOWER -> cfg.lowerRetreatHealth;
             case MIDDLING -> cfg.middlingRetreatHealth;
             case HIGHER -> cfg.higherRetreatHealth;
         };
+        return (float) Math.max(2.0, usual + nerve);
     }
 
     /** Its reaction delay for something newly seen, in ticks (by Win Method, sharper with skill). */
@@ -483,7 +691,7 @@ public final class Brain {
             default -> { lo = 4; hi = 7; }
         }
         double skill = Math.max(0.25, BotConfig.get().skill);
-        return (int) Math.round((lo + random.nextInt(hi - lo + 1)) / skill);
+        return (int) Math.max(1, Math.round((lo + random.nextInt(hi - lo + 1)) / skill * body.hands.react));
     }
 
     public Vec3d spawn() {
@@ -520,6 +728,9 @@ public final class Brain {
     public List<String> why() {
         List<String> out = new ArrayList<>();
         long now = now();
+        out.add(body.hands.title() + String.format(" (aim wanders %.1f deg, reacts x%.2f, footwork %.0f%%%s). Standing still %d%% of the time.",
+                body.hands.aimError, body.hands.react, body.hands.footwork * 100, body.hands.hopper ? ", a hopper" : "",
+                Math.round(watch.stillShare() * 100)));
         out.add("Now: " + doing() + (current != null && !current.because.isEmpty() ? " - because " + current.because : ""));
         if (!queue.isEmpty()) {
             StringBuilder q = new StringBuilder("Queued:");

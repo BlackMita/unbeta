@@ -331,7 +331,7 @@ final class Moves {
             if (!b.hold(Moves::buildingBlock)) return Reaction.Outcome.FAILED;
             if (b.bot.isOnGround()) {
                 climbFrom = b.bot.getY();
-                b.bot.setPitch(90F);
+                b.lookDown();
                 b.bot.setJumping(true);
                 return Reaction.Outcome.RUNNING;
             }
@@ -369,7 +369,7 @@ final class Moves {
             if (done()) return Reaction.Outcome.DONE;
             if (!b.hold(Moves::buildingBlock) || ++tries > 200) return Reaction.Outcome.FAILED;
             b.stopMoving();
-            b.bot.setPitch(90F);
+            b.lookDown();
             if (b.bot.isOnGround()) {
                 from = b.bot.getY();
                 b.bot.setJumping(true);

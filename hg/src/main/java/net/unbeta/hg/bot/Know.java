@@ -696,10 +696,7 @@ final class Know {
             Body b = br.body;
             if (scan > 0) {
                 b.stopMoving();
-                float yaw = b.bot.getYaw() + 9F;
-                b.bot.setYaw(yaw);
-                b.bot.setHeadYaw(yaw);
-                b.bot.setPitch(MathHelper.sin(scan / 6F) * 40F);
+                b.lookAround();
                 return --scan == 0 ? DONE : RUNNING;
             }
             Body.Walk w = b.walkTo(way.pos, 2.0);

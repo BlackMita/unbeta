@@ -129,6 +129,7 @@ final class Combat {
         public Reaction fresh() { return new Chase(); }
 
         private PlayerEntity foe;
+        private int lost;
 
         public boolean trigger(Brain br) {
             for (PlayerEntity p : foes(br, 24)) {
@@ -143,7 +144,14 @@ final class Combat {
         }
 
         public Outcome tick(Brain br) {
-            if (!br.senses.sees(foe) && br.win() != Traits.Win.LOWER) return DONE;
+            if (!br.senses.sees(foe) && br.win() != Traits.Win.LOWER) {
+                // Lost sight of them: it runs to where it last saw them and looks about, then lets it go.
+                Notebook.Sighting s = br.notebook.sightings.get(foe.getUuid());
+                if (s == null || ++lost > 60) return DONE;
+                if (br.body.walkTo(BlockPos.ofFloored(s.pos), 1.5) != Body.Walk.WALKING) br.body.lookAround();
+                return RUNNING;
+            }
+            lost = 0;
             return Fight.melee(br, foe) ? DONE : RUNNING;
         }
     }

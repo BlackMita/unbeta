@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * /hg bot ... - adding bots, giving them orders, and seeing inside their heads.
  * <ul>
- *   <li>/hg bot add [count] [traits] - e.g. /hg bot add 3, or /hg bot add 1 lower lightener hare</li>
+ *   <li>/hg bot add [count] [traits] - e.g. /hg bot add 3, or /hg bot add 1 lower lightener hare, or /hg bot add 2 ace</li>
  *   <li>/hg bot come &lt;bot&gt; - walk to you</li>
  *   <li>/hg bot goto &lt;bot&gt; &lt;x y z&gt;</li>
  *   <li>/hg bot mine &lt;bot&gt; - break the block you're looking at</li>
@@ -33,6 +33,8 @@ import java.util.List;
  *   <li>/hg bot why &lt;bot&gt; - what it's doing and why, and its last 10 Reactions</li>
  *   <li>/hg bot notebook &lt;bot&gt; - what it remembers seeing</li>
  *   <li>/hg bot brains on|off - every bot thinks for itself (on) or only follows orders (off)</li>
+ *   <li>/hg bot trial [minutes] - watch every bot for anything bot-like, then report (chat and bot-trial.txt)</li>
+ *   <li>/hg bot report - the count so far</li>
  * </ul>
  */
 public final class BotCommands {
@@ -89,7 +91,7 @@ public final class BotCommands {
                         })))
                         .then(CommandManager.literal("what").then(bot().executes(ctx -> {
                             Body b = body(ctx);
-                            return say(ctx.getSource(), name(b) + " " + b.traits.title() + ": " + b.brain.doing());
+                            return say(ctx.getSource(), name(b) + " " + b.traits.title() + " (" + b.hands.title() + "): " + b.brain.doing());
                         })))
                         .then(CommandManager.literal("why").then(bot().executes(ctx -> {
                             Body b = body(ctx);
@@ -103,6 +105,14 @@ public final class BotCommands {
                             for (String line : b.brain.notebook.describe(b.brain.now(), b.bot.getBlockPos())) say(ctx.getSource(), "  " + line);
                             return 1;
                         })))
+                        .then(CommandManager.literal("trial")
+                                .executes(ctx -> trial(ctx.getSource(), 5))
+                                .then(CommandManager.argument("minutes", IntegerArgumentType.integer(1, 60))
+                                        .executes(ctx -> trial(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "minutes")))))
+                        .then(CommandManager.literal("report").executes(ctx -> {
+                            for (String line : Trial.summary(ctx.getSource().getServer())) say(ctx.getSource(), line);
+                            return say(ctx.getSource(), Trial.write(ctx.getSource().getServer()));
+                        }))
                         .then(CommandManager.literal("brains")
                                 .then(CommandManager.literal("on").executes(ctx -> {
                                     Bots.brainsOn = true;
@@ -127,6 +137,13 @@ public final class BotCommands {
 
     private static String name(Body b) {
         return b.bot.getName().getString();
+    }
+
+    private static int trial(ServerCommandSource src, int minutes) {
+        if (Bots.all(src.getServer()).isEmpty()) return say(src, "No bots to watch: add some first (/hg bot add 8).");
+        Trial.start(src.getServer(), minutes);
+        return say(src, "Bot trial started: watching every bot for " + minutes + " min for anything bot-like "
+                + "(errors, loops, getting stuck, pacing, standing frozen). The result comes up in chat and in bot-trial.txt in the server folder.");
     }
 
     private static int add(ServerCommandSource src, int count, String traits) {

@@ -1,7 +1,10 @@
 package net.unbeta.hg.bot;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
@@ -45,18 +48,186 @@ final class Errands {
         return have instanceof Still ? have : new Still();
     }
 
-    /** F4: waiting about - shifts, looks around, now and then jumps. */
+    /**
+     * F4: waiting about. Now and then, at no set beat, it shuffles to one side, takes a step,
+     * hops or swings its arm; the restless do it more. (Its head looks about by itself.)
+     */
     static void fidget(Brain br) {
         Body b = br.body;
         b.stopMoving();
-        int t = b.bot.age;
-        if (t % 40 == 0) {
-            float yaw = b.bot.getYaw() + (br.random.nextFloat() - 0.5F) * 120F;
-            b.bot.setYaw(yaw);
-            b.bot.setHeadYaw(yaw);
+        int age = b.bot.age;
+        if (age >= br.fidgetNext) {
+            br.fidgetNext = age + (int) ((40 + br.random.nextInt(160)) * (1.5 - b.hands.restless));
+            br.fidgetUntil = age + 3 + br.random.nextInt(6);
+            br.fidgetKind = br.random.nextInt(20);
+            br.fidgetSide = br.random.nextBoolean() ? 0.5F : -0.5F;
         }
-        b.bot.setJumping(t % 160 == 0 && br.random.nextInt(3) == 0);
-        if (t % 50 == 0) b.bot.sidewaysSpeed = (br.random.nextFloat() - 0.5F) * 0.6F;
+        if (age >= br.fidgetUntil) return;
+        if (br.fidgetKind < 10) b.bot.sidewaysSpeed = br.fidgetSide;
+        else if (br.fidgetKind < 14) b.bot.forwardSpeed = br.fidgetSide;
+        else if (br.fidgetKind < 17) b.bot.setJumping(b.bot.isOnGround());
+        else if (age == br.fidgetUntil - 1) b.bot.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+    }
+
+    /**
+     * Shaken loose by its watchdog (it was stuck, pacing, frozen or going round in a loop): it
+     * backs off whatever it's caught on, walks a little way somewhere new, and starts afresh.
+     */
+    static final class Shake extends Reaction {
+        Shake() { super("X1", "Change of scene", Tier.NEED, 10, false); }
+        public Reaction fresh() { return new Shake(); }
+        public boolean trigger(Brain br) { return false; }
+
+        private BlockPos to;
+        private int tries;
+        private int backOff = 10;
+        private float side;
+
+        public Outcome tick(Brain br) {
+            Body b = br.body;
+            if (backOff > 0) {
+                if (backOff == 10) side = br.random.nextBoolean() ? 0.6F : -0.6F;
+                backOff--;
+                b.bot.forwardSpeed = -0.8F;
+                b.bot.sidewaysSpeed = side;
+                b.bot.setJumping(b.bot.isOnGround() && (b.bot.horizontalCollision || b.bot.isTouchingWater() || backOff == 5));
+                return RUNNING;
+            }
+            if (to == null) {
+                if (++tries > 4) return Outcome.DONE;
+                double rad = br.random.nextDouble() * Math.PI * 2;
+                int far = 8 + br.random.nextInt(8);
+                int x = MathHelper.floor(b.bot.getX() + Math.cos(rad) * far), z = MathHelper.floor(b.bot.getZ() + Math.sin(rad) * far);
+                if (br.world().getWorldBorder().getDistanceInsideBorder(x, z) < 8) return RUNNING;
+                // Under a roof (a cave, a hut) it stays on its own level; in the open it takes the ground as it lies.
+                int y = br.world().isSkyVisible(b.bot.getBlockPos().up()) ? br.world().getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z) : b.bot.getBlockY();
+                to = new BlockPos(x, y, z);
+            }
+            Body.Walk w = b.walkTo(to, 2.0);
+            if (w == Body.Walk.WALKING) return RUNNING;
+            if (w == Body.Walk.ARRIVED) return Outcome.DONE;
+            to = null;
+            return RUNNING;
+        }
+    }
+
+    /**
+     * Boxed in (down a hole, or up on a perch with no way off): it gets itself out as a person
+     * would. In a hole: up on a little pillar if it has the blocks and open sky, else it digs
+     * steps up and out. On a perch: it steps off the lowest side, if the drop won't hurt much.
+     */
+    static final class BreakOut extends Reaction {
+        BreakOut() { super("X2", "Getting out", Tier.NEED, 30, false); }
+        public Reaction fresh() { return new BreakOut(); }
+        public boolean trigger(Brain br) { return false; }
+
+        /** 0 not yet decided, 1 pillar up, 2 dig steps up, 3 step off. */
+        private int mode;
+        private Moves.Pillar pillar;
+        private Direction dir;
+        private BlockPos from, lastFeet, off;
+        private int turns, stall;
+
+        private static boolean open(ServerWorld world, BlockPos pos) {
+            return world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
+        }
+
+        public Outcome tick(Brain br) {
+            Body b = br.body;
+            net.unbeta.hg.DummyPlayer bot = b.bot;
+            ServerWorld world = br.world();
+            BlockPos feet = bot.getBlockPos();
+            if (from == null) from = feet;
+            if (bot.isTouchingWater()) return Outcome.FAILED;                  // swimming isn't boxed in
+            if (feet.getSquaredDistance(from) > 9) return Outcome.DONE;        // out
+            if (mode == 0) {
+                int walls = 0;
+                for (Direction d : Direction.Type.HORIZONTAL) {
+                    if (!open(world, feet.offset(d)) || !open(world, feet.offset(d).up())) walls++;
+                }
+                if (walls < 3) mode = 3;
+                else mode = world.isSkyVisible(feet.up()) && b.count(Moves::buildingBlock) >= 2 ? 1 : 2;
+                dir = bot.getHorizontalFacing();
+            }
+            if (mode == 1) {
+                if (pillar == null) pillar = new Moves.Pillar(2);
+                Outcome o = pillar.tick(br);
+                if (o == RUNNING) return RUNNING;
+                if (o == Outcome.DONE) return Outcome.DONE;
+                mode = 2;                                                       // couldn't build: dig instead
+                return RUNNING;
+            }
+            if (mode == 2) {
+                if (turns > 4) return Outcome.FAILED;
+                BlockPos ahead = feet.offset(dir);
+                boolean climb = !open(world, ahead);                            // a block to step up onto
+                java.util.List<BlockPos> clear = climb ? java.util.List.of(feet.up(2), ahead.up(), ahead.up(2))
+                        : java.util.List.of(ahead, ahead.up());
+                // Never open a way for water or lava.
+                boolean wet = false;
+                for (BlockPos p : clear) {
+                    if (!world.getFluidState(p).isEmpty()) wet = true;
+                    for (Direction d : Direction.values()) if (!world.getFluidState(p.offset(d)).isEmpty()) wet = true;
+                }
+                if (wet) {
+                    dir = dir.rotateYClockwise();
+                    turns++;
+                    return RUNNING;
+                }
+                for (BlockPos p : clear) {
+                    if (open(world, p)) continue;
+                    if (b.dig(p) == Body.Dig.FAILED) {
+                        dir = dir.rotateYClockwise();
+                        turns++;
+                    }
+                    return RUNNING;
+                }
+                // All clear: step (or hop) in.
+                b.lookAt(Vec3d.ofBottomCenter(climb ? ahead.up() : ahead).add(0, bot.getStandingEyeHeight(), 0));
+                bot.forwardSpeed = 0.5F;
+                bot.sidewaysSpeed = 0F;
+                bot.setJumping(climb && bot.isOnGround());
+                if (feet.equals(lastFeet)) {
+                    if (++stall > 40) {
+                        dir = dir.rotateYClockwise();
+                        turns++;
+                        stall = 0;
+                    }
+                } else {
+                    lastFeet = feet;
+                    stall = 0;
+                    turns = 0;
+                }
+                return RUNNING;
+            }
+            // On a perch: off the side with the shortest drop (into water for choice, never lava, never far).
+            if (bot.getBlockY() < from.getY() && bot.isOnGround()) return Outcome.DONE;
+            if (off == null) {
+                int best = 99;
+                for (Direction d : Direction.Type.HORIZONTAL) {
+                    BlockPos p = feet.offset(d);
+                    if (!open(world, p) || !open(world, p.up())) continue;
+                    int drop = 0;
+                    BlockPos q = p;
+                    while (drop <= 7 && open(world, q.down()) && world.getFluidState(q.down()).isEmpty()) {
+                        q = q.down();
+                        drop++;
+                    }
+                    if (drop > 6 || world.getFluidState(q.down()).isIn(FluidTags.LAVA)) continue;
+                    int cost = world.getFluidState(q.down()).isEmpty() ? drop : 0;
+                    if (cost < best) {
+                        best = cost;
+                        off = p;
+                    }
+                }
+                if (off == null) return Outcome.FAILED;
+            }
+            b.lookAt(Vec3d.ofBottomCenter(off).add(0, bot.getStandingEyeHeight(), 0));
+            bot.forwardSpeed = 0.6F;
+            bot.sidewaysSpeed = 0F;
+            bot.setJumping(false);
+            return ++stall > 80 ? Outcome.FAILED : RUNNING;
+        }
     }
 
     /** No one else has been seen within 24 blocks of them in the last minute. */
@@ -120,18 +291,19 @@ final class Errands {
 
         private int next;
         private boolean walking;
+        private float heading;
 
         public Outcome tick(Brain br) {
             Body b = br.body;
             if (--next <= 0) {
                 next = 30 + br.random.nextInt(70);
                 walking = br.random.nextInt(3) != 0;
-                float yaw = b.bot.getYaw() + (br.random.nextFloat() - 0.5F) * 160F;
-                b.bot.setYaw(yaw);
-                b.bot.setHeadYaw(yaw);
-                b.bot.setBodyYaw(yaw);
+                heading = b.bot.getYaw() + (br.random.nextFloat() - 0.5F) * 160F;
             }
+            // Turns to its new heading as a person would, then drifts that way.
+            b.lookAt(b.bot.getEyePos().add(Vec3d.fromPolar(0F, heading).multiply(8)));
             b.bot.forwardSpeed = walking ? 0.7F : 0F;
+            b.bot.sidewaysSpeed = 0F;
             b.bot.setJumping(walking && (b.bot.horizontalCollision || b.bot.isTouchingWater()));
             return RUNNING;
         }
@@ -175,11 +347,7 @@ final class Errands {
             if (scanning > 0) {
                 scanning--;
                 b.stopMoving();
-                float yaw = b.bot.getYaw() + 9F;
-                b.bot.setYaw(yaw);
-                b.bot.setHeadYaw(yaw);
-                b.bot.setBodyYaw(yaw);
-                b.bot.setPitch(MathHelper.sin(scanning / 6F) * 25F);
+                b.lookAround();
                 return RUNNING;
             }
             if (to == null) {
@@ -201,7 +369,7 @@ final class Errands {
             if (w == Body.Walk.FAILED) heading += 90F + br.random.nextFloat() * 180F;
             else heading += (br.random.nextFloat() - 0.5F) * 140F;
             to = null;
-            scanning = 40;
+            scanning = 30 + br.random.nextInt(25);
             return RUNNING;
         }
     }
@@ -248,6 +416,8 @@ final class Errands {
         public boolean trigger(Brain br) { return true; }
 
         private long picked = -10000;
+        /** Backing away from a quarry that came too near (kept up until there's room again, so it doesn't dither at the edge). */
+        private boolean backing;
         private final Explore lost = new Explore("Looking for someone", Float.NaN, 0);
 
         public Outcome tick(Brain br) {
@@ -278,8 +448,10 @@ final class Errands {
                 b.walkTo(BlockPos.ofFloored(s.pos), 3);
                 return RUNNING;
             }
+            if (d < 14) backing = true;
+            else if (d > 20) backing = false;
             if (d > 40) b.walkTo(BlockPos.ofFloored(s.pos), 32);
-            else if (d < 16) b.flee(s.pos);
+            else if (backing) b.flee(s.pos);
             else {
                 fidget(br);
                 b.lookAt(s.pos.add(0, 1.6, 0));
