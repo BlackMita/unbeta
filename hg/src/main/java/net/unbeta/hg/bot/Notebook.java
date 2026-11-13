@@ -112,7 +112,8 @@ public final class Notebook {
         Mark m = map.get(pos);
         if (m != null) {
             m.seen = now;
-            m.what = what;
+            // Seeing its own table again doesn't make it someone else's.
+            if (!(m.what != null && m.what.startsWith("my ") && (what == null || !what.startsWith("my ")))) m.what = what;
             return false;
         }
         map.put(pos.toImmutable(), new Mark(kind, pos.toImmutable(), now, what));

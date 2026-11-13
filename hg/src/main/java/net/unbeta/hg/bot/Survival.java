@@ -314,6 +314,8 @@ final class Survival {
         private Orders.Craft crafting;
         private boolean craftFailed;
         private LivingEntity victim;
+        private boolean hideFailed;
+        private final Errands.Explore roam = new Errands.Explore("Roaming", Float.NaN, 0);
 
         static boolean infected(LivingEntity e) {
             StatusEffect effect = Registries.STATUS_EFFECT.get(EFFECT);
@@ -345,13 +347,31 @@ final class Survival {
                         victim = null;
                         for (PlayerEntity p : br.senses.visible(PlayerEntity.class)) if (br.isFoe(p)) victim = p;
                     }
-                    if (victim == null) return RUNNING;
+                    if (victim == null) {
+                        // No one in sight to take down with it: it goes looking, toward the last one it saw.
+                        Notebook.Sighting last = null;
+                        for (Notebook.Sighting s : br.notebook.recent(br.now())) {
+                            PlayerEntity p = br.world().getPlayerByUuid(s.id);
+                            if (p != null && br.isFoe(p) && (last == null || s.seen > last.seen)) last = s;
+                        }
+                        if (last != null && last.pos.distanceTo(br.bot().getPos()) > 4) {
+                            if (br.body.walkTo(BlockPos.ofFloored(last.pos), 3) != Body.Walk.FAILED) return RUNNING;
+                        }
+                        roam.tick(br);
+                        return RUNNING;
+                    }
                     br.body.holdBestWeapon();
                     br.body.attack(victim);
                     return RUNNING;
                 }
                 case MIDDLING -> {
-                    return hide.tick(br, true) == FAILED ? FAILED : RUNNING;
+                    if (!hideFailed && hide.tick(br, true) != FAILED) return RUNNING;
+                    // Couldn't dig in: it keeps well away from everyone instead.
+                    hideFailed = true;
+                    LivingEntity near = br.nearestFoe(24);
+                    if (near != null) br.body.flee(near.getPos());
+                    else roam.tick(br);
+                    return RUNNING;
                 }
                 default -> {
                     return HigherStash.tick(br) ? DONE : RUNNING;

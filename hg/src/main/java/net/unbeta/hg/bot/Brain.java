@@ -90,6 +90,16 @@ public final class Brain {
     /** How many times running each Reaction has given up (each time it rests longer before trying again). */
     private final Map<String, Integer> failStreak = new HashMap<>();
     private final Map<String, Integer> loops = new HashMap<>();
+    /** Places it tried to get at and couldn't: left alone until the tick given. */
+    final Map<BlockPos, Long> spurned = new HashMap<>();
+
+    /** Gives up on a place for 5 minutes. */
+    void spurn(BlockPos pos) {
+        long now = now();
+        if (spurned.size() > 64) spurned.values().removeIf(t -> t < now);
+        spurned.put(pos.toImmutable(), now + 6000);
+    }
+
     /** The last tick its brain ran right through (the trial watches for brains that stop). */
     long lastThought;
     private int sleptFor;

@@ -42,6 +42,10 @@ public final class DummyPlayer extends ServerPlayerEntity {
             wander();
         }
         brain = System.nanoTime() - t1;
+        // A real player's game tells the server where it is as it moves, and the server keeps the
+        // world running around it. A bot has no game, so it must do this itself, or once it has
+        // walked a long way from where it joined, the world around it stops (and it with it).
+        if (this.age % 10 == 0) keepWorldRunning();
         this.playerTick();
         Perf.dummy(System.nanoTime() - t0 - brain, brain);
     }
@@ -60,6 +64,11 @@ public final class DummyPlayer extends ServerPlayerEntity {
         // Hop up a step it walks into, or out of water.
         this.setJumping(walking && (this.horizontalCollision || this.isTouchingWater()));
         this.setPitch(MathHelper.clamp(this.getPitch() * 0.9F, -10F, 10F));
+    }
+
+    /** Keeps the world running around the bot wherever it now is (see tick). */
+    public void keepWorldRunning() {
+        this.getServerWorld().getChunkManager().updatePosition(this);
     }
 
     /** Back on its feet at spawn: what pressing Respawn does, done in place. */
@@ -90,6 +99,7 @@ public final class DummyPlayer extends ServerPlayerEntity {
         net.minecraft.server.world.ServerChunkManager chunks = world.getChunkManager();
         chunks.unloadEntity(this);
         chunks.loadEntity(this);
+        keepWorldRunning();
         if (body != null) body.brain.onRespawn();
     }
 

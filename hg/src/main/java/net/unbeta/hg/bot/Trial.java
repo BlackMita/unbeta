@@ -82,6 +82,8 @@ public final class Trial {
             } else {
                 a[1] += 20;
             }
+            // Not being run for 5 s: the world around it may have stopped. Start it up again where the bot is.
+            if (a[1] >= 100 && !b.bot.isRemoved()) b.bot.keepWorldRunning();
             if (!playing || Round.isOut(b.bot)) continue;
             long now = b.brain.now();
             String why = null;
@@ -94,9 +96,11 @@ public final class Trial {
                 else if (b.bot.isSleeping()) why = "it's asleep in a bed";
                 else why = "its brain hasn't run for " + (now - b.brain.lastThought) / 20 + " s";
             }
-            if (why == null) continue;
-            Long last = warned.get(id);
-            if (last != null && ticks - last < 1200) continue;
+            if (why == null) {
+                warned.remove(id);           // running again: a new stretch would be noted afresh
+                continue;
+            }
+            if (warned.containsKey(id)) continue;   // one note per stretch, however long it lasts
             warned.put(id, ticks);
             note(b.brain, Watch.Tell.UNRESPONSIVE, why + " (at " + b.bot.getBlockPos().toShortString() + ", in "
                     + b.bot.getWorld().getRegistryKey().getValue() + ")");

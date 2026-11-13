@@ -418,7 +418,14 @@ final class Errands {
         private long picked = -10000;
         /** Backing away from a quarry that came too near (kept up until there's room again, so it doesn't dither at the edge). */
         private boolean backing;
+        /** Where it is moving to, to watch from (a stalker keeps shifting, from cover to cover), and when it next moves. */
+        private BlockPos spot;
+        private long nextShift;
         private final Explore lost = new Explore("Looking for someone", Float.NaN, 0);
+
+        public void stopped(Brain br) {
+            br.body.bot.setSneaking(false);
+        }
 
         public Outcome tick(Brain br) {
             Body b = br.body;
@@ -451,10 +458,32 @@ final class Errands {
             if (d < 14) backing = true;
             else if (d > 20) backing = false;
             if (d > 40) b.walkTo(BlockPos.ofFloored(s.pos), 32);
-            else if (backing) b.flee(s.pos);
-            else {
+            else if (backing) {
+                spot = null;
+                b.flee(s.pos);
+            } else if (spot != null) {
+                // Shifting to a new place to watch from, round to one side of them.
+                b.bot.setSneaking(br.win() != Traits.Win.LOWER);
+                if (b.walkTo(spot, 1.5) != Body.Walk.WALKING) {
+                    spot = null;
+                    b.bot.setSneaking(false);
+                }
+            } else {
                 fidget(br);
                 b.lookAt(s.pos.add(0, 1.6, 0));
+                if (nextShift == 0) nextShift = now + 60 + br.random.nextInt(120);
+                if (now >= nextShift) {
+                    nextShift = now + 60 + br.random.nextInt(120);
+                    double from = Math.atan2(b.bot.getZ() - s.pos.z, b.bot.getX() - s.pos.x);
+                    double turn = Math.toRadians((20 + br.random.nextInt(30)) * (br.random.nextBoolean() ? 1 : -1));
+                    double r = 20 + br.random.nextInt(9);
+                    int x = MathHelper.floor(s.pos.x + Math.cos(from + turn) * r), z = MathHelper.floor(s.pos.z + Math.sin(from + turn) * r);
+                    if (br.world().getWorldBorder().getDistanceInsideBorder(x, z) > 6) {
+                        int y = br.world().isSkyVisible(b.bot.getBlockPos().up())
+                                ? br.world().getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z) : b.bot.getBlockY();
+                        spot = new BlockPos(x, y, z);
+                    }
+                }
             }
             return RUNNING;
         }

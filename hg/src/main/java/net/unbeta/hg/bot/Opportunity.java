@@ -188,7 +188,8 @@ final class Opportunity {
             }
             BlockPos at = br.bot().getBlockPos();
             for (Notebook.Kind k : new Notebook.Kind[]{Notebook.Kind.PLACED, Notebook.Kind.TABLE, Notebook.Kind.FURNACE}) {
-                Notebook.Mark m = br.notebook.nearest(k, at, 16, x -> !x.what.startsWith("my"));
+                Notebook.Mark m = br.notebook.nearest(k, at, 16, x -> !x.what.startsWith("my")
+                        && !br.body.myTables.contains(x.pos) && br.spurned.getOrDefault(x.pos, 0L) < br.now());
                 if (m != null && br.body.canHarvest(br.world().getBlockState(m.pos))) {
                     target = m;
                     because = "someone's " + m.what + " - break it";
@@ -200,6 +201,7 @@ final class Opportunity {
 
         public Outcome tick(Brain br) {
             Reaction.Outcome o = Needs.mine(br, target.pos);
+            if (o == FAILED) br.spurn(target.pos);      // couldn't break it: leave it be for 5 min
             if (o != RUNNING) br.notebook.forget(target.kind, target.pos);
             return o;
         }
