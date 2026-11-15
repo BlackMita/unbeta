@@ -26,18 +26,21 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 
 /**
- * Right-click a Block of Diamond with a damaged diamond tool or piece of diamond armour and it
- * mends a little (one point of durability per click: one block mined, one hit, one heart of damage taken), with a quiet, high
- * anvil ring. Every repair makes that block 0.2% slower to mine, with no limit; it resets once
- * the block is mined.
+ * Right-click a Diamond Block with a damaged diamond tool or piece of diamond armour and it
+ * mends by one notch of its durability bar per click (a thirteenth of its full durability), with
+ * a quiet, high anvil ring. Each point of durability mended makes that block 0.4% slower to mine
+ * (twice what it once was per point), with no limit; it resets once the block is mined.
  */
 public final class DiamondRepair {
 
     private DiamondRepair() {}
 
     public static final Identifier SYNC = new Identifier("unbeta-content", "diamond_uses");
-    private static final float PER_USE = 0.002F;
-    private static final int COOLDOWN = 3;
+    /** Slower to mine per point of durability mended. */
+    private static final float PER_POINT = 0.004F;
+    /** The durability bar is 13 notches long: each click mends one. */
+    private static final int NOTCHES = 13;
+    private static final int COOLDOWN = 5;
 
     private static final Set<Item> DIAMOND = Set.of(Items.DIAMOND_SWORD, Items.DIAMOND_PICKAXE, Items.DIAMOND_AXE, Items.DIAMOND_SHOVEL,
             Items.DIAMOND_HOE, Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS);
@@ -56,10 +59,12 @@ public final class DiamondRepair {
             Long last = LAST.get(player.getUuid());
             if (last != null && now - last < COOLDOWN) return ActionResult.SUCCESS;
             LAST.put(player.getUuid(), now);
-            stack.setDamage(stack.getDamage() - 1);     // one click undoes one block mined / one hit / one heart worn
+            // One notch of the bar per click, so you can watch it fill.
+            int mend = Math.min(stack.getDamage(), (stack.getMaxDamage() + NOTCHES - 1) / NOTCHES);
+            stack.setDamage(stack.getDamage() - mend);
             world.playSound(null, pos, SoundEvents.BLOCK_ANVIL_USE, SoundCategory.BLOCKS, 0.25F, 1.9F + world.random.nextFloat() * 0.1F);
             BlockMemory mem = BlockMemory.get((ServerWorld) world);
-            mem.diamondUses.addTo(pos.asLong(), 1);
+            mem.diamondUses.addTo(pos.asLong(), mend);    // counted in points of durability mended
             mem.markDirty();
             return ActionResult.SUCCESS;
         });
@@ -82,7 +87,7 @@ public final class DiamondRepair {
         if (view instanceof ServerWorld sw) uses = BlockMemory.get(sw).diamondUses.get(pos.asLong());
         else if (view instanceof World w && w.isClient) uses = CLIENT.get(pos.asLong());
         else uses = 0;
-        return 1.0F + PER_USE * uses;
+        return 1.0F + PER_POINT * uses;
     }
 
     /** The block changed: a gold ward appears or goes, a diamond block forgets its repairs. */

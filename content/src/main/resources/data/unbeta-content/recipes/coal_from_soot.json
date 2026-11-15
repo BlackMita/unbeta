@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [ "aaa", "aaa", "aaa" ],
+  "key": { "a": { "item": "burnt:soot" } },
+  "result": { "item": "minecraft:coal", "count": 1 }
+}

@@ -16,13 +16,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Stone tools are gone, so laying one out on a crafting table makes nothing. The first time a
- * player does it, chat tells them that's on purpose (once ever, per player).
+ * Stone tools are gone, so laying one out on a crafting table makes nothing. Each time a player
+ * lays one out, they hear a short "nope" and the line above the hotbar says so.
  */
 @Mixin(CraftingScreenHandler.class)
 public abstract class StoneToolNoticeMixin {
 
-    private static final String TOLD = "unbeta.stone_tools_told";
+    /** Players whose grid shows a stone tool right now (so moving other items about doesn't repeat it). */
+    private static final java.util.Set<java.util.UUID> SHOWING = new java.util.HashSet<>();
     private static final String[][] SHAPES = {
             {"SSS", ".|.", ".|."},      // pickaxe
             {"SS", "S|", ".|"},         // axe
@@ -34,10 +35,16 @@ public abstract class StoneToolNoticeMixin {
     @Inject(method = "updateResult", at = @At("RETURN"))
     private static void unbeta_stoneToolNotice(ScreenHandler handler, World world, PlayerEntity player,
                                                RecipeInputInventory grid, CraftingResultInventory result, CallbackInfo ci) {
-        if (world.isClient || player.getCommandTags().contains(TOLD) || !result.getStack(0).isEmpty()) return;
-        if (!isStoneTool(grid)) return;
-        player.addCommandTag(TOLD);
-        player.sendMessage(Text.literal("Stone tools removed. Iron tier now follows wood.").formatted(Formatting.YELLOW), false);
+        if (world.isClient) return;
+        boolean stone = result.getStack(0).isEmpty() && isStoneTool(grid);
+        if (!stone) {
+            SHOWING.remove(player.getUuid());
+            return;
+        }
+        if (!SHOWING.add(player.getUuid())) return;
+        player.sendMessage(Text.literal("Stone Tools don't exist.").formatted(Formatting.GRAY), true);
+        world.playSound(null, player.getX(), player.getY(), player.getZ(), net.minecraft.sound.SoundEvents.BLOCK_DISPENSER_FAIL,
+                net.minecraft.sound.SoundCategory.PLAYERS, 0.6F, 1.6F);
     }
 
     private static boolean isStoneTool(RecipeInputInventory grid) {

@@ -112,6 +112,14 @@ public final class Gunpowder {
                 || id.getPath().startsWith("blazing_"));
     }
 
+    /** Fire has just appeared at pos: any fuse beside it, corners included, catches. */
+    public static void fireNear(ServerWorld world, BlockPos pos) {
+        if (TRAIL == null) return;
+        for (BlockPos p : BlockPos.iterate(pos.add(-1, -1, -1), pos.add(1, 1, 1))) {
+            if (world.getBlockState(p).isOf(TRAIL)) ignite(world, p.toImmutable());
+        }
+    }
+
     /** Lights the piece of fuse at pos (it's already gone if an explosion caught it). */
     public static void ignite(ServerWorld world, BlockPos pos) {
         Map<BlockPos, Fuse> fuses = FUSES.computeIfAbsent(world, w -> new HashMap<>());

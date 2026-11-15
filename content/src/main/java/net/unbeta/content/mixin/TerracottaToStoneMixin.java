@@ -22,7 +22,8 @@ import java.util.List;
  * terracotta, being brown, becomes Brown Stone.
  *
  * <p>Also: Stripped Oak Wood (the posts of village street lamps) becomes Stripped Oak Log,
- * standing the same way.
+ * standing the same way. And every other block not in Unbeta becomes its nearest Unbeta block
+ * (StructureBlocks): stained glass to glass, spruce to oak, job blocks out, and so on.
  */
 @Mixin(StructureTemplate.class)
 public abstract class TerracottaToStoneMixin {
@@ -37,9 +38,15 @@ public abstract class TerracottaToStoneMixin {
         for (int i = 0; i < in.size(); i++) {
             StructureTemplate.StructureBlockInfo info = in.get(i);
             BlockState stone = replacement(info.state());
-            if (stone == null) continue;
+            net.minecraft.nbt.NbtCompound nbt = null;
+            if (stone == null) {
+                // Anything else not in Unbeta: its nearest Unbeta block (see StructureBlocks).
+                stone = net.unbeta.content.village.StructureBlocks.swap(info.state());
+                if (stone == null) continue;
+                if (net.unbeta.content.village.StructureBlocks.keepsData(info.state(), stone)) nbt = info.nbt();
+            }
             if (out == null) out = new ArrayList<>(in);
-            out.set(i, new StructureTemplate.StructureBlockInfo(info.pos(), stone, null));
+            out.set(i, new StructureTemplate.StructureBlockInfo(info.pos(), stone, nbt));
         }
         if (out != null) cir.setReturnValue(out);
     }

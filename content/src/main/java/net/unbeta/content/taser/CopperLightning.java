@@ -39,7 +39,13 @@ public final class CopperLightning {
 
     private static void strike(ServerWorld world, LightningEntity bolt) {
         BlockPos hit = BlockPos.ofFloored(bolt.getPos().subtract(0, 1.0E-6, 0));
-        if (!world.getBlockState(hit).isIn(Taser.CONDUCTS)) return;
+        // Lightning fuses the sand it strikes into glass.
+        net.minecraft.block.BlockState struck = world.getBlockState(hit);
+        if (struck.isOf(net.minecraft.block.Blocks.SAND) || struck.isOf(net.minecraft.block.Blocks.RED_SAND)) {
+            world.setBlockState(hit, net.minecraft.block.Blocks.GLASS.getDefaultState());
+            return;
+        }
+        if (!struck.isIn(Taser.CONDUCTS)) return;
         Set<BlockPos> copper = joined(world, hit);
         if (copper.size() < 2) return;      // a lone copper block or a rod on nothing: just lightning
 

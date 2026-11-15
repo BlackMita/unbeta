@@ -186,6 +186,13 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
         }
+        // Charcoal is gone: it was coal by another name. Logs smelt into coal, and charcoal that
+        // drops (from burnt logs, say) turns into coal. Coal Blocks are back (9 coal), and fire on
+        // top of one burns for ever, as it does on netherrack.
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("charcoal")), true);
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("coal_block")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("coal_block")), false);
+
         // Hay bales and grass paths are back (villages and farms read better with them; a
         // shovel on grass makes a path again, and hay is crafted from 9 wheat).
         for (String id : new String[]{"hay_block", "dirt_path"}) {

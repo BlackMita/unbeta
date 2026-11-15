@@ -120,6 +120,14 @@ public final class UnbetaContent implements ModInitializer {
         net.unbeta.content.metal.GoldWard.register();
         net.unbeta.content.metal.DiamondRepair.register();
         net.unbeta.content.gunpowder.Gunpowder.register();
+        // Charcoal is gone (it was coal by another name): any that drops turns into coal.
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (entity instanceof net.minecraft.entity.ItemEntity drop && drop.getStack().isOf(net.minecraft.item.Items.CHARCOAL)) {
+                drop.setStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COAL, drop.getStack().getCount()));
+            }
+        });
+        // Coal Blocks don't burn away: fire sits on top of them for ever, as on netherrack.
+        net.fabricmc.fabric.api.registry.FlammableBlockRegistry.getDefaultInstance().add(net.minecraft.block.Blocks.COAL_BLOCK, 0, 0);
         net.unbeta.content.glow.Glow.register();
         net.unbeta.content.island.Island.register();
         LOG.info("Registered Bone Pile.");

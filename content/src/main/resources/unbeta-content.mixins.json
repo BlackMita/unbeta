@@ -147,7 +147,9 @@
     "FurnaceMinecartAccessor",
     "FurnaceMinecartSyncMixin",
     "FurnaceMinecartSpeedMixin",
-    "BoatPaintMixin"
+    "BoatPaintMixin",
+    "IceSlideMixin",
+    "CoalFireMixin"
   ],
   "injectors": {
     "defaultRequire": 1
