@@ -149,7 +149,9 @@
     "FurnaceMinecartSpeedMixin",
     "BoatPaintMixin",
     "IceSlideMixin",
-    "CoalFireMixin"
+    "CoalFireMixin",
+    "IceStepMixin",
+    "BoatIceMixin"
   ],
   "injectors": {
     "defaultRequire": 1

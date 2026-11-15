@@ -146,8 +146,8 @@ public final class UnbetaContent implements ModInitializer {
                 if (world.isClient) return;
                 var block = state.getBlock();
                 net.minecraft.item.ItemStack drop = null;
-                // (Stripped oak, birch and spruce logs: their loot tables drop the log - or, to a
-                // gold tool, the stripped log itself.)
+                // (Stripped oak, birch and spruce logs: their loot tables drop the log, whatever
+                // mined them, gold tools too. Painted stripped logs stay painted to a gold tool.)
                 if (block == net.minecraft.block.Blocks.STRIPPED_JUNGLE_LOG)
                     drop = new net.minecraft.item.ItemStack(net.minecraft.block.Blocks.JUNGLE_LOG);
                 else if (block == net.minecraft.block.Blocks.STRIPPED_ACACIA_LOG)
