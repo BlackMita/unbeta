@@ -115,9 +115,12 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.ITEM, mc("music_disc_" + disc)), false);
         }
 
-        // Stripped oak, birch and spruce logs as items: a gold tool keeps a stripped log whole.
+        // Stripped oak, birch and spruce logs: an axe still strips a log (and paint colours a
+        // stripped one), but they are never something to carry. Broken by anything, gold tools
+        // included, they give back the plain log. The blocks must be in, or their loot table is
+        // emptied and breaking one gives nothing; the items stay out.
         for (String log : new String[]{"stripped_oak_log", "stripped_birch_log", "stripped_spruce_log"}) {
-            ctx.set(RuleKey.of(ContentKind.ITEM, mc(log)), false);
+            ctx.set(RuleKey.of(ContentKind.BLOCK, mc(log)), false);
         }
 
         // Endermites: the Darkhold's spawners breed them.
