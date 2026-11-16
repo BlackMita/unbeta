@@ -26,7 +26,9 @@ import net.unbeta.content.stronghold.StrongholdVault;
  * Mimics, Unbeta's way (built on Better Mimic):
  * <ul>
  *   <li>They never spawn naturally - Better Mimic's biome spawns are removed.</li>
- *   <li>1 in 8 generated loot chests becomes a disguised mimic instead, facing the same
+ *   <li>In an abandoned village (the ones with cobwebs), 1 loot chest in 3 is a mimic, so most
+ *       have at least one. Ordinary villages never have mimics.</li>
+ *   <li>1 in 8 generated loot chests (dungeons and the like) becomes a disguised mimic instead, facing the same
  *       way. Fixed per position and seed. Double chests, underwater chests and the
  *       stronghold's Burnt Chest vault are never replaced.</li>
  *   <li>If the replaced chest was the stronghold's key chest, the mimic swallows the key.</li>
@@ -73,21 +75,47 @@ public final class MimicChests {
         mix ^= mix >>> 32;
         if (Math.floorMod(mix, (long) ODDS) != 0) return false;
 
-        EntityType<?> type = mimicType();
-        if (type == null) return false;
-        Entity entity = type.create(region.toServerWorld());
-        if (!(entity instanceof MobEntity mob) || !(entity instanceof MimicAccess mimic)) return false;
-
         float yaw = state.get(ChestBlock.FACING).asRotation();
+        MobEntity mob = makeMimic(region, pos, yaw);
+        if (mob == null) return false;
         world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
+        ItemStack key = StrongholdVault.keyFor(pos);
+        if (!key.isEmpty()) ((MimicAccess) mob).unbeta_contents().add(key);
+        world.spawnEntity(mob);
+        return true;
+    }
+
+    /** A disguised mimic sitting where a chest would be, facing the same way (not yet spawned), or null. */
+    private static MobEntity makeMimic(ChunkRegion region, BlockPos pos, float yaw) {
+        EntityType<?> type = mimicType();
+        if (type == null) return null;
+        Entity entity = type.create(region.toServerWorld());
+        if (!(entity instanceof MobEntity mob) || !(entity instanceof MimicAccess)) return null;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
         mob.setBodyYaw(yaw);
         mob.setHeadYaw(yaw);
         mob.setPersistent();
+        return mob;
+    }
 
-        ItemStack key = StrongholdVault.keyFor(pos);
-        if (!key.isEmpty()) mimic.unbeta_contents().add(key);
+    /** Abandoned villages: 1 chest in 3 is a mimic (so most such villages have one). */
+    private static final int ABANDONED_ODDS = 3;
 
+    /**
+     * A chest in an abandoned village's building, about to be placed: maybe it's a mimic instead.
+     * If so the mimic is spawned there now, and true says the chest itself must be left out.
+     */
+    public static boolean abandonedChest(ServerWorldAccess world, BlockPos pos, BlockState chest) {
+        if (!(world instanceof ChunkRegion region)) return false;
+        if (!(chest.getBlock() instanceof ChestBlock) || chest.get(ChestBlock.CHEST_TYPE) != ChestType.SINGLE
+                || chest.get(ChestBlock.WATERLOGGED)) return false;
+        long mix = region.getSeed() ^ (pos.asLong() * 0xD1B54A32D192ED03L);
+        mix ^= mix >>> 31;
+        mix *= 0x94D049BB133111EBL;
+        mix ^= mix >>> 29;
+        if (Math.floorMod(mix, (long) ABANDONED_ODDS) != 0) return false;
+        MobEntity mob = makeMimic(region, pos, chest.get(ChestBlock.FACING).asRotation());
+        if (mob == null) return false;
         world.spawnEntity(mob);
         return true;
     }

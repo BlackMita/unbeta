@@ -67,8 +67,12 @@ def loot_table(base, new):
             {"type": "minecraft:alternatives", "children": [by_gold, by_silk, plain]}]}]}
     keep = {"type": "minecraft:item", "name": me, "conditions": [SILK]}
     if base == "stripped_oak_log":
-        # A gold tool keeps it whole; anything else gives an oak log.
-        children = [keep, {"type": "minecraft:item", "name": "minecraft:oak_log"}]
+        # A gold tool keeps it whole (and which wood it was); anything else gives back that wood's log.
+        keep["functions"] = [{"function": "minecraft:copy_state", "block": me, "properties": ["wood"]}]
+        def log(w):
+            return {"type": "minecraft:item", "name": f"minecraft:{w}_log", "conditions": [
+                {"condition": "minecraft:block_state_property", "block": me, "properties": {"wood": w}}]}
+        children = [keep, log("birch"), log("spruce"), {"type": "minecraft:item", "name": "minecraft:oak_log"}]
         return {"type": "minecraft:block", "pools": [{"rolls": 1, "conditions": [{"condition": "minecraft:survives_explosion"}],
                                                       "entries": [{"type": "minecraft:alternatives", "children": children}]}]}
     plain = {"type": "minecraft:item", "name": f"minecraft:{base}"}

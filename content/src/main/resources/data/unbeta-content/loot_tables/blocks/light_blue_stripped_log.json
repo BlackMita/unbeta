@@ -29,6 +29,41 @@
                     ]
                   }
                 }
+              ],
+              "functions": [
+                {
+                  "function": "minecraft:copy_state",
+                  "block": "unbeta-content:light_blue_stripped_log",
+                  "properties": [
+                    "wood"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:birch_log",
+              "conditions": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "unbeta-content:light_blue_stripped_log",
+                  "properties": {
+                    "wood": "birch"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:spruce_log",
+              "conditions": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "unbeta-content:light_blue_stripped_log",
+                  "properties": {
+                    "wood": "spruce"
+                  }
+                }
               ]
             },
             {

@@ -189,6 +189,10 @@ public final class ContentRules implements RuleProvider {
             ctx.set(RuleKey.of(ContentKind.BLOCK, mc(id)), false);
             ctx.set(RuleKey.of(ContentKind.ITEM, mc(id)), false);
         }
+        // Packed Ice is back (9 ice): as slippery as ice, never melts, and any pickaxe picks it up.
+        ctx.set(RuleKey.of(ContentKind.BLOCK, mc("packed_ice")), false);
+        ctx.set(RuleKey.of(ContentKind.ITEM, mc("packed_ice")), false);
+
         // Charcoal is gone: it was coal by another name. Logs smelt into coal, and charcoal that
         // drops (from burnt logs, say) turns into coal. Coal Blocks are back (9 coal), and fire on
         // top of one burns for ever, as it does on netherrack.

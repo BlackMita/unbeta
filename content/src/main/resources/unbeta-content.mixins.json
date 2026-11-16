@@ -151,7 +151,11 @@
     "IceSlideMixin",
     "CoalFireMixin",
     "IceStepMixin",
-    "BoatIceMixin"
+    "BoatIceMixin",
+    "IceShatterMixin",
+    "ChestEmeraldMixin",
+    "RuleProcessorAccessor",
+    "ProcessorRuleAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

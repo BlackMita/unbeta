@@ -144,7 +144,7 @@ public final class DyedBlocks {
             add(Shape.WALL_SIGN, c, n + "wood_wall_sign",
                     new WallSignBlock(AbstractBlock.Settings.copy(Blocks.OAK_WALL_SIGN).mapColor(c).dropsLike(sign), wood));
             add(Shape.STRIPPED_LOG, c, n + "stripped_log",
-                    new PillarBlock(AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_LOG).mapColor(c)));
+                    new DyedStrippedLogBlock(AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_LOG).mapColor(c)));
             add(Shape.STONE, c, n + "stone", new Block(AbstractBlock.Settings.copy(Blocks.STONE).mapColor(c)));
             CUTOUT.add(door);
             CUTOUT.add(trapdoor);
@@ -204,13 +204,18 @@ public final class DyedBlocks {
         Entry e = entry(state.getBlock());
         if (e == null || e.color() == color) return false;
         Block to = block(e.shape(), color);
+        // A stripped log keeps which wood it is: painted, it remembers; unpainted, it's that stripped log again.
+        DyedStrippedLogBlock.Wood wood = DyedStrippedLogBlock.Wood.of(state);
+        if (wood != null && color == null) to = wood.stripped();
         if (to == null) return false;
         if (world.isClient) return true;
 
         BlockEntity be = world.getBlockEntity(pos);
         NbtCompound kept = be == null ? null : be.createNbt();
         int flags = Block.NOTIFY_LISTENERS | Block.FORCE_STATE;
-        world.setBlockState(pos, recolor(state, to), flags);
+        BlockState painted = recolor(state, to);
+        if (wood != null && painted.contains(DyedStrippedLogBlock.WOOD)) painted = painted.with(DyedStrippedLogBlock.WOOD, wood);
+        world.setBlockState(pos, painted, flags);
         if (state.getBlock() instanceof DoorBlock) {
             BlockPos other = state.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER ? pos.up() : pos.down();
             BlockState otherState = world.getBlockState(other);

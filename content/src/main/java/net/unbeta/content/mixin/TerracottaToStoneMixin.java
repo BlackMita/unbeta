@@ -35,8 +35,18 @@ public abstract class TerracottaToStoneMixin {
                                             CallbackInfoReturnable<List<StructureTemplate.StructureBlockInfo>> cir) {
         List<StructureTemplate.StructureBlockInfo> in = cir.getReturnValue();
         List<StructureTemplate.StructureBlockInfo> out = null;
+        Boolean abandoned = null;
         for (int i = 0; i < in.size(); i++) {
             StructureTemplate.StructureBlockInfo info = in.get(i);
+            // A loot chest in an abandoned village's building may be a mimic instead.
+            if (info.state().getBlock() instanceof net.minecraft.block.ChestBlock && info.nbt() != null && info.nbt().contains("LootTable")) {
+                if (abandoned == null) abandoned = abandoned(placementData);
+                if (abandoned && net.unbeta.content.mimic.MimicChests.abandonedChest(world, info.pos(), info.state())) {
+                    if (out == null) out = new ArrayList<>(in);
+                    out.set(i, new StructureTemplate.StructureBlockInfo(info.pos(), net.minecraft.block.Blocks.AIR.getDefaultState(), null));
+                    continue;
+                }
+            }
             BlockState stone = replacement(info.state());
             net.minecraft.nbt.NbtCompound nbt = null;
             if (stone == null) {
@@ -49,6 +59,17 @@ public abstract class TerracottaToStoneMixin {
             out.set(i, new StructureTemplate.StructureBlockInfo(info.pos(), stone, nbt));
         }
         if (out != null) cir.setReturnValue(out);
+    }
+
+    /** Is this an abandoned village's building? Their block rules scatter cobwebs; nothing else's do. */
+    private static boolean abandoned(StructurePlacementData placementData) {
+        for (net.minecraft.structure.processor.StructureProcessor p : placementData.getProcessors()) {
+            if (!(p instanceof RuleProcessorAccessor rules)) continue;
+            for (net.minecraft.structure.processor.StructureProcessorRule r : rules.unbeta_rules()) {
+                if (((ProcessorRuleAccessor) r).unbeta_outputState().isOf(net.minecraft.block.Blocks.COBWEB)) return true;
+            }
+        }
+        return false;
     }
 
     private static BlockState replacement(BlockState state) {
