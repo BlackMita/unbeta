@@ -57,7 +57,7 @@ public final class DyedBlocks {
         PLANKS("wood_planks"), STAIRS("wood_stairs"), SLAB("wood_slab"), FENCE("wood_fence"),
         FENCE_GATE("wood_fence_gate"), DOOR("wood_door"), TRAPDOOR("wood_trapdoor"), BUTTON("wood_button"),
         PRESSURE_PLATE("wood_pressure_plate"), SIGN("wood_sign"), WALL_SIGN("wood_wall_sign"),
-        STRIPPED_LOG("stripped_log"), STONE("stone");
+        STRIPPED_LOG("stripped_log"), STONE("stone"), STONE_STAIRS("stone_stairs"), STONE_SLAB("stone_slab");
 
         public final String suffix;
 
@@ -105,6 +105,8 @@ public final class DyedBlocks {
         PLAIN.put(Shape.WALL_SIGN, Blocks.OAK_WALL_SIGN);
         PLAIN.put(Shape.STRIPPED_LOG, Blocks.STRIPPED_OAK_LOG);
         PLAIN.put(Shape.STONE, Blocks.STONE);
+        PLAIN.put(Shape.STONE_STAIRS, Blocks.STONE_STAIRS);
+        PLAIN.put(Shape.STONE_SLAB, Blocks.STONE_SLAB);
         for (Shape s : Shape.values()) {
             DYED.put(s, new EnumMap<>(DyeColor.class));
             LOOKUP.put(PLAIN.get(s), new Entry(s, null));
@@ -114,6 +116,8 @@ public final class DyedBlocks {
         LOOKUP.put(Blocks.GRANITE, new Entry(Shape.STONE, null));
         LOOKUP.put(Blocks.DIORITE, new Entry(Shape.STONE, null));
         LOOKUP.put(Blocks.ANDESITE, new Entry(Shape.STONE, null));
+        // Unbeta's own Stone Slab (smooth stone's) paints like the plain stone slab.
+        LOOKUP.put(Blocks.SMOOTH_STONE_SLAB, new Entry(Shape.STONE_SLAB, null));
         LOOKUP.put(Blocks.STRIPPED_BIRCH_LOG, new Entry(Shape.STRIPPED_LOG, null));
         LOOKUP.put(Blocks.STRIPPED_SPRUCE_LOG, new Entry(Shape.STRIPPED_LOG, null));
 
@@ -145,7 +149,11 @@ public final class DyedBlocks {
                     new WallSignBlock(AbstractBlock.Settings.copy(Blocks.OAK_WALL_SIGN).mapColor(c).dropsLike(sign), wood));
             add(Shape.STRIPPED_LOG, c, n + "stripped_log",
                     new DyedStrippedLogBlock(AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_LOG).mapColor(c)));
-            add(Shape.STONE, c, n + "stone", new Block(AbstractBlock.Settings.copy(Blocks.STONE).mapColor(c)));
+            Block stone = add(Shape.STONE, c, n + "stone", new Block(AbstractBlock.Settings.copy(Blocks.STONE).mapColor(c)));
+            // Its stairs and slab (Clutter No More makes its vertical slabs and steps from these).
+            add(Shape.STONE_STAIRS, c, n + "stone_stairs",
+                    new StairsBlock(stone.getDefaultState(), AbstractBlock.Settings.copy(Blocks.STONE_STAIRS).mapColor(c)) {});
+            add(Shape.STONE_SLAB, c, n + "stone_slab", new SlabBlock(AbstractBlock.Settings.copy(Blocks.STONE_SLAB).mapColor(c)));
             CUTOUT.add(door);
             CUTOUT.add(trapdoor);
 

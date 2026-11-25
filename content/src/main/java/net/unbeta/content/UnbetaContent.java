@@ -643,5 +643,9 @@ public final class UnbetaContent implements ModInitializer {
                 entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.TORCH_ITEM);
                 entries.add(net.unbeta.content.torch.UnbetaTorchRegistry.LIT_TORCH_ITEM);
         });
+
+        // Clutter No More's vertical slabs and steps go in now, while every mod is still adding
+        // blocks: on a server Clutter's own moment comes too late. (See compat/ClutterEarly.)
+        net.unbeta.content.compat.ClutterEarly.run("at the end of Unbeta's start-up");
     }
 }

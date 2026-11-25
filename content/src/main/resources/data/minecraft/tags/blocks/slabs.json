@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_stone_slab",
+    "unbeta-content:orange_stone_slab",
+    "unbeta-content:magenta_stone_slab",
+    "unbeta-content:light_blue_stone_slab",
+    "unbeta-content:yellow_stone_slab",
+    "unbeta-content:lime_stone_slab",
+    "unbeta-content:pink_stone_slab",
+    "unbeta-content:gray_stone_slab",
+    "unbeta-content:light_gray_stone_slab",
+    "unbeta-content:cyan_stone_slab",
+    "unbeta-content:purple_stone_slab",
+    "unbeta-content:blue_stone_slab",
+    "unbeta-content:brown_stone_slab",
+    "unbeta-content:green_stone_slab",
+    "unbeta-content:red_stone_slab",
+    "unbeta-content:black_stone_slab"
+  ]
+}

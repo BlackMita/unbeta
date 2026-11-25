@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "unbeta-content:block/red_stone",
+    "side": "unbeta-content:block/red_stone",
+    "top": "unbeta-content:block/red_stone"
+  }
+}

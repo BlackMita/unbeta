@@ -35,6 +35,7 @@ public final class Bots {
 
     public static List<Body> all(MinecraftServer server) {
         List<Body> list = new ArrayList<>();
+        if (server.getPlayerManager() == null) return list;      // the server stopped before it finished starting
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
             if (p instanceof DummyPlayer d && d.body != null) list.add(d.body);
         }

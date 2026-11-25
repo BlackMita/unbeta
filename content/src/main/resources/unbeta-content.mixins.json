@@ -155,12 +155,15 @@
     "IceShatterMixin",
     "ChestEmeraldMixin",
     "RuleProcessorAccessor",
-    "ProcessorRuleAccessor"
+    "ProcessorRuleAccessor",
+    "ClutterOnceMixin",
+    "ClutterEarlyMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
+    "ClutterEarlyClientMixin",
     "BoatPaintTextureMixin",
     "IslandWorldTabMixin",
     "EndermanDreadMixin",

@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "unbeta-content:white_stone_stairs",
+    "unbeta-content:orange_stone_stairs",
+    "unbeta-content:magenta_stone_stairs",
+    "unbeta-content:light_blue_stone_stairs",
+    "unbeta-content:yellow_stone_stairs",
+    "unbeta-content:lime_stone_stairs",
+    "unbeta-content:pink_stone_stairs",
+    "unbeta-content:gray_stone_stairs",
+    "unbeta-content:light_gray_stone_stairs",
+    "unbeta-content:cyan_stone_stairs",
+    "unbeta-content:purple_stone_stairs",
+    "unbeta-content:blue_stone_stairs",
+    "unbeta-content:brown_stone_stairs",
+    "unbeta-content:green_stone_stairs",
+    "unbeta-content:red_stone_stairs",
+    "unbeta-content:black_stone_stairs"
+  ]
+}

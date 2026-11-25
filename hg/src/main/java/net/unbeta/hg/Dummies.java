@@ -25,6 +25,7 @@ public final class Dummies {
 
     public static List<DummyPlayer> all(MinecraftServer server) {
         List<DummyPlayer> list = new ArrayList<>();
+        if (server.getPlayerManager() == null) return list;      // the server stopped before it finished starting
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) if (p instanceof DummyPlayer d) list.add(d);
         return list;
     }

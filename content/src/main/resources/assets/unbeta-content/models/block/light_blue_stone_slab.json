@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "unbeta-content:block/light_blue_stone",
+    "side": "unbeta-content:block/light_blue_stone",
+    "top": "unbeta-content:block/light_blue_stone"
+  }
+}

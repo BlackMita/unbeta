@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "unbeta-content:block/light_gray_stone_slab"
+    },
+    "type=double": {
+      "model": "unbeta-content:block/light_gray_stone"
+    },
+    "type=top": {
+      "model": "unbeta-content:block/light_gray_stone_slab_top"
+    }
+  }
+}
