@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Freezing water: in any water where it would snow rather than rain, a creature freezes twice as
  * fast as in powder snow (frost over the screen, then freezing damage). Each piece of leather
  * armour slows the freezing (1 piece twice as slow, 2 three times, 3 four times), and a full
- * leather set stops it. Creatures that live or breathe under water never freeze this way.
+ * leather set stops it. Creatures that live or breathe under water, and wolves, never freeze this way.
  */
 @Mixin(LivingEntity.class)
 public abstract class ColdWaterFreezeMixin {
@@ -63,6 +63,7 @@ public abstract class ColdWaterFreezeMixin {
         if (!self.isTouchingWater() || self.canBreatheInWater()) return false;
         if (self.getType().isIn(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES)) return false;
         if (self instanceof net.minecraft.entity.mob.WaterCreatureEntity) return false;
+        if (self instanceof net.minecraft.entity.passive.WolfEntity) return false; // thick winter coats
         if (self instanceof PlayerEntity p && (p.isCreative() || p.isSpectator())) return false;
         BlockPos at = self.getBlockPos();
         return unbeta_snowsAt(self.getWorld(), at);
