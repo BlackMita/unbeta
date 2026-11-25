@@ -17,8 +17,9 @@ import java.util.WeakHashMap;
 
 /**
  * Ice (plain Ice, not Packed or Blue) may shatter underfoot: each time anything steps onto a new
- * block of it, 1 chance in 16 it breaks to nothing at once. Sneaking across doesn't count as
- * stepping on it (as with magma).
+ * block of it, 1 chance in 16 it breaks; landing on it from a jump or fall is 2 in 16. Sneaking
+ * across doesn't count as stepping on it (as with magma). Shattered ice leaves water behind, just
+ * as when it's broken by hand: only over something solid or liquid, and never in the Nether.
  */
 @Mixin(Block.class)
 public abstract class IceShatterMixin {
@@ -32,6 +33,22 @@ public abstract class IceShatterMixin {
         BlockPos last = LAST.get(entity);
         if (pos.equals(last)) return;
         LAST.put(entity, pos.toImmutable());
-        if (world.random.nextInt(16) == 0) world.breakBlock(pos, false, entity);
+        if (world.random.nextInt(16) == 0) unbeta_shatter(world, pos, entity);
+    }
+
+    @Inject(method = "onLandedUpon", at = @At("HEAD"))
+    private void unbeta_maybeShatterOnLanding(World world, BlockState state, BlockPos pos, Entity entity, float fallDistance, CallbackInfo ci) {
+        if (world.isClient || !state.isOf(Blocks.ICE) || fallDistance < 0.6f) return;
+        // This landing is the roll for this block; don't roll again for stepping onto it.
+        LAST.put(entity, pos.toImmutable());
+        if (world.random.nextInt(16) < 2) unbeta_shatter(world, pos, entity);
+    }
+
+    @Unique
+    private static void unbeta_shatter(World world, BlockPos pos, Entity entity) {
+        world.breakBlock(pos, false, entity);
+        if (world.getDimension().ultrawarm()) return;
+        BlockState below = world.getBlockState(pos.down());
+        if (below.blocksMovement() || below.isLiquid()) world.setBlockState(pos, Blocks.WATER.getDefaultState());
     }
 }
