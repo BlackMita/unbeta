@@ -65,6 +65,37 @@ public abstract class ColdWaterFreezeMixin {
         if (self instanceof net.minecraft.entity.mob.WaterCreatureEntity) return false;
         if (self instanceof PlayerEntity p && (p.isCreative() || p.isSpectator())) return false;
         BlockPos at = self.getBlockPos();
-        return self.getWorld().getBiome(at).value().getPrecipitation(at) == Biome.Precipitation.SNOW;
+        return unbeta_snowsAt(self.getWorld(), at);
+    }
+
+    /** Moderner Beta's world method that says where it snows by its beta climate (null if not found). */
+    @Unique private static java.lang.reflect.Method unbeta_betaWeather;
+    @Unique private static boolean unbeta_lookedForBetaWeather;
+
+    /**
+     * Would it snow here rather than rain? In a beta world, Moderner Beta decides that by its own
+     * climate (a Beta Taiga can be snowy while the biome itself says rain), so ask it; otherwise
+     * ask the biome as vanilla does.
+     */
+    @Unique
+    private static boolean unbeta_snowsAt(net.minecraft.world.World world, BlockPos at) {
+        Biome biome = world.getBiome(at).value();
+        if (!unbeta_lookedForBetaWeather) {
+            unbeta_lookedForBetaWeather = true;
+            try {
+                unbeta_betaWeather = world.getClass().getMethod("modernerBeta$samplePrecipitation", Biome.class, BlockPos.class);
+            } catch (Throwable t) {
+                unbeta_betaWeather = null;
+            }
+        }
+        if (unbeta_betaWeather != null) {
+            try {
+                Object weather = unbeta_betaWeather.invoke(world, biome, at);
+                if (weather instanceof Biome.Precipitation p) return p == Biome.Precipitation.SNOW;
+            } catch (Throwable ignored) {
+                // fall through to the biome's own answer
+            }
+        }
+        return biome.getPrecipitation(at) == Biome.Precipitation.SNOW;
     }
 }
