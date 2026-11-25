@@ -15,10 +15,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Freezing water: with its head under water where it would snow rather than rain, a creature
- * freezes just as in powder snow (frost over the screen, then freezing damage). Each piece of
- * leather armour slows the freezing (1 piece twice as slow, 2 three times, 3 four times), and a
- * full leather set stops it. Creatures that live or breathe under water never freeze this way.
+ * Freezing water: in any water where it would snow rather than rain, a creature freezes twice as
+ * fast as in powder snow (frost over the screen, then freezing damage). Each piece of leather
+ * armour slows the freezing (1 piece twice as slow, 2 three times, 3 four times), and a full
+ * leather set stops it. Creatures that live or breathe under water never freeze this way.
  */
 @Mixin(LivingEntity.class)
 public abstract class ColdWaterFreezeMixin {
@@ -47,11 +47,12 @@ public abstract class ColdWaterFreezeMixin {
         unbeta_coldTicks++;
         int max = self.getMinFreezeDamageTicks();
         int frost = unbeta_frozenBefore;
-        if (unbeta_coldTicks % (leather + 1) == 0) frost++;
+        if (unbeta_coldTicks % (leather + 1) == 0) frost += 2;
         self.setFrozenTicks(Math.max(self.getFrozenTicks(), Math.min(max, frost)));
 
-        // Vanilla only hurts frozen things that wear no leather at all; with 1-3 pieces, hurt them here.
-        if (leather > 0 && self.age % 40 == 0 && self.isFrozen()) {
+        // Vanilla's freezing damage never fires here (it checks before this sets the frost back up,
+        // and skips anything wearing leather), so hurt frozen things here, as powder snow would.
+        if (!self.inPowderSnow && self.age % 40 == 0 && self.isFrozen()) {
             int dmg = self.getType().isIn(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES) ? 5 : 1;
             self.damage(self.getDamageSources().freeze(), dmg);
         }
@@ -59,11 +60,11 @@ public abstract class ColdWaterFreezeMixin {
 
     @Unique
     private static boolean unbeta_inFreezingWater(LivingEntity self) {
-        if (!self.isSubmergedInWater() || self.canBreatheInWater()) return false;
+        if (!self.isTouchingWater() || self.canBreatheInWater()) return false;
         if (self.getType().isIn(EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES)) return false;
         if (self instanceof net.minecraft.entity.mob.WaterCreatureEntity) return false;
         if (self instanceof PlayerEntity p && (p.isCreative() || p.isSpectator())) return false;
-        BlockPos at = BlockPos.ofFloored(self.getEyePos());
+        BlockPos at = self.getBlockPos();
         return self.getWorld().getBiome(at).value().getPrecipitation(at) == Biome.Precipitation.SNOW;
     }
 }
